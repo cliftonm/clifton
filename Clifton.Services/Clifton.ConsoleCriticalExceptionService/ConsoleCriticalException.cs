@@ -26,7 +26,7 @@ namespace Clifton.ConsoleCriticalExceptionService
 		{
 			try
 			{
-				ILoggerService logger = serviceManager.GetSingleton<ILoggerService>();
+				ILoggerService logger = serviceManager.Get<ILoggerService>();
 
 				if (e.ExceptionObject is Exception)
 				{
