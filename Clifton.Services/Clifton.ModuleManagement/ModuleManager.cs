@@ -28,7 +28,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Register all modules specified in the XML filename.
+		/// Register all modules specified in the XML filename so that the application
+		/// can gain access to the services provided in those modules.
 		/// </summary>
 		public virtual void RegisterModules(XmlFileName filename)
 		{
@@ -39,7 +40,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Return the list of assembly names specified in the XML file.
+		/// Return the list of assembly names specified in the XML file so that
+		/// we know what assemblies are considered modules as part of the application.
 		/// </summary>
 		protected virtual List<AssemblyFileName> GetModuleList(XmlFileName filename)
 		{
@@ -49,7 +51,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Load the assemblies and return the list of loaded assemblies.
+		/// Load the assemblies and return the list of loaded assemblies.  In order to register
+		/// services that the module implements, we have to load the assembly.
 		/// </summary>
 		protected virtual List<Assembly> LoadModules(List<AssemblyFileName> moduleFilenames)
 		{
@@ -65,7 +68,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Load and return an assembly given the assembly filename.
+		/// Load and return an assembly given the assembly filename so we can proceed with
+		/// instantiating the module and so the module can register its services.
 		/// </summary>
 		protected virtual Assembly LoadAssembly(AssemblyFileName assyName)
 		{
@@ -76,7 +80,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Returns the list of modules specified in the XML document.
+		/// Returns the list of modules specified in the XML document so we know what
+		/// modules to instantiate.
 		/// </summary>
 		protected virtual List<AssemblyFileName> GetModuleList(XDocument xdoc)
 		{
@@ -89,6 +94,8 @@ namespace Clifton.ModuleManagement
 
 		/// <summary>
 		/// Instantiate and return the list of registratants -- assemblies with classes that implement IModule.
+		/// The registrants is one and only one class in the module that implements IModule, which we can then
+		/// use to call the Initialize method so the module can register its services.
 		/// </summary>
 		protected virtual List<IModule> InstantiateRegistrants(List<Assembly> modules)
 		{
@@ -104,6 +111,8 @@ namespace Clifton.ModuleManagement
 
 		/// <summary>
 		/// Instantiate a registrant.  A registrant must have one and only one class that implements IModule.
+		/// The registrant is one and only one class in the module that implements IModule, which we can then
+		/// use to call the Initialize method so the module can register its services.
 		/// </summary>
 		protected virtual IModule InstantiateRegistrant(Assembly module)
 		{
@@ -121,7 +130,8 @@ namespace Clifton.ModuleManagement
 		}
 
 		/// <summary>
-		/// Initialize each registrant by passing in the service manager.
+		/// Initialize each registrant by passing in the service manager.  This allows the module
+		/// to register the services it provides.
 		/// </summary>
 		protected virtual void InitializeRegistrants(List<IModule> registrants)
 		{
@@ -130,6 +140,7 @@ namespace Clifton.ModuleManagement
 
 		/// <summary>
 		/// Return the full path of the executing application (here we assume that ModuleManager.dll is in that path) and concatenate the assembly name of the module.
+		/// .NET requires the the full path in order to load the associated assembly.
 		/// </summary>
 		protected virtual FullPath GetFullPath(AssemblyFileName assemblyName)
 		{
