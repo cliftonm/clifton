@@ -8,7 +8,7 @@ namespace Clifton.ConsoleCriticalExceptionService
 	{
 		public virtual void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.Register<IConsoleCriticalExceptionService, ConsoleCriticalException>(ConstructionOption.AlwaysSingleton);
+			serviceManager.RegisterSingleton<IConsoleCriticalExceptionService, ConsoleCriticalException>();
 		}
 	}
 

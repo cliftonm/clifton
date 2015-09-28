@@ -13,7 +13,7 @@ namespace Clifton.ConsoleLoggerService
 	{
 		public void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.Register<IConsoleLoggerService, LoggerService>(ConstructionOption.AlwaysSingleton);
+			serviceManager.RegisterSingleton<IConsoleLoggerService, LoggerService>();
 		}
 	}
 

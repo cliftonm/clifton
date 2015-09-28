@@ -26,10 +26,10 @@ namespace Clifton.ServiceManagement
 		public void Initialize(IServiceManager svcMgr) { }
 
 		/// <summary>
-		/// Register a service S that implements interface I.
+		/// Register a service S that can be instantiated as a singleton or multiple instance that implements interface I.
 		/// Both S and I must implement IService.
 		/// </summary>
-		public virtual void Register<I, S>(ConstructionOption option = ConstructionOption.SingletonOrInstance)
+		public virtual void Register<I, S>()
 			where I : IService
 			where S : IService
 		{
@@ -37,16 +37,59 @@ namespace Clifton.ServiceManagement
 			Type serviceType = typeof(S);
 			Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), "The service " + GetName<S>() + " has already been registered.");
 			interfaceServiceMap[interfaceType] = serviceType;
-			constructionOption[interfaceType] = option;
+			constructionOption[interfaceType] = ConstructionOption.SingletonOrInstance;
+		}
 
-			if (option == ConstructionOption.AlwaysSingleton)
+		public virtual void RegisterInstanceOnly<I, S>()
+			where I : IService
+			where S : IService
+		{
+			Type interfaceType = typeof(I);
+			Type serviceType = typeof(S);
+			Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), "The service " + GetName<S>() + " has already been registered.");
+			interfaceServiceMap[interfaceType] = serviceType;
+			constructionOption[interfaceType] = ConstructionOption.AlwaysInstance;
+		}
+
+		public virtual void RegisterSingleton<I, S>()
+			where I : IService
+			where S : IService
+		{
+			Type interfaceType = typeof(I);
+			Type serviceType = typeof(S);
+			Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), "The service " + GetName<S>() + " has already been registered.");
+			interfaceServiceMap[interfaceType] = serviceType;
+			constructionOption[interfaceType] = ConstructionOption.AlwaysSingleton;
+			RegisterSingletonBaseInterfaces(interfaceType, serviceType);
+
+			// Singletons are always instantiated immediately so that they can be initialized
+			// for global behaviors.  A good example is the global exception handler services.
+			CreateAndRegisterSingleton<I>();
+		}
+
+		public virtual T Get<T>()
+			where T : IService
+		{
+			IService instance = null;
+			VerifyRegistered<T>();
+			Type interfaceType = typeof(T);
+
+			switch (constructionOption[interfaceType])
 			{
-				RegisterSingletonBaseInterfaces(interfaceType, serviceType);
+				case ConstructionOption.AlwaysInstance:
+					instance = CreateInstance<T>();
+					instance.Initialize(this);
+					break;
 
-				// Singletons are always instantiated immediately so that they can be initialized
-				// for global behaviors.  A good example is the global exception handler services.
-				CreateAndRegister<I>();				
+				case ConstructionOption.AlwaysSingleton:
+					instance = CreateOrGetSingleton<T>();
+					break;
+
+				default:
+					throw new ApplicationException("Cannot determine whether the service " + GetName<T>() + " should be created as a unique instance or as a singleton.");
 			}
+
+			return (T)instance;
 		}
 
 		/// <summary>
@@ -71,6 +114,17 @@ namespace Clifton.ServiceManagement
 		{
 			VerifyRegistered<T>();
 			VerifySingletonOption<T>();
+			IService instance = CreateOrGetSingleton<T>();
+
+			return (T)instance;
+		}
+
+		/// <summary>
+		/// Return a registered singleton or create it and register it if it isn't registered.
+		/// </summary>
+		protected IService CreateOrGetSingleton<T>()
+			where T : IService
+		{
 			Type t = typeof(T);
 			IService instance;
 
@@ -78,14 +132,17 @@ namespace Clifton.ServiceManagement
 			{
 				if (!singletons.TryGetValue(t, out instance))
 				{
-					instance = CreateAndRegister<T>();
+					instance = CreateAndRegisterSingleton<T>();
 				}
 			}
 
-			return (T)instance;
+			return instance;
 		}
 
-		protected virtual IService CreateAndRegister<T>()
+		/// <summary>
+		/// Create and register an instance.
+		/// </summary>
+		protected virtual IService CreateAndRegisterSingleton<T>()
 			where T : IService
 		{
 			IService instance = CreateInstance<T>();

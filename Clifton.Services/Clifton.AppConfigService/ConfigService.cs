@@ -9,7 +9,7 @@ namespace Clifton.AppConfigService
 	{
 		public void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.Register<IAppConfigService, ConfigService>(ConstructionOption.AlwaysSingleton);
+			serviceManager.RegisterSingleton<IAppConfigService, ConfigService>();
 		}
 	}
 
