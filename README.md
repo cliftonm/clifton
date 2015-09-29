@@ -1,2 +1,2 @@
 # clifton
-The core classes in The Clifton Method of software implementation
+The core classes in The Clifton Method of software engineering
