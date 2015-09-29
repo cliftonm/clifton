@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FF4E6842-ADC8-4671-90BE-B7493393B995}</ProjectGuid>
+    <ProjectGuid>{8FB66797-9B28-4E70-9184-598BC168F15A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Clifton.Semantics</RootNamespace>
-    <AssemblyName>Clifton.Semantics</AssemblyName>
+    <RootNamespace>Clifton.SemanticProcessorInterfaces</RootNamespace>
+    <AssemblyName>Clifton.SemanticProcessorInterfaces</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -39,13 +39,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ImmutableSemanticType.cs" />
+    <Compile Include="Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
-      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
-      <Name>Clifton.ExtensionMethods</Name>
+    <ProjectReference Include="..\Clifton.ServiceInterfaces\Clifton.ServiceInterfaces.csproj">
+      <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>
+      <Name>Clifton.ServiceInterfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

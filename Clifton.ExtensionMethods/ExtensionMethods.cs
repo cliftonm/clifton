@@ -695,7 +695,7 @@ namespace Clifton.ExtensionMethods
 		/// <param name="src">The source string.</param>
 		/// <param name="c">The seach char.</param>
 		/// <returns>Returns everything to the right of the rightmost search char, or an empty string.</returns>
-		public static string RightOfRightmostOf(string src, char c)
+		public static string RightOfRightmostOf(this string src, char c)
 		{
 			string ret = String.Empty;
 			int idx = src.LastIndexOf(c);
@@ -868,6 +868,30 @@ namespace Clifton.ExtensionMethods
 			}
 
 			return ret;
+		}
+
+		// http://stackoverflow.com/questions/8868119/find-all-parent-types-both-base-classes-and-interfaces
+		public static IEnumerable<Type> GetParentTypes(this Type type)
+		{
+			// is there any base type?
+			if ((type == null) || (type.BaseType == null))
+			{
+				yield break;
+			}
+
+			// return all implemented or inherited interfaces
+			foreach (var i in type.GetInterfaces())
+			{
+				yield return i;
+			}
+
+			// return all inherited types
+			var currentBaseType = type.BaseType;
+			while (currentBaseType != null)
+			{
+				yield return currentBaseType;
+				currentBaseType = currentBaseType.BaseType;
+			}
 		}
 	}
 }
