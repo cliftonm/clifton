@@ -17,7 +17,7 @@ namespace Clifton.ConsoleLoggerService
 		}
 	}
 
-	public class LoggerService : IConsoleLoggerService
+	public class LoggerService : ServiceBase, IConsoleLoggerService
 	{
 		public void Initialize(IServiceManager svcMgr) { }
 

@@ -12,13 +12,11 @@ namespace Clifton.ConsoleCriticalExceptionService
 		}
 	}
 
-    public class ConsoleCriticalException : IConsoleCriticalExceptionService
+    public class ConsoleCriticalException : ServiceBase, IConsoleCriticalExceptionService
     {
-		protected IServiceManager serviceManager;
-
-		public void Initialize(IServiceManager svcMgr)
+		public override void Initialize(IServiceManager svcMgr)
 		{
-			serviceManager = svcMgr;
+			base.Initialize(svcMgr);
 			AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
 		}
 

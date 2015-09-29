@@ -67,6 +67,11 @@ namespace Clifton.ServiceManagement
 			CreateAndRegisterSingleton<I>();
 		}
 
+		public virtual void FinishedInitialization()
+		{
+			singletons.ForEach(kvp => kvp.Value.FinishedInitialization());
+		}
+
 		public virtual T Get<T>()
 			where T : IService
 		{

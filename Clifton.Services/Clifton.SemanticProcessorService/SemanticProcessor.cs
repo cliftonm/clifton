@@ -71,7 +71,7 @@ namespace Clifton.SemanticProcessorService
 		public Action<IReceptor> Initializer { get; set; }
 	}
 
-	public class SemanticProcessor : ISemanticProcessor
+	public class SemanticProcessor : ServiceBase, ISemanticProcessor
 	{
 		public IMembrane Surface { get; protected set; }
 		public IMembrane Logger { get; protected set; }
@@ -112,8 +112,6 @@ namespace Clifton.SemanticProcessorService
 
 			InitializePoolThreads();
 		}
-
-		public void Initialize(IServiceManager svcMgr) { }
 
 		public IMembrane RegisterMembrane<M>()
 			where M : IMembrane, new()

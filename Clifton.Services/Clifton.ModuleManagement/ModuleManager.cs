@@ -14,17 +14,10 @@ using Clifton.ServiceInterfaces;
 
 namespace Clifton.ModuleManagement
 {
-    public class ModuleManager : IModuleManager
+    public class ModuleManager : ServiceBase, IModuleManager
     {
-		protected IServiceManager serviceManager;
-
 		public ModuleManager()
 		{
-		}
-
-		public void Initialize(IServiceManager svcMgr)
-		{
-			serviceManager = svcMgr;
 		}
 
 		/// <summary>

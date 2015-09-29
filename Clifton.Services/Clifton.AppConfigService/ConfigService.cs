@@ -13,10 +13,8 @@ namespace Clifton.AppConfigService
 		}
 	}
 
-    public class ConfigService : IAppConfigService
+    public class ConfigService : ServiceBase, IAppConfigService
     {
-		public void Initialize(IServiceManager svcMgr) { }
-
 		public virtual string GetConnectionString(string key)
 		{
 			return ConfigurationManager.ConnectionStrings[key].ConnectionString;
