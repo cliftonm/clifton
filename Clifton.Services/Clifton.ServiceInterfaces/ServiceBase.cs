@@ -7,11 +7,11 @@ namespace Clifton.ServiceInterfaces
 	/// </summary>
 	public abstract class ServiceBase : IService
 	{
-		protected IServiceManager serviceManager;
+		public IServiceManager ServiceManager { get; set; }
 
 		public virtual void Initialize(IServiceManager svcMgr)
 		{
-			serviceManager = svcMgr;
+			ServiceManager = svcMgr;
 		}
 
 		public virtual void FinishedInitialization()

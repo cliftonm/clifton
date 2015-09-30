@@ -43,6 +43,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
+      <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
+      <Name>Clifton.Semantics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Clifton.ServiceInterfaces\Clifton.ServiceInterfaces.csproj">
       <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>
       <Name>Clifton.ServiceInterfaces</Name>

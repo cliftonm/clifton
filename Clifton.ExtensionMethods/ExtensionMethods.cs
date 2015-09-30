@@ -474,6 +474,11 @@ namespace Clifton.ExtensionMethods
 			return ret;
 		}
 
+		public static int to_i(this string src)
+		{
+			return Convert.ToInt32(src);
+		}
+
 		public static bool to_b(this string src)
 		{
 			return Convert.ToBoolean(src);
@@ -893,5 +898,25 @@ namespace Clifton.ExtensionMethods
 				currentBaseType = currentBaseType.BaseType;
 			}
 		}
+
+		public static byte[] FromBase64(this char[] data)
+		{
+			return Convert.FromBase64CharArray(data, 0, data.Length);
+		}
+
+		public static byte[] FromBase64(this string data)
+		{
+			return Convert.FromBase64String(data);
+		}
+
+		public static string ToBase64(this byte[] data)
+		{
+			return Convert.ToBase64String(data);
+		}
+
+		public static byte[] to_Utf8(this string str)
+		{
+			return Encoding.UTF8.GetBytes(str);
+		}			
 	}
 }

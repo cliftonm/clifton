@@ -7,7 +7,7 @@ using Clifton.ServiceInterfaces;
 
 namespace Clifton.ServiceManagement
 {
-	public class ServiceManager : IServiceManager
+	public class ServiceManager : ServiceBase, IServiceManager
 	{
 		protected ConcurrentDictionary<Type, Type> interfaceServiceMap;
 		protected ConcurrentDictionary<Type, IService> singletons;
@@ -21,9 +21,6 @@ namespace Clifton.ServiceManagement
 			singletons = new ConcurrentDictionary<Type, IService>();
 			constructionOption = new ConcurrentDictionary<Type, ConstructionOption>();
 		}
-
-		// Strange stuff, haha.
-		public void Initialize(IServiceManager svcMgr) { }
 
 		/// <summary>
 		/// Register a service S that can be instantiated as a singleton or multiple instance that implements interface I.
@@ -67,7 +64,7 @@ namespace Clifton.ServiceManagement
 			CreateAndRegisterSingleton<I>();
 		}
 
-		public virtual void FinishedInitialization()
+		public override void FinishedInitialization()
 		{
 			singletons.ForEach(kvp => kvp.Value.FinishedInitialization());
 		}

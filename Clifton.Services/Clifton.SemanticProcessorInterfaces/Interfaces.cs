@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Clifton.Semantics;
 using Clifton.ServiceInterfaces;
 
 namespace Clifton.SemanticProcessorInterfaces
@@ -32,10 +33,9 @@ namespace Clifton.SemanticProcessorInterfaces
 
 		void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false)
 			where T : ISemanticType;
-	}
 
-	public interface ISemanticType
-	{
+		void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
+			where M : IMembrane, new();
 	}
 
 	public interface IMembrane

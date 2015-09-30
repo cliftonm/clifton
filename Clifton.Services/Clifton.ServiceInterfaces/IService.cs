@@ -8,6 +8,7 @@ namespace Clifton.ServiceInterfaces
 {
 	public interface IService
 	{
+		IServiceManager ServiceManager { get; }
 		void Initialize(IServiceManager srvMgr);
 		void FinishedInitialization();
 	}

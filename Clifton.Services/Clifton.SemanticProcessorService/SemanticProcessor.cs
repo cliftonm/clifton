@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MoreLinq;
 
 using Clifton.ExtensionMethods;
+using Clifton.Semantics;
 using Clifton.SemanticProcessorInterfaces;
 using Clifton.ServiceInterfaces;
 
@@ -386,6 +387,13 @@ namespace Clifton.SemanticProcessorService
 			PermeateOut(membrane, caller, obj, processOnCallerThread);
 		}
 
+		public void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
+			where M : IMembrane, new()
+		{
+			IMembrane m = RegisterMembrane<M>();
+			ProcessInstance(m, null, obj, processOnCallerThread);
+		}
+
 		/// <summary>
 		/// Traverse permeable membranes without calling back into the caller.  While membranes should not be bidirectionally
 		/// permeable, this does stop infinite recursion if the user accidentally (or intentionally) configured the membranes thusly.
@@ -405,13 +413,6 @@ namespace Clifton.SemanticProcessorService
 		{
 			List<IMembrane> pmembranes = ((Membrane)membrane).PermeateTo(obj);
 			pmembranes.Where(m => m != caller).ForEach((m) => ProcessInstance(m, membrane, obj, processOnCallerThread));
-		}
-
-		public void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
-			where M : IMembrane, new()
-		{
-			IMembrane m = RegisterMembrane<M>();
-			ProcessInstance(m, null, obj, processOnCallerThread);
 		}
 
 		/// <summary>

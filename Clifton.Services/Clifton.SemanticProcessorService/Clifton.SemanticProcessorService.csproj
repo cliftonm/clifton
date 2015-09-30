@@ -52,6 +52,10 @@
       <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
       <Name>Clifton.ExtensionMethods</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
+      <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
+      <Name>Clifton.Semantics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Clifton.SemanticProcessorInterfaces\Clifton.SemanticProcessorInterfaces.csproj">
       <Project>{8fb66797-9b28-4e70-9184-598bc168f15a}</Project>
       <Name>Clifton.SemanticProcessorInterfaces</Name>

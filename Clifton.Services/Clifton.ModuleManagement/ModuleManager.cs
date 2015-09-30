@@ -128,7 +128,7 @@ namespace Clifton.ModuleManagement
 		/// </summary>
 		protected virtual void InitializeRegistrants(List<IModule> registrants)
 		{
-			registrants.ForEach(r => r.InitializeServices(serviceManager));
+			registrants.ForEach(r => r.InitializeServices(ServiceManager));
 		}
 
 		/// <summary>

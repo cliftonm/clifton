@@ -19,8 +19,6 @@ namespace Clifton.ConsoleLoggerService
 
 	public class LoggerService : ServiceBase, IConsoleLoggerService
 	{
-		public void Initialize(IServiceManager svcMgr) { }
-
 		public virtual void Log(LogMessage msg)
 		{
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss : ") + msg.Value);
