@@ -579,7 +579,7 @@ namespace Clifton.ExtensionMethods
 		/// <param name="start">The first char to find.</param>
 		/// <param name="end">The end char to find.</param>
 		/// <returns>The string between the start and stop chars, or an empty string if not found.</returns>
-		public static string Between(string src, char start, char end)
+		public static string Between(this string src, char start, char end)
 		{
 			string ret = String.Empty;
 			int idxStart = src.IndexOf(start);
@@ -598,7 +598,7 @@ namespace Clifton.ExtensionMethods
 			return ret;
 		}
 
-		public static string Between(string src, string start, string end)
+		public static string Between(this string src, string start, string end)
 		{
 			string ret = String.Empty;
 			int idxStart = src.IndexOf(start);
@@ -617,7 +617,7 @@ namespace Clifton.ExtensionMethods
 			return ret;
 		}
 
-		public static string BetweenEnds(string src, char start, char end)
+		public static string BetweenEnds(this string src, char start, char end)
 		{
 			string ret = String.Empty;
 			int idxStart = src.IndexOf(start);
@@ -642,7 +642,7 @@ namespace Clifton.ExtensionMethods
 		/// <param name="src">The source string.</param>
 		/// <param name="find">The search char.</param>
 		/// <returns>The # of times the char occurs in the search string.</returns>
-		public static int Count(string src, char find)
+		public static int Count(this string src, char find)
 		{
 			int ret = 0;
 
@@ -669,7 +669,7 @@ namespace Clifton.ExtensionMethods
 		public static string RightOf(this String src, char c)
 		{
 			string ret = String.Empty;
-			int idx = src.LastIndexOf(c);
+			int idx = src.IndexOf(c);
 
 			if (idx != -1)
 			{
@@ -722,7 +722,7 @@ namespace Clifton.ExtensionMethods
 		/// <param name="src">The source string.</param>
 		/// <param name="c">Return everything to the left of this character.</param>
 		/// <returns>String to the left of c, or the entire string.</returns>
-		public static string LeftOf(string src, char c)
+		public static string LeftOf(this string src, char c)
 		{
 			string ret = src;
 			int idx = src.IndexOf(c);
