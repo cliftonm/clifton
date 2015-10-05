@@ -10,6 +10,72 @@
 
 <p>The Clifton Method</p>
 <p>Guidelines for Writing Applications</p>
+<p>Module Manager: Manages instantiation of modules, which are by default 
+singleton instances.&nbsp; Normally a module registers services.</p>
+<p>Service Manager: Manages registration and instantiation of singleton and 
+multiple services instances.&nbsp; Some services register semantic receptors to 
+subscribe to specific semantic data on a membrane data bus.</p>
+<p>Semantic Processor: Usually implemented as a singleton service, the semantic 
+processor is a sophisticated multithreaded publisher/subscriber system that 
+allows multiple subscribers to respond to semantic data published on a membrane 
+data bus.</p>
+<p>Modules are always singletons and can expose interfaces that provide 
+functions and properties that are accessible to all services.&nbsp; This is sort 
+of a module-specific global store.&nbsp; Use cases for this situation are very 
+uncommon.&nbsp; Some modules do not register services.&nbsp; An example is the 
+web server service module, which starts a listener thread.</p>
+<p>Services typically expose their interface for access by other services to 
+service functions and instantiating custom service instances.&nbsp; There are 
+use cases where services do not expose their interface, particularly when the 
+service sets up a receptor that processes data published on a membrane data bus.</p>
+<p>Bootstrap Process:</p>
+<ol>
+	<li>The service manager is instantiated.</li>
+	<li>The module manager is registered as a singleton service.<ol>
+		<li>All modules are loaded.</li>
+		<li>On completion, modules register services provided by the module.</li>
+		<li>Singleton services are automatically instantiated.</li>
+	</ol>
+	</li>
+	<li>Services register any semantic receptors.</li>
+	<li>The application starts any listener processes and/or completes its 
+	startup process.</li>
+</ol>
+<p>A typical bootstrap looks like this:</p>
+<pre>static void Main(string[] args)
+{
+  Bootstrap();
+  // The rest of application-specific initialization.
+}
+
+static void Bootstrap()
+{
+  serviceManager = new ServiceManager();
+  serviceManager.RegisterSingleton&lt;IModuleManager, ModuleManager&gt;();
+
+  try
+  {
+    IModuleManager moduleMgr = serviceManager.Get&lt;IModuleManager&gt;();
+    moduleMgr.RegisterModules(XmlFileName.Create(&quot;modules.xml&quot;));
+    serviceManager.FinishedInitialization();
+  }
+  catch (Exception ex)
+  {
+    Console.WriteLine(ex.Message);
+    Environment.Exit(1);
+  }
+}</pre>
+<p>A bootstrap for an application implementing a REST or web server would have a 
+slightly expanded <code>Main</code>:</p>
+<pre>static void Main(string[] args)
+{
+  Bootstrap();
+  serviceManager.Get&lt;IWebServerService&gt;().Start();
+  // The rest of application-specific initialization.
+}</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <h2>Introduction</h2>
 <p>A long time ago, someone said to me &quot;I'm not going to use your style of 
 programming because I can't put 'Proficient in the Clifton Method&quot; on my resume.&nbsp; 
