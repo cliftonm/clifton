@@ -13,22 +13,22 @@ namespace Clifton.StateManagement
 
 		public Enum ToState;
 
-		public Func<bool> PreValidate { get; set; }
-		public Func<bool> PostValidate { get; set; }
+		/// <summary>
+		/// Function that returns true if the transition to the ToState is valid given an application-specific requirement.
+		/// </summary>
+		public Func<bool> Validate { get; set; }
 
 		public Action OnTransition { get; set; }            // When the specific to-from state transition occurs.
 
 		public StateTransition()
 		{
-			PreValidate = () => true;
-			PostValidate = () => true;
+			Validate = () => true;
 			OnTransition = () => { };
 		}
 
-		public StateTransition(Func<bool> preValidate, Func<bool> postValidate)
+		public StateTransition(Func<bool> validate)
 		{
-			PreValidate = preValidate;
-			PostValidate = postValidate;
+			Validate = validate;
 			OnTransition = () => { };
 		}
 	}
