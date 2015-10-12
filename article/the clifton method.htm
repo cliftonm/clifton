@@ -8,8 +8,52 @@
 
 <body>
 
-<p>The Clifton Method</p>
-<p>Guidelines for Writing Applications</p>
+<p>The Clifton Method: Diary of a Coder</p>
+<p>Or: Why You Shouldn't Tell People You Write Code This Way</p>
+<h2>Introduction</h2>
+<p>This is how I aspire to write code, especially for anything other than small 
+or test projects.&nbsp; I don't usually succeed at this because somewhere along 
+the way I end up taking shortcuts, which is a Bad Thing, or something that 
+starts small ends up growing and then I wish I'd &quot;done it right&quot; from the 
+beginning.&nbsp; What I'm presenting here is based on my years of experience of 
+doing software both wrong and right.&nbsp; These are my experiences.&nbsp; 
+First, I'm not interested in convincing you to do similarly -- if there's 
+something valuable in here for you, the great, if not, that's great too.&nbsp; I 
+would also love to hear about your experiences and what wisdom you have gleaned 
+from your own failures and successes.</p>
+<h3>Why am writing this?</h3>
+<p>Admittedly, this is sort of selfish:</p>
+<ol>
+	<li>As a reminder to myself on what I've learned as the best practices for 
+	writing client and server applications.&nbsp; It's strange how easy it is to 
+	forget some of these lessons, especially after spending a while writing 
+	Javascript.</li>
+	<li>As a baseline to continue improving the process.</li>
+	<li>To document my core technology base, so that there's actually some 
+	documentation</li>
+	<li>As a reminder, when I want to take a shortcut, that shortcuts are 
+	usually long cuts, unless you're Strider, and even that didn't work out too 
+	well.</li>
+</ol>
+<p>A long time ago, someone said to me &quot;I'm not going to use your style of 
+programming because I can't put 'Proficient in the Clifton Method&quot; on my resume.&nbsp; 
+Well, besides the fact that I ended up leading a tiger team to rescue his 
+project and the company from a lawsuit, one of the reasons for writing this is 
+that, yes, you can then point to this article as documentation for the crazy way 
+that you write code, if you adopt some of these concepts.&nbsp; And certainly,<i> I</i> 
+can point&nbsp;to this article when someone asks me for documentation, haha!</p>
+<h3>Foundational Principles</h3>
+<ul>
+	<li>Exception handling and logging</li>
+<li>Modular</li>
+	<li>Service-Oriented</li>
+	<li>Semantic</li>
+</ul>
+<p>Service-Oriented: this means interfaces are used to communicate between 
+components and that components are instantiated and referenced through an 
+interface descriptor, not some literal.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>Module Manager: Manages instantiation of modules, which are by default 
 singleton instances.&nbsp; Normally a module registers services.</p>
 <p>Service Manager: Manages registration and instantiation of singleton and 
