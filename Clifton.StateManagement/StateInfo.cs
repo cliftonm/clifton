@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Clifton.StateManagement
 {
-	public class StateInfo<T>
+	public class StateInfo<T> where T : IStateContext
 	{
 		public Enum State { get; set; }
 		public Action<T> OnEnter { get; set; }

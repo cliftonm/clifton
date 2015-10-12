@@ -39,10 +39,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IStateContext.cs" />
     <Compile Include="StateInfo.cs" />
     <Compile Include="StateManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StateTransition.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
+      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
+      <Name>Clifton.ExtensionMethods</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
