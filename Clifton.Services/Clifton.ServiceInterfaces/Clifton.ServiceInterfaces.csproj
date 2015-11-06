@@ -44,6 +44,7 @@
     <Compile Include="IConsoleCriticalExceptionService.cs" />
     <Compile Include="IConsoleLoggerService.cs" />
     <Compile Include="ICriticalExceptionService.cs" />
+    <Compile Include="IDatabaseServices.cs" />
     <Compile Include="ILoggerService.cs" />
     <Compile Include="IModule.cs" />
     <Compile Include="IModuleManager.cs" />

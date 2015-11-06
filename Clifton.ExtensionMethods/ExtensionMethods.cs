@@ -3,18 +3,39 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-// using System.Drawing;
-// using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Clifton.ExtensionMethods
 {
 	public static class ExtensionMethods
 	{
+		public static bool If<T>(this T v, Func<T, bool> predicate, Action<T> action)
+		{
+			bool ret = predicate(v);
+
+			if (ret)
+			{
+				action(v);
+			}
+
+			return ret;
+		}
+
+		public static bool If(this bool b, Action action)
+		{
+			if (b)
+			{
+				action();
+			}
+
+			return b;
+		}
+
 		// Type is...
 		public static bool Is<T>(this object obj, Action<T> action)
 		{
@@ -29,6 +50,16 @@ namespace Clifton.ExtensionMethods
 		}
 
 		// ---------- if-then-else as lambda expressions --------------
+
+		// If the test returns true, execute the action.
+		// Works with objects, not value types.
+		public static void IfTrue<T>(this T obj, Func<T, bool> test, Action<T> action)
+		{
+			if (test(obj))
+			{
+				action(obj);
+			}
+		}
 
 		/// <summary>
 		/// Returns true if the object is null.
@@ -556,6 +587,11 @@ namespace Clifton.ExtensionMethods
 			return "\"" + src + "\"";
 		}
 
+		public static string Spaced(this String src)
+		{
+			return " " + src + " ";
+		}
+
 		/// <summary>
 		/// Returns a new string surrounded by brackets.
 		/// </summary>
@@ -987,6 +1023,55 @@ namespace Clifton.ExtensionMethods
 			}
 
 			return decryptedBytes;
+		}
+
+		public static string SplitCamelCase(this string input)
+		{
+			// return Regex.Replace(input, "([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim();
+			// Replaced, because the version below also handles strings like "IBMMakeStuffAndSellIt", converting it to "IBM Make Stuff And Sell It"
+			// See http://stackoverflow.com/questions/5796383/insert-spaces-between-words-on-a-camel-cased-token
+			return Regex.Replace(
+				Regex.Replace(input, @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2"),
+					@"(\p{Ll})(\P{Ll})", "$1 $2");
+		}
+
+		public static string CamelCase(this string src)
+		{
+			return src[0].ToString().ToLower() + src.Substring(1).ToLower();
+
+		}
+
+		public static string PascalCase(this string src)
+		{
+			string ret = String.Empty;
+
+			if (!String.IsNullOrEmpty(src))
+			{
+				ret = src[0].ToString().ToUpper() + src.Substring(1).ToLower();
+			}
+
+			return ret;
+		}
+
+		/// <summary>
+		/// Returns a Pascal-cased string, given a string with words separated by spaces.
+		/// </summary>
+		/// <param name="src"></param>
+		/// <returns></returns>
+		public static string PascalCaseWords(this string src)
+		{
+			StringBuilder sb = new StringBuilder();
+			string[] s = src.Split(' ');
+			string more = String.Empty;
+
+			foreach (string s1 in s)
+			{
+				sb.Append(more);
+				sb.Append(PascalCase(s1));
+				more = " ";
+			}
+
+			return sb.ToString();
 		}
 	}
 }

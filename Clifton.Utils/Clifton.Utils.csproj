@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9D4CA37E-4C77-4823-9364-4642BBE311C7}</ProjectGuid>
+    <ProjectGuid>{D4A90018-505C-41B4-8F9D-260F125997A9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Clifton.ExtensionMethods</RootNamespace>
-    <AssemblyName>Clifton.ExtensionMethods</AssemblyName>
+    <RootNamespace>Clifton.Utils</RootNamespace>
+    <AssemblyName>Clifton.Utils</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -39,9 +39,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DistinctBy.cs" />
-    <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Assert.cs" />
+    <Compile Include="Converter.cs" />
+    <Compile Include="PasswordHash.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
+      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
+      <Name>Clifton.ExtensionMethods</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
