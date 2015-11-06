@@ -12,5 +12,6 @@ namespace Clifton.ServiceInterfaces
 	{
 		void SetConnectionString(ConnectionString connectionString);
 		UserId Login(UserName username, PlainTextPassword password);
+		uint GetRole(UserId id);
 	}
 }

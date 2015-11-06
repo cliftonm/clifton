@@ -259,8 +259,20 @@ namespace Clifton.DbServices
 
 			// TODO: Deal with aliased field names.
 			// TODO: We need to do a full join here of all tables in the view.
-			string tableName = ((ViewInfo)view).ViewTables[0].TableInfo.Name;
-			T ret = QueryScalar<T>("select " + fieldName + " from " + tableName.Brackets() + " where " + AndOptionalWhere(where) + GetWhereClause(parms), parms);
+			// string tableName = ((ViewInfo)view).ViewTables[0].TableInfo.Name;
+			// T ret = QueryScalar<T>("select " + fieldName + " from " + tableName.Brackets() + " where " + AndOptionalWhere(where) + GetWhereClause(parms), parms);
+
+			DataTable dt = Query(view, where, parms);
+			T ret = default(T);
+
+			if (dt.Rows.Count == 1)
+			{
+				ret = (T)Converter.Convert(dt.Rows[0][fieldName], typeof(T));
+			}
+			else
+			{
+				throw new ApplicationException("Expected 1 and only 1 row returned for QueryScalar");
+			}
 
 			return ret;
 		}

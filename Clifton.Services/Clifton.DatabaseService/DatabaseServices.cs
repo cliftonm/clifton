@@ -36,6 +36,8 @@ namespace Clifton.DatabaseService
 			db.LoadViewDefinitions();
 		}
 
+		// TODO: This is actually a web-server user management functions.  Move them somewhere else!
+
 		/// <summary>
 		/// Verifies the username/password with the entry in the table SiteUser.
 		/// Acquires the role from the table Role and sets it in the session manager.
@@ -52,6 +54,15 @@ namespace Clifton.DatabaseService
 			List<DataRow> match = (from user in dt.AsEnumerable() where PasswordHash.ValidatePassword(password.Value, user.Field<string>("PasswordHash")) select user).ToList();
 
 			return match.Count == 1 ? UserId.Create(match[0].Field<int>("Id")) : null;
+		}
+
+		// TODO: This is actually a web-server user management functions.  Move them somewhere else!
+
+		public uint GetRole(UserId id)
+		{
+			uint mask = db.QueryScalar<uint>(db.GetView("UserRole"), "ActivityMask", new Dictionary<string, object>() { { "userid", id.Value } }, "SiteUser.Id = @userid");
+
+			return mask;
 		}
 	}
 }
