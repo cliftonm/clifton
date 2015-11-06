@@ -50,6 +50,7 @@ namespace Clifton.StateManagement
 
 		public Enum CurrentState { get { return state; } }
 		public string CurrentStateName { get { return CurrentState.ToString(); } }
+		public Dictionary<Enum, StateInfo<T>> StateTransitionMap { get { return stateTransitionMap; } }
 
 		public StateManager()
 		{
@@ -57,23 +58,32 @@ namespace Clifton.StateManagement
 		}
 
 		/// <summary>
+		/// Initialize the state without events firing.
+		/// </summary>
+		public void InitialState(Enum state)
+		{
+			this.state = state;
+		}
+
+		/// <summary>
 		/// We allow the current state to be explicitly set, without testing for allowed transitions.
 		/// </summary>
-		public void SetState(Enum state)
+		public void SetState(Enum state, T context)
 		{
 			this.state = state;
 			StateChange.Fire(this, EventArgs.Empty);
+			stateTransitionMap[CurrentState].OnEnter(context);
 		}
 
 		/// <summary>
 		/// The caller normally uses ToState to transition from the currrent state to the next desired state.
 		/// This call will throw an exception if transition validation fails.
 		/// </summary>
-		public void ToState(Enum state)
+		public void ToState(Enum state, T context)
 		{
 			if (CanTransition(state))
 			{
-				SetState(state);
+				SetState(state, context);
 			}
 			else
 			{
@@ -86,7 +96,7 @@ namespace Clifton.StateManagement
 		/// This simplifies the application logic when a specific state change is qualified by the application context.
 		/// If no transitions validate, or more than one transition validates, an exception is thrown.
 		/// </summary>
-		public void ToNextAllowedState()
+		public void ToNextAllowedState(T context)
 		{
 			var transitions = stateTransitionMap[CurrentState].StateTransitions.Where(t => t.Validate()).ToList();
 
@@ -96,7 +106,7 @@ namespace Clifton.StateManagement
 					throw new StateManagerNoQualifiedStateException("There is no qualified next allowed state from " + CurrentStateName);
 
 				case 1:
-					SetState(transitions[0].ToState);
+					SetState(transitions[0].ToState, context);
 					break;
 
 				default:
