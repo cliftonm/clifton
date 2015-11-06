@@ -70,6 +70,7 @@ namespace Clifton.StateManagement
 		/// </summary>
 		public void SetState(Enum state, T context)
 		{
+			stateTransitionMap[CurrentState].OnLeave(context);
 			this.state = state;
 			StateChange.Fire(this, EventArgs.Empty);
 			stateTransitionMap[CurrentState].OnEnter(context);
