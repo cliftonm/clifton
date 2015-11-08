@@ -51,6 +51,10 @@
       <Project>{d24f5d5d-8f77-4a60-b184-8a856597cd32}</Project>
       <Name>Clifton.DbService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
+      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
+      <Name>Clifton.ExtensionMethods</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
       <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
       <Name>Clifton.Semantics</Name>

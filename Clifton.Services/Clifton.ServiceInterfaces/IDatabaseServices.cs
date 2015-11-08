@@ -23,5 +23,6 @@ namespace Clifton.ServiceInterfaces
 		void Delete(ViewName viewName, Dictionary<string, object> parms, WhereClause where);
 		DataTable Query(ViewName viewName);
 		DataTable Query(ViewName viewName, Dictionary<string, object> parms, WhereClause where);
+		void FixupLookups(ViewName viewName, Dictionary<string, object> parms);
 	}
 }
