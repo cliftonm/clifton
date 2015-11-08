@@ -13,4 +13,6 @@ namespace Clifton.CoreSemanticTypes
 	public class HashedPassword : ImmutableSemanticType<HashedPassword, string> { }
 	public class PlainTextPassword : ImmutableSemanticType<PlainTextPassword, string> { }
 	public class UserId : ImmutableSemanticType<UserId, int> { }
+	public class ViewName : ImmutableSemanticType<ViewName, string> { }
+	public class WhereClause : ImmutableSemanticType<WhereClause, string> { }
 }

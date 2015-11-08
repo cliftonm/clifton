@@ -253,7 +253,7 @@ namespace Clifton.DbServices
 		/// <summary>
 		/// Query the view.  The field name is the aliased field name.  The qualifier parameters are the aliased parameter names.
 		/// </summary>
-		public T QueryScalar<T>(IViewInfo view, string fieldName, Dictionary<string, object> parms, string where = null)
+		public T QueryScalar<T>(IViewInfo view, string fieldName, Dictionary<string, object> parms, string where)
 		{
 			Assert.That(parms.Count > 0, "At least one parameter must be specified for QueryScalar<T>");
 
@@ -305,23 +305,19 @@ namespace Clifton.DbServices
 		}
 
 		/// <summary>
-		/// Returns true if the record exists.  The where clause is optional and is constructed from the parameters.  At least one parameter must be specified.
+		/// Returns true if the record exists.
 		/// </summary>
-		public bool Exists(IViewInfo view, Dictionary<string, object> parms, string where = null)
+		public bool Exists(IViewInfo view, Dictionary<string, object> parms, string where)
 		{
-			Assert.That(parms.Count > 0, "At least one parameter must be specified for Exists");
-			
-			// TODO: We need to do a full join here of all tables in the view.
-			string tableName = ((ViewInfo)view).ViewTables[0].TableInfo.Name;
-			int ret = QueryScalar<int>("select count(*) from " + tableName.Brackets() + " where " + AndOptionalWhere(where) + GetWhereClause(parms), parms);
+			DataTable dt = Query(view, where, parms);
 
-			return ret != 0;
+			return dt.Rows.Count != 0;
 		}
 
 		/// <summary>
 		/// Insert records in all tables in the view.
 		/// </summary>
-		public decimal Insert(IViewInfo iview, Dictionary<string, object> parms)
+		public int Insert(IViewInfo iview, Dictionary<string, object> parms)
 		{
 			// TODO: Implement multi-table insert.  This needs to be smart, preventing joined table inserts when they're just FK helpers.  Needs to be configurable in the ViewInfo for the table collection.
 			// TODO: If implementing true multi-table inserts, need to figure out how to return the ID's of all affected table records.
@@ -331,7 +327,7 @@ namespace Clifton.DbServices
 
 			string tableName = view.ViewTables[0].TableInfo.Name;
 			Dictionary<string, object> dealiasedParms = GetFieldNames(view, tableName, parms);
-			decimal ret = Insert(tableName, dealiasedParms);
+			int ret = Insert(tableName, dealiasedParms);
 
 			return ret;
 		}
@@ -960,7 +956,7 @@ namespace Clifton.DbServices
 			return ret;
 		}
 */
-		protected decimal Insert(string tableName, Dictionary<string, object> parms, bool identityInsert = false)
+		protected int Insert(string tableName, Dictionary<string, object> parms, bool identityInsert = false)
 		{
 			// Get the connection and create the command:
 			IDbConnection conn = OpenConnection();
@@ -987,11 +983,11 @@ namespace Clifton.DbServices
 
 			// Execute:
 			object oid = cmd.ExecuteScalar();
-			decimal id = -1;
+			int id = -1;
 
 			if (oid != DBNull.Value)
 			{
-				id = Convert.ToDecimal(oid);
+				id = Convert.ToInt32(oid);
 			}
 
 			// We don't have an auto-increment ID field!  Bad DB design!
@@ -999,7 +995,7 @@ namespace Clifton.DbServices
 			{
 				// Get the PK value that the user set when creating the record.
 				// We only assume a single PK in this case, and it must be a number.
-				id = Convert.ToDecimal(GetPK(tableName, parms).First().Value);
+				id = Convert.ToInt32(GetPK(tableName, parms).First().Value);
 			}
 
 			CloseConnection(conn);

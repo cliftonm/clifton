@@ -60,9 +60,61 @@ namespace Clifton.DatabaseService
 
 		public uint GetRole(UserId id)
 		{
-			uint mask = db.QueryScalar<uint>(db.GetView("UserRole"), "ActivityMask", new Dictionary<string, object>() { { "userid", id.Value } }, "SiteUser.Id = @userid");
+			uint mask = db.QueryScalar<uint>(db.GetView("User"), "ActivityMask", new Dictionary<string, object>() { { "userid", id.Value } }, "SiteUser.Id = @userid");
 
 			return mask;
+		}
+
+		// Generic DB functions.
+
+		public bool Exists(ViewName viewName, Dictionary<string, object> parms, WhereClause where)
+		{
+			bool exists = db.Exists(db.GetView(viewName.Value), parms, where.Value);
+
+			return exists;
+		}
+
+		public int Insert(ViewName viewName, Dictionary<string, object> parms)
+		{
+			int id = db.Insert(db.GetView(viewName.Value), parms);
+
+			return id;
+		}
+
+		public T QueryScalar<T>(ViewName viewName, string fieldName, Dictionary<string, object> parms, WhereClause where)
+		{
+			T ret = db.QueryScalar<T>(db.GetView(viewName.Value), fieldName, parms, where.Value);
+
+			return ret;
+		}
+
+		public void Update(ViewName viewName, Dictionary<string, object> fields)
+		{
+			db.Update(db.GetView(viewName.Value), fields);
+		}
+
+		public DataTable Query(ViewName viewName)
+		{
+			DataTable dt = db.Query(db.GetView(viewName.Value), null);
+
+			return dt;
+		}
+
+		public DataTable Query(ViewName viewName, Dictionary<string, object> parms, WhereClause where)
+		{
+			DataTable dt = db.Query(db.GetView(viewName.Value), where.Value, parms);
+
+			return dt;
+		}
+
+		public void Delete(ViewName viewName, Dictionary<string, object> parms)
+		{
+			db.Delete(db.GetView(viewName.Value), parms);
+		}
+
+		public void Delete(ViewName viewName, Dictionary<string, object> parms, WhereClause where)
+		{
+			db.Delete(db.GetView(viewName.Value), where.Value, parms);
 		}
 	}
 }

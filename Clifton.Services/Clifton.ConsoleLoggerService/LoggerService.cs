@@ -32,6 +32,7 @@ namespace Clifton.ConsoleLoggerService
 		public virtual void Log(Exception ex)
 		{
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.Message);
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.StackTrace);
 		}
 	}
 }
