@@ -816,12 +816,12 @@ namespace Clifton.DbServices
 						{
 							case TableRelationship.Child:
 								// The src table is a child to the table under test.
-								vtgSrc.ParentTables.Add(new ViewTableGraph(vtgTest.ViewTable));
+								vtgSrc.ParentTables.Add(graph.Single(g=>g.ViewTable == vtgTest.ViewTable));
 								break;
 
 							case TableRelationship.Parent:
 								// The table under test has a child to the soource table.
-								vtgSrc.ChildTables.Add(new ViewTableGraph(vtgTest.ViewTable));
+								vtgSrc.ChildTables.Add(graph.Single(g=>g.ViewTable == vtgTest.ViewTable));
 								break;
 						}
 					}
