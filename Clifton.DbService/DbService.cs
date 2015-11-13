@@ -180,9 +180,19 @@ namespace Clifton.DbServices
 
 			// Get the data.
 			cmd.CommandText = sb.ToString();
-			Console.WriteLine(sb.ToString());
 			SqlDataAdapter da = new SqlDataAdapter((SqlCommand)cmd);
-			da.Fill(dt);
+
+			try
+			{
+				da.Fill(dt);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sb.ToString());
+				throw;
+			}
+
 			CloseConnection(conn);
 
 			return dt;
@@ -200,10 +210,20 @@ namespace Clifton.DbServices
 			cmd.CommandText = sql;
 			// cmd.Transaction = externalTransaction;
 			parms.IfNotNull((p) => p.ForEach(kvp => cmd.Parameters.Add(new SqlParameter(kvp.Key, kvp.Value))));
-			Console.WriteLine(sql);
-			parms.Dump();
+			// parms.Dump();
 			SqlDataAdapter da = new SqlDataAdapter((SqlCommand)cmd);
-			da.Fill(dt);
+
+			try
+			{
+				da.Fill(dt);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sql);
+				throw;
+			}
+
 			CloseConnection(conn);
 
 			return dt;
@@ -220,8 +240,18 @@ namespace Clifton.DbServices
 			IDbCommand cmd = conn.CreateCommand();
 			cmd.CommandText = sql;
 			PopulateParameters(cmd, parms);
-			Console.WriteLine(sql);
-			object obj = cmd.ExecuteScalar();
+			object obj;
+
+			try
+			{
+				obj = cmd.ExecuteScalar();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sql);
+				throw;
+			}
 
 			object ret = (obj == DBNull.Value ? null : obj);
 			CloseConnection(conn);
@@ -238,8 +268,19 @@ namespace Clifton.DbServices
 			IDbCommand cmd = conn.CreateCommand();
 			cmd.CommandText = sql;
 			PopulateParameters(cmd, parms);
-			Console.WriteLine(sql);
-			object obj = cmd.ExecuteScalar();
+			object obj;
+
+			try
+			{
+				obj = cmd.ExecuteScalar();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sql);
+				throw;
+			}
+
 			T ret = default(T);
 
 			if (obj != null)
@@ -371,8 +412,18 @@ namespace Clifton.DbServices
 			PopulateParameters(cmd, parms);
 
 			cmd.CommandText = sb.ToString();
-			Console.WriteLine(sb.ToString());
+
+			try
+			{
 			cmd.ExecuteNonQuery();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sb.ToString());
+				throw;
+			}
+
 			CloseConnection(conn);
 		}
 
@@ -400,8 +451,18 @@ namespace Clifton.DbServices
 			PopulateParameters(cmd, parms);
 
 			cmd.CommandText = sql;
-			Console.WriteLine(sql);
-			cmd.ExecuteNonQuery();
+
+			try
+			{
+				cmd.ExecuteNonQuery();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sql);
+				throw;
+			}
+
 			CloseConnection(conn);
 		}
 
@@ -412,9 +473,18 @@ namespace Clifton.DbServices
 			IDbCommand cmd = conn.CreateCommand();
 
 			cmd.CommandText = "delete from " + tableName.Brackets();
-			Console.WriteLine(cmd.CommandText);
 
+			try
+			{
 			cmd.ExecuteNonQuery();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(cmd.CommandText);
+				throw;
+			}
+
 			CloseConnection(conn);
 		}
 
@@ -593,7 +663,7 @@ namespace Clifton.DbServices
 					});
 			});
 
-			ret.Dump();
+			// ret.Dump();
 
 			return ret;
 		}
@@ -979,10 +1049,19 @@ namespace Clifton.DbServices
 
 			PopulateParameters(cmd, parms);
 			cmd.CommandText = sql.ToString();
-			Console.WriteLine(cmd.CommandText);
+			object oid = null;
 
-			// Execute:
-			object oid = cmd.ExecuteScalar();
+			try
+			{
+			oid = cmd.ExecuteScalar();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(sql.ToString());
+				throw;
+			}
+
 			int id = -1;
 
 			if (oid != DBNull.Value)
@@ -1031,10 +1110,17 @@ namespace Clifton.DbServices
 			PopulateParameters(cmd, dealiasedFields);
 			PopulateParameters(cmd, pks);
 
-			Console.WriteLine(cmd.CommandText);
-
-			// Execute:
+			try
+			{
 			cmd.ExecuteNonQuery();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				Console.WriteLine(cmd.CommandText);
+				throw;
+			}
+
 			CloseConnection(conn);
 		}
 
