@@ -9,26 +9,58 @@
 <body>
 
 <p>The Clifton Method: Diary of a Coder</p>
+<p>An ideal, not always a reality</p>
 <p>Or: Why You Shouldn't Tell People You Write Code This Way</p>
 <h2>Introduction</h2>
 <p>This is how I aspire to write code, especially for anything other than small 
 or test projects.&nbsp; I don't usually succeed at this because somewhere along 
 the way I end up taking shortcuts, which is a Bad Thing, or something that 
-starts small ends up growing and then I wish I'd &quot;done it right&quot; from the 
+starts small ends up growing and then I wish I'd Done it Right from the 
 beginning.&nbsp; What I'm presenting here is based on my years of experience of 
-doing software both wrong and right.&nbsp; These are my experiences.&nbsp; 
-First, I'm not interested in convincing you to do similarly -- if there's 
-something valuable in here for you, the great, if not, that's great too.&nbsp; I 
-would also love to hear about your experiences and what wisdom you have gleaned 
-from your own failures and successes.</p>
+writing software applications both the wrong way and the right way.&nbsp; These are my experiences--I'm not interested in convincing you to do similarly -- if there's 
+something valuable in here for you, that's great, if not, that's great too.&nbsp; </p>
+<h3>The Myths of Today's Software Development</h3>
+<p>These are examples of the myths the media, developers, and managers are all 
+falling prey to:</p>
+<p>&quot;focus on simplicity and productivity&quot; (Ruby)</p>
+<p>&quot;optimized for programmer happiness and sustainable productivity&quot; - Rails</p>
+<p>&quot;it's easy to learn and use Python.&quot; - Python</p>
+<p>&quot;an open source programming language that makes it easy to build simple, 
+reliable, and efficient software.&quot; - Go</p>
+<p>&quot;Avast, Ye Pirates: Write a Web App&quot; - Dart</p>
+<p>&quot;a systems programming language focused on three goals: safety, speed, and 
+concurrency.&quot; - Rust</p>
+<p>Do languages and supporting frameworks<i> </i>really improve productivity, 
+reliability, or efficiency?&nbsp; Probably not, as any argument tends to reveal 
+an individual programmer's passions, comfort level, and fear of the unknown.&nbsp; 
+While there certainly can be objectively better choices depending on the 
+requirement (for example, very few of us program in assembly language), and 
+there can also be constraints (until recently, you were pretty much constrained 
+to using Objective-C for iOS development) in the majority of cases I've 
+encountered, no matter how well designed a framework is (whether you're using 
+.NET, Rails, Spring, or something else) and no matter how opinionated (as in, 
+enforcing you to do things a certain way) the framework is, it's all too easy to 
+create a stinking pile of code dung, even if it's following the practices of 
+someone else's concept of &quot;the right way.&quot;&nbsp; </p>
+<p>What I'm presenting in this article is two-fold.&nbsp; First, what believe to 
+be &quot;provably correct&quot; principles of software development, as concepts.&nbsp; 
+Second, implementation of these concepts.&nbsp; For me, the concepts are the 
+most important thing, and it is what I look for first regardless of whether I'm 
+starting a new project or I'm hired to bail out an existing project fiasco.&nbsp; 
+Implementations can vary.</p>
 <h3>Why am writing this?</h3>
-<p>Admittedly, this is sort of selfish:</p>
+<p>Admittedly, this is selfish:</p>
 <ol>
-	<li>As a reminder to myself on what I've learned as the best practices for 
-	writing client and server applications.&nbsp; It's strange how easy it is to 
-	forget some of these lessons, especially after spending a while writing 
-	Javascript.</li>
-	<li>As a baseline to continue improving the process.</li>
+	<li>As a reminder to myself for what I've learned as the best practices for 
+	writing client and server applications, whether it's a desktop application, 
+	a web server, a web site, or an embedded application.&nbsp; It also doesn't 
+	matter what language and supporting frameworks I'm using--I've come to 
+	realize that there actually are universal truths about how software should 
+	be developed.&nbsp; I'm continually appalled to see production code that 
+	ignores these truths, whether it's my own code or someone else's.&nbsp; </li>
+	<li>It's strange how easy it is to forget some of these lessons, so the best 
+	way to remember them, at least for me, is to write about them. </li>
+	<li>As a baseline to continue improving my own process.</li>
 	<li>To document my core technology base, so that there's actually some 
 	documentation</li>
 	<li>As a reminder, when I want to take a shortcut, that shortcuts are 
@@ -48,6 +80,9 @@ can point&nbsp;to this article when someone asks me for documentation, haha!</p>
 <li>Modular</li>
 	<li>Service-Oriented</li>
 	<li>Semantic</li>
+	<li>Asynchronous semantic processing</li>
+	<li>State Management</li>
+	<li>Workflow</li>
 </ul>
 <p>Service-Oriented: this means interfaces are used to communicate between 
 components and that components are instantiated and referenced through an 
