@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Clifton.CoreSemanticTypes;
-using Clifton.DbServices;
+using Clifton.Db;
 using Clifton.ExtensionMethods;
 using Clifton.Semantics;
 using Clifton.ServiceInterfaces;
