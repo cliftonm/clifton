@@ -43,7 +43,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
+    <ProjectReference Include="..\Clifton.Semantics\Clifton.Semantics.csproj">
       <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
       <Name>Clifton.Semantics</Name>
     </ProjectReference>
