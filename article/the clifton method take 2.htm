@@ -245,6 +245,7 @@ decent program!</p>
 </pre>
 <p>We can now write a service/module based &quot;Hello World&quot; (in the 
 source code, this is in ServiceDemo1):</p>
+<p>(<a name="bootstrap_process">bootstrap process</a>)</p>
 <pre>using System;
 using System.Reflection;
 
@@ -402,6 +403,57 @@ know!</p>
 	registering players and messages between players.</li>
 </ol>
 <h3><a name="The_Poloron_Rendering_Service">The Poloron Rendering Service</a></h3>
+<p><img border="0" src="poloron1.png" width="329" height="266"></p>
+<p>Here we have an example of the three Poloron states: neutral, negative, and 
+positive.&nbsp; So far, we have a bootstrap function identical to what was 
+presented <a href="#bootstrap_process">earlier</a>, and the initialization of 
+the rendering service with the test case shown in the screenshot above:</p>
+<pre>static void Main()
+{
+  Application.EnableVisualStyles();
+  Application.SetCompatibleTextRenderingDefault(false);
+  Bootstrap();
+
+  IPoloronRenderingService renderer = serviceManager.Get&lt;IPoloronRenderingService&gt;();
+  Form mainForm = renderer.CreateForm();
+  mainForm.Text = &quot;Poloron&quot;;
+
+  // testing!
+  renderer.SetPoloronState(PoloronId.Create(0), XPos.Create(100), YPos.Create(50), PoloronState.Neutral);
+  renderer.SetPoloronState(PoloronId.Create(1), XPos.Create(150), YPos.Create(100), PoloronState.Negative);
+  renderer.SetPoloronState(PoloronId.Create(2), XPos.Create(200), YPos.Create(150), PoloronState.Positive);
+
+  Application.Run(mainForm);
+}</pre>
+<p>One thing you'll note is that, for crossing boundaries between services 
+(including the application itself), I'm experimenting with full on semantic 
+types, which you can read more about in
+<a href="http://www.codeproject.com/Articles/1031504/Strong-Type-Checking-with-Semantic-Types">
+Strong Type Checking with Semantic Types</a>.</p>
+<p>The rendering service implements this interface (so far, we'll see how it 
+goes):</p>
+<pre>public interface IPoloronRenderingService : IService
+{
+  Form CreateForm();
+  void SetPoloronState(PoloronId id, XPos x, YPos y, PoloronState state);
+}</pre>
+<p>And there's a whole bunch of configurable stuff right from the get-go:</p>
+<pre>&lt;appSettings&gt;
+  &lt;add key=&quot;BackgroundColor&quot; value=&quot;64, 64, 96&quot;/&gt;
+  &lt;add key=&quot;GridColor&quot; value=&quot;96, 96, 192&quot;/&gt;
+  &lt;add key=&quot;GridSpacing&quot; value=&quot;32&quot;/&gt;
+  &lt;add key=&quot;Width&quot; value=&quot;800&quot;/&gt;
+  &lt;add key=&quot;Height&quot; value=&quot;600&quot;/&gt;
+  &lt;add key=&quot;NeutralColor&quot; value=&quot;64, 64, 255&quot;/&gt;
+  &lt;add key=&quot;NegativeColor&quot; value=&quot;255, 64, 64&quot;/&gt;
+  &lt;add key=&quot;PositiveColor&quot; value=&quot;64, 255, 64&quot;/&gt;
+&lt;/appSettings&gt;</pre>
+<p>But we only have two service modules:</p>
+<pre>&lt;Modules&gt;
+  &lt;Module AssemblyName='PoloronRenderingService.dll'/&gt;
+  &lt;Module AssemblyName='Clifton.AppConfigService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
