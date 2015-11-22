@@ -67,7 +67,16 @@ namespace Clifton.ModuleManagement
 		protected virtual Assembly LoadAssembly(AssemblyFileName assyName)
 		{
 			FullPath fullPath = GetFullPath(assyName);
-			Assembly assembly = Assembly.LoadFile(fullPath.Value);
+			Assembly assembly = null;
+
+			try
+			{
+				assembly = Assembly.LoadFile(fullPath.Value);
+			}
+			catch(Exception ex)
+			{
+				throw new ApplicationException("Unable to load module " + assyName.Value + ": " + ex.Message);
+			}
 
 			return assembly;
 		}

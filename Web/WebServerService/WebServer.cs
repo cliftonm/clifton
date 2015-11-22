@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Clifton.ExtensionMethods;
@@ -41,6 +45,18 @@ namespace WebServerService
 			string url = UrlWithPort(ip, port);
 			logger.Log(LogMessage.Create("Listening on " + ip + " (port " + port + ")"));
 			listener.Prefixes.Add(url);
+
+			if (cfg.GetValue("UseLocalIP").to_b())
+			{
+				List<IPAddress> localHostIPs = GetLocalHostIPs();
+				localHostIPs.ForEach(localip =>
+				{
+					url = UrlWithPort("http://" + localip.ToString(), port);
+					logger.Log(LogMessage.Create("Listening on http://" + localip + " (port " + port + ")"));
+					listener.Prefixes.Add(url);
+				});
+				
+			}
 
 			if ( (port != 80) && (cfg.GetValue("ServeWebPages").to_b()) )
 			{
@@ -99,6 +115,27 @@ namespace WebServerService
 			}
 
 			return ret;
+		}
+
+		/// <summary>
+		/// Returns list of IP addresses assigned to localhost network devices, such as hardwired ethernet, wireless, etc.
+		/// </summary>
+		protected List<IPAddress> GetLocalHostIPs()
+		{
+			IPHostEntry host;
+			host = Dns.GetHostEntry(Dns.GetHostName());
+			List<IPAddress> ret = host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork).ToList();
+
+			return ret;
+		}
+
+		protected string GetExternalIP()
+		{
+			string externalIP;
+			externalIP = (new WebClient()).DownloadString("http://checkip.dyndns.org/");
+			externalIP = (new Regex(@"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")).Matches(externalIP)[0].ToString();
+
+			return externalIP;
 		}
     }
 }

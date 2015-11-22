@@ -1,0 +1,870 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>The Clifton Method</title>
+</head>
+
+<body>
+
+<h2>Table of Contents</h2>
+<ul>
+	<li><a href="#Whats_The_Buzz,_Tell_Me_Whats_Happening!">What's The Buzz, 
+	Tell Me What's Happening!</a></li>
+	<li><a href="#Core_Concepts">Core Concepts</a><ul>
+	<li><a href="#Software_As_A_Collection_of_Services">Software as a Collection 
+	of Services</a><ul>
+	<li><a href="#Our_First_Can_of_Worms">Our First Can of Worms</a></li>
+	<li><a href="#Dependency_Injection">Dependency Injection</a></li>
+	<li><a href="#Is_DI/IoC_a_Solution_Looking_for_a_Problem">Is DI/IoC a 
+	Solution Looking for a Problem?</a></li>
+</ul>
+	</li>
+	<li><a href="#Modular_Software_Development">Modular Software Development</a></li>
+</ul>
+	</li>
+	<li><a href="#A_Few_Basic_Services">A Few Basic Services</a><ul>
+	<li><a href="#Console_Logging">Console Logging</a></li>
+	<li><a href="#Reading_.config_File_Data">Reading .config File Data</a></li>
+</ul>
+	</li>
+	<li><a href="#Source_Code">Source Code</a><ul>
+	<li><a href="#Service_Manager">Service Manager</a></li>
+	<li><a href="#Module_Manager">Module Manager</a></li>
+	<li><a href="#Console_Logger">Console Logger</a></li>
+	<li><a href="#Config_Reader">Config Reader</a></li>
+	<li><a href="#Global_Exception_Handler">Global Exception Handler</a></li>
+</ul>
+	</li>
+</ul>
+<p>&nbsp;</p>
+<h2><a name="Whats_The_Buzz,_Tell_Me_Whats_Happening!">What's The Buzz, Tell Me 
+What's Happening!</a></h2>
+<p><img border="0" src="whatsthebuzz.jpg" width="224" height="150"><br>
+(Jesus Christ Superstar)</p>
+<p><i>If you knew the path we're riding,<br>
+You'd understand it less than I</i></p>
+<p>I think this is a great summary of the difficulty of software development, 
+particularly when you use someone else's framework, code fragment, or library -- 
+your understanding of it will usually be less than the author's, and therein 
+lies the core difficulty of software development.&nbsp; With that in mind, 
+here's the buzz on the crazy way that I go about software development.</p>
+<h2><a name="Core_Concepts">Core Concepts</a></h2>
+<p>The two core concepts are:</p>
+<ol>
+	<li>Software as a collection of services</li>
+	<li>Services are modules</li>
+</ol>
+<p>Why?&nbsp; Because I want to write software where behavior can be easily 
+interchanged.&nbsp; Ever write a caching component only to realize later that 
+you want to change how it works?&nbsp; What about a customer wanting data 
+displayed as a pie chart instead of a bar graph?&nbsp; These are but two 
+examples of how writing an application as a collection of services makes it 
+easier to replace the behavior of one particular component of that software.&nbsp; 
+Simulating hardware is another great example, as is the concept of mocking in 
+general -- for example, replacing the persistence engine with an in-memory 
+simulation for testing.</p>
+<h3><a name="Software_As_A_Collection_of_Services">Software as a Collection of 
+Services</a></h3>
+<p><img border="0" src="services.png" width="300" height="182"><br>
+(On Her Majesty's Secret Service)</p>
+<p>(<a href="#Service_Manager">Click here for source code</a>)</p>
+<p>We won't need secret service agents, but we will need a service manager.&nbsp; 
+Services are requested by an interface (as opposed to a literal string name) and 
+a service is registered by associating a concrete implementor with the 
+interface.&nbsp; I'll show many examples soon!</p>
+<p>To bootstrap our application, we instantiate the service manager:</p>
+<pre>static IServiceManager serviceManager;</pre>
+<pre>static void Bootstrap()
+{
+  serviceManager = new ServiceManager();
+}</pre>
+<p>Henceforth, all our interaction with other services is through the service 
+manager.</p>
+<p>A service can be:</p>
+<ul>
+	<li>a singleton -- only one instance of the service will ever exist.&nbsp; 
+	Most services fall in this category</li>
+<li>always a unique instance -- every time you ask the service manager to get 
+you the service, it returns a new instance</li>
+	<li>either -- you have control over whether you want a new instance or an 
+	existing instance. </li>
+</ul>
+<h4><a name="Our_First_Can_of_Worms">Our First Can of Worms</a></h4>
+<p><img border="0" src="gagh.png" width="265" height="192"><br>
+(Klingon Gagh)</p>
+<p>Writing software that is service-based can create a can of worms:</p>
+<ul>
+	<li>What do you do if the service doesn't exist?&nbsp; Am I dependent on 
+	that service?</li>
+<li>Since services aren't named, how do I distinguish, for example, a logger 
+service that writes to a file vs. a logger service that logs to 
+<a href="https://papertrailapp.com/">PaperTrailApp</a>?&nbsp; 
+What if I want to do both?</li>
+	<li>How are service versions handled?</li>
+</ul>
+<p>That second question is a real troublemaker.&nbsp; Using the logging example, 
+let's say I write a service that implements:</p>
+<pre>public interface ILoggerService
+{
+  void Log(string message);
+}</pre>
+<p>and I have two implementations:</p>
+<ol>
+	<li>A file logger</li>
+	<li>A PaperTrailApp logger</li>
+</ol>
+<p>This is all fine and we could replace one service with another.&nbsp; 
+However, if we want to use both services, you'll have to implement them with 
+more semantically descriptive interfaces:</p>
+<pre>public interface IFileLoggerService : ILoggerService
+{
+}
+
+public interface IPaperTrailAppLoggerService : ILoggerService
+{
+}</pre>
+<p>The problem with this is it requires any code that uses one of these services 
+to be married to the implementation, either getting the file logger:</p>
+<pre>ILoggerService logger = serviceManager.Get&lt;IFileLoggerService&gt;();</pre>
+<p>or the PaperTrailApp logger:</p>
+<pre>ILoggerService logger = serviceManager.Get&lt;IPaperTrailAppLoggerService&gt;();</pre>
+<p>This basically defeats the purpose of services as replaceable components!</p>
+<h4><a name="Dependency_Injection">Dependency Injection</a></h4>
+<p><img border="0" src="needle.png" width="300" height="191"></p>
+<p>The solution to this problem has typically been something called Dependency 
+Injection (DI), which, through metadata, assigns a property to the desired 
+implementor.&nbsp; So all you have to code is something like this:</p>
+<pre>public ILoggerService TraceLogger {get;set;}
+public ILoggerService ExceptionLogger {get;set;}</pre>
+<p>and you let some metadata determine what service to use by injecting an 
+instance of the desired implementation into the property.&nbsp; Dependency 
+injection is one side of the coin, where Inversion of Control (IoC) is the 
+other.&nbsp; IoC comes into play because your component doesn't have to, for 
+example, read a configuration file to determine the implementor of an interface, 
+the implementor is determined by some other control mechanism.</p>
+<p>The very sharp needle point of this digression is to point out that going the 
+service route can box you in--what is intended to provide flexibility instead 
+results in rigidity, and, if you want to avoid checking configuration files to 
+determine your implementors, the solution DI/IoC, yet another layer of 
+complexity.&nbsp; Furthermore, the problem can even be shoved around some more, 
+for example:</p>
+<pre>public interface ILoggerService
+{
+  void Log(MessageType type, string message);
+}</pre>
+<p>Here, the implementor allows the caller to give up on the problem and is 
+basically say, &quot;hey, you can give me a message type and I'll figure out how to 
+log the message based on its type.&quot;&nbsp; Here's yet another way to skin the 
+cat, though most likely, the logger will have to either read a configuration 
+file or rely on DI/IoC to figure out how to handle the different message types.</p>
+<h4><a name="Is_DI/IoC_a_Solution_Looking_for_a_Problem">Is DI/IoC a Solution 
+Looking for a Problem?</a></h4>
+<p><img border="0" src="molehill.png" width="300" height="248"></p>
+<p>In my opinion, pretty much yes.&nbsp; In actual use:</p>
+<ul>
+	<li>Services that actually are candidates for being replaced by other 
+	implementations are either at the physical level (hardware) or at the 
+	technology level (SQL Server vs. Postgres, for example.)</li>
+	<li>Configuration data typically applies to &quot;how is this component 
+	initialized&quot;, things like connection strings, REST URL's, timeouts, etc., 
+	and is localized to a particular service's needs.</li>
+	<li>A service usually knows who it needs to talk to.&nbsp; If I have an 
+	exception, it's going to be logged to the exception logger.&nbsp; If I 
+	don't, it's usually a diagnostic of some sort.</li>
+	<li>While DI/IoC sounds like it solves a problem, from my experience, once 
+	the metadata injection information is set, it's never touched again, proving 
+	that DI/IoC is solving a problem that doesn't actually exist.</li>
+</ul>
+<h3><a name="Modular_Software_Development">Modular Software Development</a></h3>
+<p><img border="0" src="monoliths.png" width="247" height="303"><br>
+(2001 Space Odyssey)</p>
+<p>(<a href="#Service_Manager">click here for source code</a>)</p>
+<p>Software development should not be monolithic.&nbsp; It should be modular, 
+meaning that modules implement the &quot;how&quot; and can be removed, added, and replaced 
+as the behavioral requirements of the application changes.&nbsp; It's fine to 
+have all your code work through interfaces, but you still end up with a modular 
+implementation!&nbsp; And guess what?&nbsp; Services are implemented as modules, and the module 
+manager is itself a service.&nbsp; So after bootstrapping the service manager, 
+we:</p>
+<ol>
+	<li>register the module manager</li>
+	<li>get an instance of the module manager</li>
+	<li>tell it to register the modules in our application</li>
+</ol>
+<pre>static void Bootstrap()
+{
+  serviceManager = new ServiceManager();
+  serviceManager.RegisterSingleton&lt;IModuleManager, ModuleManager&gt;();
+
+  try
+  {
+    IModuleManager moduleMgr = serviceManager.Get&lt;IModuleManager&gt;();
+    moduleMgr.RegisterModules(XmlFileName.Create(&quot;modules.xml&quot;));
+  }
+  catch (Exception ex)
+  {
+    // report the error!
+  }
+}</pre>
+<p>The format of the XML would look like this:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='[your module assembly name here].dll'/&gt;
+&lt;/Modules&gt;</pre>
+<h2><a name="A_Few_Basic_Services">A Few Basic Services</a></h2>
+<p><img border="0" src="needs.png" width="300" height="201"><br>
+(Maslow's Hierarchy of Needs)</p>
+<p>So let's start with a few basic services.&nbsp; You guessed it -- a couple 
+different logger services!&nbsp; This covers the basic physiological needs of an 
+decent program!</p>
+<h3><a name="Console_Logging">Console Logging</a></h3>
+<p><img border="0" src="console1.png" width="323" height="112"></p>
+<p>(<a href="#Console_Logger">click here for source code</a>)</p>
+<p>The console logger, like all our modules:</p>
+<ol>
+	<li>implements the module entry point</li>
+	<li>usually registers the service that the module contains, though not all 
+	modules have services.</li>
+</ol>
+<p>Let's define our one and only module in <code>modules.xml</code>:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.ConsoleLoggerService.dll'/&gt;
+&lt;/Modules&gt;
+</pre>
+<p>We can now write a service/module based &quot;Hello World&quot; (in the 
+source code, this is in ServiceDemo1):</p>
+<pre>using System;
+using System.Reflection;
+
+using Clifton.CoreSemanticTypes;
+using Clifton.ModuleManagement;
+using Clifton.ServiceInterfaces;
+using Clifton.ServiceManagement;
+
+namespace CashlessServer
+{
+  class Program
+  {
+    static IServiceManager serviceManager;
+
+    static void Main(string[] args)
+    {
+      Bootstrap();
+      ILoggerService logger = serviceManager.Get&lt;ILoggerService&gt;();
+      logger.Log(LogMessage.Create(&quot;Hello world.&quot;));
+      Console.ReadLine();
+    }
+
+    static void Bootstrap()
+    {
+      serviceManager = new ServiceManager();
+      serviceManager.RegisterSingleton&lt;IModuleManager, ModuleManager&gt;();
+
+      try
+      {
+        IModuleManager moduleMgr = serviceManager.Get&lt;IModuleManager&gt;();
+        moduleMgr.RegisterModules(XmlFileName.Create(&quot;modules.xml&quot;));
+        serviceManager.FinishedInitialization();
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex.Message);
+        Console.WriteLine(ex.StackTrace);
+
+        if (ex is ReflectionTypeLoadException)
+        {
+          ReflectionTypeLoadException exl = ex as ReflectionTypeLoadException;
+          Exception[] exceptions = exl.LoaderExceptions;
+
+          foreach (Exception exle in exceptions)
+          {
+            Console.WriteLine(exle.Message);
+          }
+        }
+
+        Environment.Exit(1);
+      }
+    }
+  }
+}</pre>
+<h3><a name="Reading_.config_File_Data">Reading .config File Data</a></h3>
+<p><img border="0" src="console2.png" width="323" height="112"></p>
+<p>(<a href="#Config_Reader">click here for source code</a>)</p>
+<p>Another very core need of most applications is to read .config information.&nbsp; 
+Again, we implement the module entry point and register the service.&nbsp; Now 
+we can use the service (in the source code, this is in ServiceDemo1).&nbsp; 
+First, our <code>.config</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;configuration&gt;
+  &lt;startup&gt; 
+    &lt;supportedRuntime version=&quot;v4.0&quot; sku=&quot;.NETFramework,Version=v4.5&quot; /&gt;
+  &lt;/startup&gt;
+  &lt;appSettings&gt;
+    &lt;add key=&quot;Message&quot; value=&quot;Hello World!&quot;/&gt;
+  &lt;/appSettings&gt;
+&lt;/configuration&gt;</pre>
+<p>Second, our <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='Clifton.AppConfigService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>And thirdly, our new <code>Main</code>:</p>
+<pre>static void Main(string[] args)
+{
+  Bootstrap();
+  ILoggerService logger = serviceManager.Get&lt;ILoggerService&gt;();
+  IAppConfigService config = serviceManager.Get&lt;IAppConfigService&gt;();
+  logger.Log(LogMessage.Create(config.GetValue(&quot;Message&quot;)));
+  Console.ReadLine();
+}</pre>
+<h3><a name="Exception_Handling">Exception Handling</a></h3>
+<p><img border="0" src="console3.png" width="995" height="140"></p>
+<p>(<a href="#Global_Exception_Handler">click here for source code</a>)</p>
+<p><img border="0" src="parachute.png" width="300" height="375"></p>
+<p>Moving up the Maslow hierarchy of needs, we can implement a service that adds some 
+safety to our application, at least with regards to catching unhandled 
+exceptions.&nbsp; Here we finally have a service that employs another service.&nbsp; 
+Here we also see a module that initializes a service whose interface has no 
+implementation -- technically we don't even need to implement the module as a 
+service.</p>
+<p>Here's the new <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='Clifton.AppConfigService.dll'/&gt;
+  &lt;Module AssemblyName='Clifton.ConsoleCriticalExceptionService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>And the updated <code>Main</code> for testing exception handling:</p>
+<pre>static void Main(string[] args)
+{
+  Bootstrap();
+  ILoggerService logger = serviceManager.Get&lt;ILoggerService&gt;();
+  IAppConfigService config = serviceManager.Get&lt;IAppConfigService&gt;();
+  logger.Log(LogMessage.Create(config.GetValue(&quot;Message&quot;)));
+  throw new ApplicationException(&quot;Here's a global exception being handled!&quot;);
+  Console.ReadLine();
+}</pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><a name="Source_Code">Source Code</a></h2>
+<h3><a name="Service_Manager">Service Manager</a></h3>
+<pre>using System;
+using System.Collections.Concurrent;
+
+using Clifton.Assertions;
+using Clifton.ExtensionMethods;
+using Clifton.ServiceInterfaces;
+
+namespace Clifton.ServiceManagement
+{
+  public class ServiceManager : ServiceBase, IServiceManager
+  {
+    protected ConcurrentDictionary&lt;Type, Type&gt; interfaceServiceMap;
+    protected ConcurrentDictionary&lt;Type, IService&gt; singletons;
+    protected ConcurrentDictionary&lt;Type, ConstructionOption&gt; constructionOption;
+
+    protected object locker = new object();
+
+    public ServiceManager()
+    {
+      interfaceServiceMap = new ConcurrentDictionary&lt;Type, Type&gt;();
+      singletons = new ConcurrentDictionary&lt;Type, IService&gt;();
+      constructionOption = new ConcurrentDictionary&lt;Type, ConstructionOption&gt;();
+    }
+
+    /// &lt;summary&gt;
+    /// Register a service S that can be instantiated as a singleton or multiple instance that implements interface I.
+    /// Both S and I must implement IService.
+    /// &lt;/summary&gt;
+    public virtual void Register&lt;I, S&gt;()
+      where I : IService
+      where S : IService
+    {
+      Type interfaceType = typeof(I);
+      Type serviceType = typeof(S);
+      Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), &quot;The service &quot; + GetName&lt;S&gt;() + &quot; has already been registered.&quot;);
+      interfaceServiceMap[interfaceType] = serviceType;
+      constructionOption[interfaceType] = ConstructionOption.SingletonOrInstance;
+    }
+
+    public virtual void RegisterInstanceOnly&lt;I, S&gt;()
+      where I : IService
+      where S : IService
+    {
+      Type interfaceType = typeof(I);
+      Type serviceType = typeof(S);
+      Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), &quot;The service &quot; + GetName&lt;S&gt;() + &quot; has already been registered.&quot;);
+      interfaceServiceMap[interfaceType] = serviceType;
+      constructionOption[interfaceType] = ConstructionOption.AlwaysInstance;
+    }
+
+    public virtual void RegisterSingleton&lt;I, S&gt;()
+      where I : IService
+      where S : IService
+    {
+      Type interfaceType = typeof(I);
+      Type serviceType = typeof(S);
+      Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), &quot;The service &quot; + GetName&lt;S&gt;() + &quot; has already been registered.&quot;);
+      interfaceServiceMap[interfaceType] = serviceType;
+      constructionOption[interfaceType] = ConstructionOption.AlwaysSingleton;
+      RegisterSingletonBaseInterfaces(interfaceType, serviceType);
+
+      // Singletons are always instantiated immediately so that they can be initialized
+      // for global behaviors. A good example is the global exception handler services.
+      CreateAndRegisterSingleton&lt;I&gt;();
+    }
+
+    public override void FinishedInitialization()
+    {
+      singletons.ForEach(kvp =&gt; kvp.Value.FinishedInitialization());
+    }
+
+    public virtual T Get&lt;T&gt;()
+      where T : IService
+    {
+      IService instance = null;
+      VerifyRegistered&lt;T&gt;();
+      Type interfaceType = typeof(T);
+
+      switch (constructionOption[interfaceType])
+      {
+        case ConstructionOption.AlwaysInstance:
+          instance = CreateInstance&lt;T&gt;();
+          instance.Initialize(this);
+          break;
+
+        case ConstructionOption.AlwaysSingleton:
+          instance = CreateOrGetSingleton&lt;T&gt;();
+          break;
+
+        default:
+          throw new ApplicationException(&quot;Cannot determine whether the service &quot; + GetName&lt;T&gt;() + &quot; should be created as a unique instance or as a singleton.&quot;);
+      }
+
+      return (T)instance;
+    }
+
+    /// &lt;summary&gt;
+    /// If allowed, returns a new instance of the service implement interface T.
+    /// &lt;/summary&gt;
+    public virtual T GetInstance&lt;T&gt;()
+      where T : IService
+    {
+      VerifyRegistered&lt;T&gt;();
+      VerifyInstanceOption&lt;T&gt;();
+      IService instance = CreateInstance&lt;T&gt;();
+      instance.Initialize(this);
+
+      return (T)instance;
+    }
+
+    /// &lt;summary&gt;
+    /// If allowed, creates and registers or returns an existing service that implements interface T.
+    /// &lt;/summary&gt;
+    public virtual T GetSingleton&lt;T&gt;()
+      where T : IService
+    {
+      VerifyRegistered&lt;T&gt;();
+      VerifySingletonOption&lt;T&gt;();
+      IService instance = CreateOrGetSingleton&lt;T&gt;();
+
+      return (T)instance;
+    }
+
+    /// &lt;summary&gt;
+    /// Return a registered singleton or create it and register it if it isn't registered.
+    /// &lt;/summary&gt;
+    protected IService CreateOrGetSingleton&lt;T&gt;()
+      where T : IService
+    {
+      Type t = typeof(T);
+      IService instance;
+
+      lock (locker)
+      {
+        if (!singletons.TryGetValue(t, out instance))
+        {
+          instance = CreateAndRegisterSingleton&lt;T&gt;();
+        }
+      }
+
+      return instance;
+    }
+
+    /// &lt;summary&gt;
+    /// Create and register an instance.
+    /// &lt;/summary&gt;
+    protected virtual IService CreateAndRegisterSingleton&lt;T&gt;()
+      where T : IService
+    {
+      IService instance = CreateInstance&lt;T&gt;();
+      Register&lt;T&gt;(instance);
+      instance.Initialize(this);
+
+      return instance;
+    }
+
+    /// &lt;summary&gt;
+    /// Singletons are allowed to also register their base type so that applications can reference singleton services by the common type
+    /// rather than their instance specific interface type.
+    /// &lt;/summary&gt;
+    protected virtual void RegisterSingletonBaseInterfaces(Type interfaceType, Type serviceType)
+    {
+      Type[] itypes = interfaceType.GetInterfaces();
+
+      foreach (Type itype in itypes)
+      {
+        if (itype.Name != &quot;IService&quot;)
+        {
+          interfaceServiceMap[itype] = serviceType;
+          constructionOption[itype] = ConstructionOption.AlwaysSingleton;
+        }
+      }
+    }
+
+    /// &lt;summary&gt;
+    /// Interface T must be registered.
+    /// &lt;/summary&gt;
+    protected void VerifyRegistered&lt;T&gt;()
+      where T : IService
+    {
+      Type t = typeof(T);
+      Assert.That(interfaceServiceMap.ContainsKey(t), &quot;The service &quot; + GetName&lt;T&gt;() + &quot; has not been registered.&quot;);
+    }
+
+    /// &lt;summary&gt;
+    /// Create and return the concrete instance that implements service interface T.
+    /// &lt;/summary&gt;
+    protected IService CreateInstance&lt;T&gt;()
+      where T : IService
+    {
+      Type t = typeof(T);
+      IService instance = (IService)Activator.CreateInstance(interfaceServiceMap[t]);
+
+      return instance;
+    }
+
+    /// &lt;summary&gt;
+    /// Register the service instance that implements the service interface T into the singleton dictionary.
+    /// &lt;/summary&gt;
+    protected void Register&lt;T&gt;(IService instance)
+      where T : IService
+    {
+      Type t = typeof(T);
+      singletons[t] = instance;
+    }
+
+    protected void VerifyInstanceOption&lt;T&gt;()
+      where T : IService
+    {
+      Type t = typeof(T);
+      ConstructionOption opt = constructionOption[t];
+      Assert.That(opt == ConstructionOption.AlwaysInstance || opt == ConstructionOption.SingletonOrInstance, &quot;The service &quot; + GetName&lt;T&gt;() + &quot; does not support instance creation.&quot;);
+    }
+
+    protected void VerifySingletonOption&lt;T&gt;()
+      where T : IService
+    {
+      Type t = typeof(T);
+      ConstructionOption opt = constructionOption[t];
+      Assert.That(opt == ConstructionOption.AlwaysSingleton || opt == ConstructionOption.SingletonOrInstance, &quot;The service &quot; + GetName&lt;T&gt;() + &quot; does not support singleton creation.&quot;);
+    }
+
+    protected string GetName&lt;T&gt;()
+    {
+      return typeof(T).Name;
+    }
+  }
+}</pre>
+<p>(<a href="#Software_As_A_Collection_of_Services">go back</a>)</p>
+<h3><a name="Module_Manager">Module Manager</a></h3>
+<pre>using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Xml;
+using System.Xml.Linq;
+
+using Clifton.Assertions;
+using Clifton.CoreSemanticTypes;
+using Clifton.ExtensionMethods;
+using Clifton.Semantics;
+using Clifton.ServiceInterfaces;
+
+namespace Clifton.ModuleManagement
+{
+  public class ModuleManager : ServiceBase, IModuleManager
+  {
+    public ModuleManager()
+    {
+    }
+
+    /// &lt;summary&gt;
+    /// Register all modules specified in the XML filename so that the application
+    /// can gain access to the services provided in those modules.
+    /// &lt;/summary&gt;
+    public virtual void RegisterModules(XmlFileName filename)
+    {
+      List&lt;AssemblyFileName&gt; moduleFilenames = GetModuleList(filename);
+      List&lt;Assembly&gt; modules = LoadModules(moduleFilenames);
+      List&lt;IModule&gt; registrants = InstantiateRegistrants(modules);
+      InitializeRegistrants(registrants);
+    }
+
+    /// &lt;summary&gt;
+    /// Return the list of assembly names specified in the XML file so that
+    /// we know what assemblies are considered modules as part of the application.
+    /// &lt;/summary&gt;
+    protected virtual List&lt;AssemblyFileName&gt; GetModuleList(XmlFileName filename)
+    {
+      Assert.That(File.Exists(filename.Value), &quot;Module definition file &quot; + filename.Value + &quot; does not exist.&quot;);
+      XDocument xdoc = XDocument.Load(filename.Value);
+      return GetModuleList(xdoc);
+    }
+
+    /// &lt;summary&gt;
+    /// Load the assemblies and return the list of loaded assemblies. In order to register
+    /// services that the module implements, we have to load the assembly.
+    /// &lt;/summary&gt;
+    protected virtual List&lt;Assembly&gt; LoadModules(List&lt;AssemblyFileName&gt; moduleFilenames)
+    {
+      List&lt;Assembly&gt; modules = new List&lt;Assembly&gt;();
+
+      moduleFilenames.ForEach(a =&gt;
+      {
+        Assembly assembly = LoadAssembly(a);
+        modules.Add(assembly);
+      });
+
+      return modules;
+    }
+
+    /// &lt;summary&gt;
+    /// Load and return an assembly given the assembly filename so we can proceed with
+    /// instantiating the module and so the module can register its services.
+    /// &lt;/summary&gt;
+    protected virtual Assembly LoadAssembly(AssemblyFileName assyName)
+    {
+      FullPath fullPath = GetFullPath(assyName);
+      Assembly assembly = Assembly.LoadFile(fullPath.Value);
+
+      return assembly;
+    }
+
+    /// &lt;summary&gt;
+    /// Returns the list of modules specified in the XML document so we know what
+    /// modules to instantiate.
+    /// &lt;/summary&gt;
+    protected virtual List&lt;AssemblyFileName&gt; GetModuleList(XDocument xdoc)
+    {
+      List&lt;AssemblyFileName&gt; assemblies = new List&lt;AssemblyFileName&gt;();
+        (from module in xdoc.Element(&quot;Modules&quot;).Elements(&quot;Module&quot;)
+        select module.Attribute(&quot;AssemblyName&quot;).Value).ForEach(s =&gt; assemblies.Add(AssemblyFileName.Create(s)));
+
+      return assemblies;
+    }
+
+    /// &lt;summary&gt;
+    /// Instantiate and return the list of registratants -- assemblies with classes that implement IModule.
+    /// The registrants is one and only one class in the module that implements IModule, which we can then
+    /// use to call the Initialize method so the module can register its services.
+    /// &lt;/summary&gt;
+    protected virtual List&lt;IModule&gt; InstantiateRegistrants(List&lt;Assembly&gt; modules)
+    {
+      List&lt;IModule&gt; registrants = new List&lt;IModule&gt;();
+      modules.ForEach(m =&gt;
+      {
+        IModule registrant = InstantiateRegistrant(m);
+        registrants.Add(registrant);
+      });
+
+      return registrants;
+    }
+
+    /// &lt;summary&gt;
+    /// Instantiate a registrant. A registrant must have one and only one class that implements IModule.
+    /// The registrant is one and only one class in the module that implements IModule, which we can then
+    /// use to call the Initialize method so the module can register its services.
+    /// &lt;/summary&gt;
+    protected virtual IModule InstantiateRegistrant(Assembly module)
+    {
+      var classesImplementingInterface = module.GetTypes().
+      Where(t =&gt; t.IsClass).
+        Where(c =&gt; c.GetInterfaces().Where(i =&gt; i.Name == &quot;IModule&quot;).Count() &gt; 0);
+
+      Assert.That(classesImplementingInterface.Count() &lt;= 1, &quot;Module can only have one class that implements IModule&quot;);
+      Assert.That(classesImplementingInterface.Count() != 0, &quot;Module does not have any classes that implement IModule&quot;);
+
+      Type implementor = classesImplementingInterface.Single();
+      IModule instance = Activator.CreateInstance(implementor) as IModule;
+
+      return instance;
+    }
+
+    /// &lt;summary&gt;
+    /// Initialize each registrant by passing in the service manager. This allows the module
+    /// to register the services it provides.
+    /// &lt;/summary&gt;
+    protected virtual void InitializeRegistrants(List&lt;IModule&gt; registrants)
+    {
+      registrants.ForEach(r =&gt; r.InitializeServices(ServiceManager));
+    }
+
+    /// &lt;summary&gt;
+    /// Return the full path of the executing application (here we assume that ModuleManager.dll is in that path) and concatenate the assembly name of the module.
+    /// .NET requires the the full path in order to load the associated assembly.
+    /// &lt;/summary&gt;
+    protected virtual FullPath GetFullPath(AssemblyFileName assemblyName)
+    {
+      string appLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+      string fullPath = Path.Combine(appLocation, assemblyName.Value);
+
+      return FullPath.Create(fullPath);
+    }
+  }
+}  </pre>
+<p>(<a href="#Modular_Software_Development">go back</a>)</p>
+<h3><a name="Console_Logger">Console Logger</a></h3>
+<pre>using System;
+
+using Clifton.Semantics;
+using Clifton.ServiceInterfaces;
+
+namespace Clifton.ConsoleLoggerService
+{
+  public class LoggerModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IConsoleLoggerService, LoggerService&gt;();
+    }
+  }
+
+  public class LoggerService : ServiceBase, IConsoleLoggerService
+  {
+    public virtual void Log(LogMessage msg)
+    {
+      Console.WriteLine(DateTime.Now.ToString(&quot;MM/dd/yyyy HH:mm:ss : &quot;) + msg.Value);
+    }
+
+    public virtual void Log(ExceptionMessage msg)
+    {
+      Console.WriteLine(DateTime.Now.ToString(&quot;MM/dd/yyyy HH:mm:ss EXCEPTION : &quot;) + msg.Value);
+    }
+
+    public virtual void Log(Exception ex)
+    {
+      Console.WriteLine(DateTime.Now.ToString(&quot;MM/dd/yyyy HH:mm:ss EXCEPTION : &quot;) + ex.Message);
+      Console.WriteLine(DateTime.Now.ToString(&quot;MM/dd/yyyy HH:mm:ss EXCEPTION : &quot;) + ex.StackTrace);
+    }
+  }
+}</pre>
+<p>(<a href="#Console_Logging">go back</a>)</p>
+<h3><a name="Config_Reader">Config Reader</a></h3>
+<pre>using System;
+using System.Configuration;
+
+using Clifton.ServiceInterfaces;
+
+namespace Clifton.AppConfigService
+{
+  public class AppConfigModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IAppConfigService, ConfigService&gt;();
+    }
+  }
+
+  public class ConfigService : ServiceBase, IAppConfigService
+  {
+    public virtual string GetConnectionString(string key)
+    {
+      return ConfigurationManager.ConnectionStrings[key].ConnectionString;
+    }
+
+    public virtual string GetValue(string key)
+    {
+      return ConfigurationManager.AppSettings[key];
+    }
+  }
+}</pre>
+<p>(<a href="#Reading_.config_File_Data">go back</a>)</p>
+<h3><a name="Global_Exception_Handler">Global Exception Handler</a></h3>
+<pre>using System;
+
+using Clifton.ServiceInterfaces;
+
+namespace Clifton.ConsoleCriticalExceptionService
+{
+  public class ConsoleCriticalExceptionModule : IModule
+  {
+    public virtual void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IConsoleCriticalExceptionService, ConsoleCriticalException&gt;();
+    }
+  }
+
+  public class ConsoleCriticalException : ServiceBase, IConsoleCriticalExceptionService
+  {
+    public override void Initialize(IServiceManager svcMgr)
+    {
+      base.Initialize(svcMgr);
+      AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
+    }
+
+    protected virtual void GlobalExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+    {
+      try
+      {
+        ILoggerService logger = ServiceManager.Get&lt;ILoggerService&gt;();
+
+        if (e.ExceptionObject is Exception)
+        {
+          logger.Log((Exception)e.ExceptionObject);
+        }
+        else
+        {
+          logger.Log(ExceptionMessage.Create(e.ExceptionObject.GetType().Name));
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex.Message + &quot;\r\n&quot; + ex.StackTrace);
+      }
+
+      Environment.Exit(1);
+    }
+  }
+}</pre>
+<p>(<a href="#Exception_Handling">go back</a>)</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img border="0" src="scream.png" width="236" height="208"><br>
+(Edvard Much, The Scream)</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

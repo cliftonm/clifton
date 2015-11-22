@@ -20,7 +20,7 @@ namespace Clifton.ConsoleCriticalExceptionService
 			AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
 		}
 
-		void GlobalExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+		protected virtual void GlobalExceptionHandler(object sender, UnhandledExceptionEventArgs e)
 		{
 			try
 			{
