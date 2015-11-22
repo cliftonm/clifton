@@ -31,6 +31,11 @@
 	<li><a href="#Having_Fun_Yet">Having Fun Yet?</a></li>
 </ul>
 	</li>
+	<li><a href="#Lets_Write_a_Game!">Let's Write a Multiplayer Game!</a><ul>
+	<li><a href="#Poloron_Services">Poloron Services</a></li>
+	<li><a href="#The_Poloron_Rendering_Service">The Poloron Rendering Service</a></li>
+</ul>
+	</li>
 	<li><a href="#Source_Code">Source Code</a><ul>
 	<li><a href="#Service_Manager">Service Manager</a></li>
 	<li><a href="#Module_Manager">Module Manager</a></li>
@@ -51,7 +56,9 @@ You'd understand it less than I</i></p>
 particularly when you use someone else's framework, code fragment, or library -- 
 your understanding of it will usually be less than the author's, and therein 
 lies the core difficulty of software development.&nbsp; With that in mind, 
-here's the buzz on the crazy way that I go about software development.</p>
+here's the buzz on the crazy way that I go about software development.&nbsp; I 
+call it The Clifton Method, so now you know what to put on your resume if you 
+use any of this code!</p>
 <h2><a name="Core_Concepts">Core Concepts</a></h2>
 <p>The two core concepts are:</p>
 <ol>
@@ -356,6 +363,50 @@ service.</p>
 <p>I certainly am -- it's fun to add a module in an XML file and whamo, there's 
 new functionality!&nbsp; Of course, it's also fun to unplug things, but that 
 won't work too well.</p>
+<h2><a name="Lets_Write_a_Game!">Let's Write a Multiplayer Game!</a></h2>
+<p><img border="0" src="thegame.png" width="300" height="165"><br>
+(The Game, Star Trek Next Generation)</p>
+<p>More than 353 years before The Game was invented, I had written (on Windows 
+3.1 with WinG) a game I called &quot;Magneto&quot;, in which the goal was to sink the puck 
+into a sinkhole, thus taking you to the next level.&nbsp; Your puck could be 
+polarized positively or negatively, which would attract or repel it from other 
+pucks (or poles) of opposite or like charges.&nbsp; In the harder levels, both 
+the sinkhole and the non-player pucks would move, and non-player pucks would 
+occasionally reverse polarity.&nbsp; So here's a modern recreation of the game, 
+which I'll call &quot;Poloron&quot; to avoid the boring name &quot;The Game&quot; and the copyright 
+lawsuit for &quot;Magneto.&quot;&nbsp; And of course, we'll write this using The Clifton 
+Method!&nbsp; Now, the first incarnation, some 30 years ago (yet another piece 
+of code I'm resurrecting from the past) was single player.&nbsp; To really 
+showcase this architecture, and a few things I haven't talked about yet, I'll 
+write this is a multiplayer game which you can run on an intranet with a small 
+server, or against random players on poloron.net.&nbsp; Be warned, the graphics 
+are going to be rather two-dimensional, like in the original W3.1 game.</p>
+<p>Hey Guys -- if someone wants to implement this on mobile devices, let me 
+know!</p>
+<h3><a name="Poloron_Services">Poloron Services</a></h3>
+<p>First, let's define a few services:</p>
+<ol>
+	<li>The Poloron rendering service.&nbsp; This handles the rendering of the 
+	surface, sprites, and all other game elements.&nbsp; We could break this 
+	apart into several smaller services, but it's so simple, I don't see the 
+	need.</li>
+	<li>The physics engine service.&nbsp; Things bounce around, like billiard 
+	balls, and charge polarization follows a basic force algorithm, so 
+	everything we need for the physics of the game will be in this service.</li>
+	<li>The controller service.&nbsp; Only left and right mouse button clicks 
+	are required to play the game, so this will be a simple service.</li>
+	<li>The cloud client service.&nbsp; We'll implement a client socket service 
+	to provide communication between the server and the client (player's) 
+	computer and support the messages we need to send and receive.</li>
+	<li>The cloud server service.&nbsp; The server-side, which coordinates 
+	registering players and messages between players.</li>
+</ol>
+<h3><a name="The_Poloron_Rendering_Service">The Poloron Rendering Service</a></h3>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
@@ -872,6 +923,9 @@ namespace Clifton.ConsoleCriticalExceptionService
 <p>&nbsp;</p>
 <p><img border="0" src="scream.png" width="236" height="208"><br>
 (Edvard Much, The Scream)</p>
+<p>&nbsp;</p>
+
+<p>&nbsp;</p>
 <p>&nbsp;</p>
 
 </body>
