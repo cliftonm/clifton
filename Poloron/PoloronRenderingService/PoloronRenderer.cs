@@ -21,14 +21,24 @@ namespace PoloronRenderingService
 	{
 		protected GraphicsPanel surface;
 
+		public PoloronRenderer()
+		{
+		}
+
 		public Form CreateForm()
 		{
 			Form form = new Form();
 			IAppConfigService cfgSvc = ServiceManager.Get<IAppConfigService>();
 			SetupLocationAndSize(form, cfgSvc);
 			surface = SetupRenderingSurface(form, cfgSvc);
+			SetupPoloronColors(cfgSvc);			
 
 			return form;
+		}
+
+		public void SetPoloronState(PoloronId id, XPos x, YPos y, PoloronState state)
+		{
+			surface.SetPoloronState(id, x, y, state);
 		}
 
 		protected void SetupLocationAndSize(Form form, IAppConfigService cfgSvc)
@@ -47,6 +57,13 @@ namespace PoloronRenderingService
 			form.Controls.Add(surface);
 
 			return surface;
+		}
+
+		protected void SetupPoloronColors(IAppConfigService cfgSvc)
+		{
+			surface.NeutralColor = cfgSvc.GetValue("NeutralColor").ToColor();
+			surface.NegativeColor = cfgSvc.GetValue("NegativeColor").ToColor();
+			surface.PositiveColor = cfgSvc.GetValue("PositiveColor").ToColor();
 		}
 	}
 }

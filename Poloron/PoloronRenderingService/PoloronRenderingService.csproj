@@ -45,6 +45,7 @@
     <Compile Include="GraphicsPanel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Poloron.cs" />
     <Compile Include="PoloronRenderer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

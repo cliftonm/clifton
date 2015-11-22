@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+
+using Clifton.ExtensionMethods;
+
+using PoloronInterfaces;
 
 namespace PoloronRenderingService
 {
@@ -20,19 +25,60 @@ namespace PoloronRenderingService
 			}
 		}
 
+		public Color NeutralColor
+		{
+			get { return neutralColor; }
+			set
+			{
+				neutralColor = value;
+				neutralBrush = new SolidBrush(neutralColor);
+				poloronBrushes[(int)PoloronState.Neutral] = neutralBrush;
+			}
+		}
+
+		public Color NegativeColor
+		{
+			get { return negativeColor; }
+			set
+			{
+				negativeColor = value;
+				negativeBrush = new SolidBrush(negativeColor);
+				poloronBrushes[(int)PoloronState.Negative] = negativeBrush;
+			}
+		}
+
+		public Color PositiveColor
+		{
+			get { return positiveColor; }
+			set
+			{
+				positiveColor = value;
+				positiveBrush = new SolidBrush(positiveColor);
+				poloronBrushes[(int)PoloronState.Positive] = positiveBrush;
+			}
+		}
+
+		protected Brush[] poloronBrushes = new Brush[3];
+		protected Color neutralColor;
+		protected Color negativeColor;
+		protected Color positiveColor;
 		protected Color gridColor;
 		protected Pen gridPen = new Pen(Color.Black, 1);
+		protected Brush neutralBrush;
+		protected Brush negativeBrush;
+		protected Brush positiveBrush;
+		protected Dictionary<int, Poloron> polorons;
 
 		public GraphicsPanel(Color backColor)
 		{
 			DoubleBuffered = true;
 			BackgroundBrush = new SolidBrush(backColor);
+			polorons = new Dictionary<int, Poloron>();
 		}
 
-		public void DrawGrid(Graphics gr)
+		public void SetPoloronState(PoloronId id, XPos x, YPos y, PoloronState state)
 		{
-			DrawVerticalLines(gr);
-			DrawHorizontalLines(gr);
+			polorons[id.Value] = new Poloron() { X = x.Value, Y = y.Value, State = state };
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -40,6 +86,18 @@ namespace PoloronRenderingService
 			base.OnPaint(e);
 			e.Graphics.FillRectangle(BackgroundBrush, RectRegion);
 			DrawGrid(e.Graphics);
+			DrawPolorons(e.Graphics);
+		}
+
+		protected void DrawGrid(Graphics gr)
+		{
+			DrawVerticalLines(gr);
+			DrawHorizontalLines(gr);
+		}
+
+		protected void DrawPolorons(Graphics gr)
+		{
+			polorons.Values.ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.X - 20, p.Y - 20, 40, 40));
 		}
 
 		protected void DrawVerticalLines(Graphics gr)
