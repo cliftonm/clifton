@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Bootstrap.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="GameTick.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

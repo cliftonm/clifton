@@ -19,22 +19,22 @@ namespace PoloronGame
 	{
 		public void Process(ISemanticProcessor proc, IMembrane membrane, PolarizeChargeUp st)
 		{
-			Program.renderer.SetState(PoloronId.Create(0), PoloronState.Charging);
+			Program.SetState(PoloronId.Create(0), PoloronState.Charging);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, PolarizeNegative st)
 		{
-			Program.renderer.SetState(PoloronId.Create(0), PoloronState.Negative);
+			Program.SetState(PoloronId.Create(0), PoloronState.Negative);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, PolarizePositive st)
 		{
-			Program.renderer.SetState(PoloronId.Create(0), PoloronState.Positive);
+			Program.SetState(PoloronId.Create(0), PoloronState.Positive);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, PolarizeNeutral st)
 		{
-			Program.renderer.SetState(PoloronId.Create(0), PoloronState.Neutral);
+			Program.SetState(PoloronId.Create(0), PoloronState.Neutral);
 		}
 	}
 }

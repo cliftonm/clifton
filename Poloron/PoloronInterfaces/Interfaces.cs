@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Collections.Generic;
+using System.Windows.Forms;
 
 using Clifton.ServiceInterfaces;
 
@@ -7,13 +8,11 @@ namespace PoloronInterfaces
 	public interface IPoloronRenderingService : IService
 	{
 		Control Surface { get; }
+		List<Poloron> Polorons { get; set; }
+		Gate Gate { get; set; }
 
 		Form CreateForm();
-		void CreatePoloron(PoloronId id, Point2D location, Vector2D velocity, PoloronState state);
-		void CreateGate(Point2D position, Vector2D velocity);
-		void SetState(PoloronId id, PoloronState state);
-		void Start();
-		void Stop();
+		void Render();
 	}
 
 	public interface IPoloronPhysicsService : IService

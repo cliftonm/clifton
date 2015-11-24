@@ -22,28 +22,18 @@ namespace PoloronRenderingService
 	public class PoloronRenderer : ServiceBase, IPoloronRenderingService
 	{
 		public Control Surface { get { return surface; } }
+		public List<Poloron> Polorons { get; set; }
+		public Gate Gate { get; set; }
 
-		public List<Poloron> Polorons { get { return polorons; } }
-		public Gate Gate { get { return gate; } }
-
-		protected IPoloronPhysicsService physics;
 		protected GraphicsPanel surface;
-		protected List<Poloron> polorons;
-		protected Gate gate;
-		protected Timer refreshTimer;
 
 		public PoloronRenderer()
 		{
-			polorons = new List<Poloron>();
-			refreshTimer = new Timer();
-			refreshTimer.Interval = 1000 / 60;	// 60 times a second.
-			refreshTimer.Tick += UpdateSurface;
 		}
 
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();
-			physics = ServiceManager.Get<IPoloronPhysicsService>();
 		}
 
 		public Form CreateForm()
@@ -58,32 +48,9 @@ namespace PoloronRenderingService
 			return form;
 		}
 
-		public void Start()
+		public void Render()
 		{
-			refreshTimer.Start();
-		}
-
-		public void Stop()
-		{
-			refreshTimer.Stop();
-		}
-
-		// TODO: Config for poloron and gate radius
-
-		public void CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
-		{
-			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 20 };
-			polorons.Add(p);
-		}
-
-		public void CreateGate(Point2D position, Vector2D velocity)
-		{
-			gate = new Gate() { Position = position, Velocity = velocity, Radius = 40 };
-		}
-
-		public void SetState(PoloronId id, PoloronState state)
-		{
-			polorons.Single(p => p.Id.Value == id.Value).State = state;
+			surface.Invalidate();
 		}
 
 		protected void SetupLocationAndSize(Form form, IAppConfigService cfgSvc)
@@ -115,57 +82,6 @@ namespace PoloronRenderingService
 		protected void SetupGate(IAppConfigService cfgSvc)
 		{
 			surface.GateColor = cfgSvc.GetValue("GateColor").ToColor();
-		}
-
-		protected void UpdateSurface(object sender, EventArgs e)
-		{
-			MovePolorons();
-			MoveGate();
-			EdgeHandler();
-			CollisionHandler();
-			surface.Invalidate();
-		}
-
-		protected void MovePolorons()
-		{
-			Polorons.ForEach(p=>p.Move());
-		}
-
-		protected void MoveGate()
-		{
-			gate.Move();
-		}
-
-		protected void EdgeHandler()
-		{
-			Polorons.ForEach(p =>
-				{
-					CheckEdgeCollision(p);
-				});
-
-			CheckEdgeCollision(gate);
-		}
-
-		protected void CheckEdgeCollision(Ball2D ball)
-		{
-			physics.LeftEdgeHandler(ball);
-			physics.TopEdgeHandler(ball);
-			physics.RightEdgeHandler(ball, surface.Width);
-			physics.BottomEdgeHandler(ball, surface.Height);
-		}
-
-		protected void CollisionHandler()
-		{
-			for (int i = 0; i < polorons.Count(); i++)
-			{
-				for (int j = i + 1; j < polorons.Count(); j++)
-				{
-					if (polorons[i].Intersects(polorons[j]))
-					{
-						physics.Collide(polorons[i], polorons[j]);
-					}
-				}
-			}
 		}
 	}
 }

@@ -14,6 +14,7 @@ namespace PoloronGame
 	static partial class Program
 	{
 		public static IPoloronRenderingService renderer;
+		public static IPoloronPhysicsService physics;
 
 		/// <summary>
 		/// The main entry point for the application.
@@ -28,7 +29,7 @@ namespace PoloronGame
 
 			try
 			{
-				mainForm = InitializeRenderer();
+				mainForm = InitializeGame();
 				mainForm.Shown += OnShown;
 				InitializeInputController();
 				InitializeController();
@@ -45,18 +46,22 @@ namespace PoloronGame
 
 		private static void OnShown(object sender, EventArgs e)
 		{
-			renderer.Start();
+			Start();
 		}
 
-		private static Form InitializeRenderer()
+		private static Form InitializeGame()
 		{
 			renderer = serviceManager.Get<IPoloronRenderingService>();
+			physics = serviceManager.Get<IPoloronPhysicsService>();
 			Form mainForm = renderer.CreateForm();
 			mainForm.Text = "Poloron";
-			renderer.CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
-			renderer.CreatePoloron(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
-			renderer.CreatePoloron(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
-			renderer.CreateGate(new Point2D(400, 75), new Vector2D(-3, 2));
+			CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
+			CreatePoloron(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
+			CreatePoloron(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
+			CreateGate(new Point2D(400, 75), new Vector2D(-3, 2));
+			renderer.Polorons = polorons;
+			renderer.Gate = gate;
+			InitializeGameTick();
 
 			return mainForm;
 		}
