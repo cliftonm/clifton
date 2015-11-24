@@ -7,6 +7,17 @@ namespace PoloronInterfaces
 	public interface IPoloronRenderingService : IService
 	{
 		Form CreateForm();
-		void SetPoloronState(PoloronId id, XPos x, YPos y, PoloronState state);
+		void SetPoloronState(PoloronId id, Point2D location, Vector2D velocity, PoloronState state);
+		void Start();
+		void Stop();
+	}
+
+	public interface IPoloronPhysicsService : IService
+	{
+		void LeftEdgeHandler(Ball2D ball);
+		void TopEdgeHandler(Ball2D ball);
+		void RightEdgeHandler(Ball2D ball, int width);
+		void BottomEdgeHandler(Ball2D ball, int height);
+		void Collide(Ball2D ball1, Ball2D ball2);
 	}
 }

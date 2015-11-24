@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{487AA693-E11A-4F63-84D2-D1DE8BEE94A2}</ProjectGuid>
+    <ProjectGuid>{94B1EC73-74D3-4643-8298-EAD696C6133C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PoloronRenderingService</RootNamespace>
-    <AssemblyName>PoloronRenderingService</AssemblyName>
+    <RootNamespace>PoloronPhysicsService</RootNamespace>
+    <AssemblyName>PoloronPhysicsService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -33,7 +33,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,22 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="GraphicsPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PoloronRenderer.cs" />
+    <Compile Include="ElasticCollision.cs" />
+    <Compile Include="PoloronPhysics.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
-      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
-      <Name>Clifton.ExtensionMethods</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
-      <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
-      <Name>Clifton.Semantics</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Services\Clifton.ServiceInterfaces\Clifton.ServiceInterfaces.csproj">
       <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>
       <Name>Clifton.ServiceInterfaces</Name>

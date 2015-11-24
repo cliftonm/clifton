@@ -9,6 +9,102 @@
 <body>
 
 <p>The Clifton Method: Diary of a Coder</p>
+<h2>Introduction</h2>
+<p>Here's how I like to write applications, whether they're stand-alone client, 
+n-tier client-server, web, or embedded apps.&nbsp; I don't necessarily use all 
+of the pieces discussed in this article, but I like to consider whether some 
+implementation should be used or not.&nbsp; There's really two aspects to this 
+article: concept and implementation.&nbsp; The concepts are universal, no matter 
+what I'm building.&nbsp; The implementation that I present here is specific to 
+C# and the .NET framework.</p>
+<p>The reader should be aware that I'm doing something different in this article 
+-- I will be presenting only usage examples in the body of the article rather 
+than confusing the article with both usage and underlying implementation.&nbsp; 
+Instead, the underlying implementation for each component will be at the end of 
+the article.</p>
+<h3>The Core Concepts</h3>
+<p>The core concepts embody the following principles:</p>
+<ul>
+	<li>Modular - <code>Main</code> shouldn't do anything else except bootstrap the 
+module loader.<ul>
+		<li>Why?&nbsp; Because I am a strong advocate of decoupled, autonomous 
+		islands of computation.</li>
+	</ul>
+</li>
+	<li>Semantic - Semantic types in favor of native types<ul>
+	<li>Why? Because semantic types add stronger compile-time type checking and 
+	inform the application, not just programmer, with regards to type.&nbsp; If 
+	I were to design a programming language, you would never be able to directly 
+	instantiate a native type (I know, radical.)</li>
+	</ul>
+	</li>
+	<li>Service Oriented&nbsp; - most modules are implemented as either 
+	singleton or instance services with which other services communicate using 
+	interfaces.<ul>
+		<li>Why? Services eliminate direct dependencies between islands of 
+		computation.&nbsp; The fewer dependencies, the more adaptable your code 
+		is to changes.</li>
+	</ul></li>
+	<li>Asynchronous Computing - Computations should almost always be capable of 
+	asynchronous execution.<ul>
+		<li>Why?&nbsp; Because modern computers support multiple processors and 
+		multiple threads within a processor, and we need to get away from 
+		mutable, stateful architectures and instead be taking advantage of the 
+		computational power of our machines with immutable, stateless computing.&nbsp; 
+		You don't need to be programming in a &quot;functional programming&quot; language 
+		to achieve that goal.</li>
+	</ul></li>
+	<li>State Management - for when state persistence is needed.<ul>
+		<li>Why?&nbsp; Because the world is actually stateful, however declaring 
+		and managing state is not something that objects do well--state ends up 
+		entangled in the behavior of an object.&nbsp;&nbsp;&nbsp; </li>
+	</ul></li>
+	<li>Workflow Oriented - for when islands of computation need to be chained 
+	together to build richer computations.<ul>
+		<li>Why?&nbsp; Because as code is decoupled, isolated and simplified 
+		into components, a big gaping hole is created--moving data from one 
+		component to another for processing.&nbsp; A workflow glues together 
+		components, replacing the old spaghetti code with more declarative and 
+		semantic processes.</li>
+	</ul></li>
+	</ul>
+<h3>This is not Rocket Science</h3>
+<p>I'm also a proponent of well thought out but simple designs.&nbsp; The 
+implementations I present in this article are the result of a lot of thought, 
+real world experience and re-work based on what those experiences have taught 
+me.&nbsp; They aren't the simplest implementations (certainly not from where I 
+started with originally) -- they are implementations that I've found necessary 
+to do the job right.&nbsp; Still, it's definitely not rocket science, yet 
+ironically, the feedback that I get from many people is &quot;this is too 
+complicated&quot;, &quot;it's overkill&quot;, etc.&nbsp; At the end of the day, all I can say 
+is, the projects that are successful implement some (not necessarily all) of the 
+concepts described above, and those that I'm hired to bail out, well, Agile 
+clearly failed, and everyone at that point ends up saying to me &quot;yeah, I wish 
+we'd implemented modularization&quot; or &quot;wow, a state machine, we never thought of 
+that, it would have made the code so much more manageable.&quot;&nbsp; </p>
+<h2>Bootstrapping</h2>
+<p>The bootstrap process consists of instantiating the module manager and 
+kicking off the module load process.&nbsp; Everything else should be implemented 
+in modules, leaving the main application very simple:</p>
+<p>&nbsp;</p>
+<h3>What Service Should be Written First?</h3>
+<p>Once you've got a basic bootstrap in place for loading modules and 
+initializing services, the very first service that should be implemented is 
+logging.&nbsp; Messages, warnings, exceptions -- this should be the very first 
+service that is implemented in an application, before anything else. </p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>The Clifton Method: Diary of a Coder</p>
 <p>An ideal, not always a reality</p>
 <p>Or: Why You Shouldn't Tell People You Write Code This Way</p>
 <h2>Introduction</h2>

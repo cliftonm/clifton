@@ -98,6 +98,10 @@
       <Project>{c3310e72-4995-4722-83e9-a8e04d5fb279}</Project>
       <Name>PoloronInterfaces</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PoloronPhysicsService\PoloronPhysicsService.csproj">
+      <Project>{94b1ec73-74d3-4643-8298-ead696c6133c}</Project>
+      <Name>PoloronPhysicsService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PoloronRenderingService\PoloronRenderingService.csproj">
       <Project>{487aa693-e11a-4f63-84d2-d1de8bee94a2}</Project>
       <Name>PoloronRenderingService</Name>

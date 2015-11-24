@@ -13,6 +13,8 @@ namespace PoloronGame
 {
 	static partial class Program
 	{
+		private static IPoloronRenderingService renderer;
+
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
@@ -23,13 +25,19 @@ namespace PoloronGame
 			Application.SetCompatibleTextRenderingDefault(false);
 			Bootstrap();
 
-			IPoloronRenderingService renderer = serviceManager.Get<IPoloronRenderingService>();
+			renderer = serviceManager.Get<IPoloronRenderingService>();
 			Form mainForm = renderer.CreateForm();
 			mainForm.Text = "Poloron";
-			renderer.SetPoloronState(PoloronId.Create(0), XPos.Create(100), YPos.Create(50), PoloronState.Neutral);
-			renderer.SetPoloronState(PoloronId.Create(1), XPos.Create(150), YPos.Create(100), PoloronState.Negative);
-			renderer.SetPoloronState(PoloronId.Create(2), XPos.Create(200), YPos.Create(150), PoloronState.Positive);
+			renderer.SetPoloronState(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
+			renderer.SetPoloronState(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
+			renderer.SetPoloronState(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
+			mainForm.Shown += OnShown;
 			Application.Run(mainForm);
+		}
+
+		private static void OnShown(object sender, EventArgs e)
+		{
+			renderer.Start();
 		}
 	}
 }

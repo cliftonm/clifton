@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -67,18 +66,13 @@ namespace PoloronRenderingService
 		protected Brush neutralBrush;
 		protected Brush negativeBrush;
 		protected Brush positiveBrush;
-		protected Dictionary<int, Poloron> polorons;
+		protected PoloronRenderer renderer;
 
-		public GraphicsPanel(Color backColor)
+		public GraphicsPanel(PoloronRenderer renderer, Color backColor)
 		{
+			this.renderer = renderer;
 			DoubleBuffered = true;
 			BackgroundBrush = new SolidBrush(backColor);
-			polorons = new Dictionary<int, Poloron>();
-		}
-
-		public void SetPoloronState(PoloronId id, XPos x, YPos y, PoloronState state)
-		{
-			polorons[id.Value] = new Poloron() { X = x.Value, Y = y.Value, State = state };
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -97,7 +91,7 @@ namespace PoloronRenderingService
 
 		protected void DrawPolorons(Graphics gr)
 		{
-			polorons.Values.ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.X - 20, p.Y - 20, 40, 40));
+			renderer.Polorons.ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.LeftEdge, p.TopEdge, p.Diameter, p.Diameter));
 		}
 
 		protected void DrawVerticalLines(Graphics gr)
