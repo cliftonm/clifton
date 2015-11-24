@@ -57,6 +57,17 @@ namespace PoloronRenderingService
 			}
 		}
 
+		public Color ChargingColor
+		{
+			get { return chargingColor; }
+			set
+			{
+				chargingColor = value;
+				chargingBrush = new SolidBrush(chargingColor);
+				poloronBrushes[(int)PoloronState.Charging] = chargingBrush;
+			}
+		}
+
 		public Color GateColor
 		{
 			get { return gateColor; }
@@ -67,17 +78,19 @@ namespace PoloronRenderingService
 			}
 		}
 
-		protected Brush[] poloronBrushes = new Brush[3];
+		protected Brush[] poloronBrushes = new Brush[4];
 		protected Brush gateBrush;
 		protected Color gateColor;
 		protected Color neutralColor;
 		protected Color negativeColor;
 		protected Color positiveColor;
+		protected Color chargingColor;
 		protected Color gridColor;
 		protected Pen gridPen = new Pen(Color.Black, 1);
 		protected Brush neutralBrush;
 		protected Brush negativeBrush;
 		protected Brush positiveBrush;
+		protected Brush chargingBrush;
 		protected PoloronRenderer renderer;
 
 		public GraphicsPanel(PoloronRenderer renderer, Color backColor)

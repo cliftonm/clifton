@@ -40,7 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConcurrentList.cs" />
-    <Compile Include="Membrane.cs" />
     <Compile Include="MinBy.cs" />
     <Compile Include="SemanticProcessorModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

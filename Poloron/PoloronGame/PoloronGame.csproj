@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootstrap.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -70,6 +71,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Clifton.Assertions\Clifton.Assertions.csproj">
+      <Project>{bc365bc6-c446-495e-81bf-d2f40b3eb355}</Project>
+      <Name>Clifton.Assertions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.CoreSemanticTypes\Clifton.CoreSemanticTypes.csproj">
       <Project>{f17421d0-37db-4aeb-984a-9488abff9186}</Project>
       <Name>Clifton.CoreSemanticTypes</Name>
@@ -77,6 +82,10 @@
     <ProjectReference Include="..\..\Clifton.ModuleManagement\Clifton.ModuleManagement.csproj">
       <Project>{5c4d4440-75d9-437c-b861-4270653f42ca}</Project>
       <Name>Clifton.ModuleManagement</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.SemanticProcessorInterfaces\Clifton.SemanticProcessorInterfaces.csproj">
+      <Project>{8fb66797-9b28-4e70-9184-598bc168f15a}</Project>
+      <Name>Clifton.SemanticProcessorInterfaces</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
       <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
@@ -90,9 +99,17 @@
       <Project>{3fa7fe77-f12d-49b7-b2ba-1cd3bc076cde}</Project>
       <Name>Clifton.AppConfigService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
+      <Project>{a49bd2a0-e6a1-4bfd-b957-a9de4cac17f5}</Project>
+      <Name>Clifton.SemanticProcessorService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Services\Clifton.ServiceInterfaces\Clifton.ServiceInterfaces.csproj">
       <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>
       <Name>Clifton.ServiceInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PoloronInputControllerService\PoloronInputControllerService.csproj">
+      <Project>{668056d9-5c8c-4f4d-ad6e-c78c6a652aec}</Project>
+      <Name>PoloronInputControllerService</Name>
     </ProjectReference>
     <ProjectReference Include="..\PoloronInterfaces\PoloronInterfaces.csproj">
       <Project>{c3310e72-4995-4722-83e9-a8e04d5fb279}</Project>

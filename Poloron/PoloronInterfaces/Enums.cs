@@ -10,6 +10,7 @@ namespace PoloronInterfaces
 	{
 		Neutral,
 		Positive,
-		Negative
+		Negative,
+		Charging,
 	}
 }

@@ -51,6 +51,10 @@
     <Compile Include="Vector.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Clifton.SemanticProcessorInterfaces\Clifton.SemanticProcessorInterfaces.csproj">
+      <Project>{8fb66797-9b28-4e70-9184-598bc168f15a}</Project>
+      <Name>Clifton.SemanticProcessorInterfaces</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
       <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
       <Name>Clifton.Semantics</Name>

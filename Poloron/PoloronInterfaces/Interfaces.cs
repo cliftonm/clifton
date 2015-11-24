@@ -6,9 +6,12 @@ namespace PoloronInterfaces
 {
 	public interface IPoloronRenderingService : IService
 	{
+		Control Surface { get; }
+
 		Form CreateForm();
 		void CreatePoloron(PoloronId id, Point2D location, Vector2D velocity, PoloronState state);
 		void CreateGate(Point2D position, Vector2D velocity);
+		void SetState(PoloronId id, PoloronState state);
 		void Start();
 		void Stop();
 	}
@@ -20,5 +23,10 @@ namespace PoloronInterfaces
 		void RightEdgeHandler(Ball2D ball, int width);
 		void BottomEdgeHandler(Ball2D ball, int height);
 		void Collide(Ball2D ball1, Ball2D ball2);
+	}
+
+	public interface IPoloronInputController : IService 
+	{
+		void Initialize(Control control);
 	}
 }

@@ -21,6 +21,8 @@ namespace PoloronRenderingService
 
 	public class PoloronRenderer : ServiceBase, IPoloronRenderingService
 	{
+		public Control Surface { get { return surface; } }
+
 		public List<Poloron> Polorons { get { return polorons; } }
 		public Gate Gate { get { return gate; } }
 
@@ -79,6 +81,11 @@ namespace PoloronRenderingService
 			gate = new Gate() { Position = position, Velocity = velocity, Radius = 40 };
 		}
 
+		public void SetState(PoloronId id, PoloronState state)
+		{
+			polorons.Single(p => p.Id.Value == id.Value).State = state;
+		}
+
 		protected void SetupLocationAndSize(Form form, IAppConfigService cfgSvc)
 		{
 			form.Width = cfgSvc.GetValue("Width").to_i();
@@ -102,6 +109,7 @@ namespace PoloronRenderingService
 			surface.NeutralColor = cfgSvc.GetValue("NeutralColor").ToColor();
 			surface.NegativeColor = cfgSvc.GetValue("NegativeColor").ToColor();
 			surface.PositiveColor = cfgSvc.GetValue("PositiveColor").ToColor();
+			surface.ChargingColor = cfgSvc.GetValue("ChargingColor").ToColor();
 		}
 
 		protected void SetupGate(IAppConfigService cfgSvc)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Windows.Forms;
 
 using Clifton.CoreSemanticTypes;
 using Clifton.ModuleManagement;
@@ -26,20 +27,7 @@ namespace PoloronGame
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.Message);
-				Console.WriteLine(ex.StackTrace);
-
-				if (ex is ReflectionTypeLoadException)
-				{
-					ReflectionTypeLoadException exl = ex as ReflectionTypeLoadException;
-					Exception[] exceptions = exl.LoaderExceptions;
-
-					foreach (Exception exle in exceptions)
-					{
-						Console.WriteLine(exle.Message);
-					}
-				}
-
+				MessageBox.Show(ex.Message, "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Environment.Exit(1);
 			}
 		}
