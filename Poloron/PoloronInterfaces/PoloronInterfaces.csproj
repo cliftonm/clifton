@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Ball2D.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="Gate.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="Point2D.cs" />
     <Compile Include="Poloron.cs" />

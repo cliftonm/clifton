@@ -28,9 +28,10 @@ namespace PoloronGame
 			renderer = serviceManager.Get<IPoloronRenderingService>();
 			Form mainForm = renderer.CreateForm();
 			mainForm.Text = "Poloron";
-			renderer.SetPoloronState(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
-			renderer.SetPoloronState(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
-			renderer.SetPoloronState(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
+			renderer.CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
+			renderer.CreatePoloron(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
+			renderer.CreatePoloron(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
+			renderer.CreateGate(new Point2D(400, 75), new Vector2D(-3, 2));
 			mainForm.Shown += OnShown;
 			Application.Run(mainForm);
 		}

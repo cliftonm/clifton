@@ -7,7 +7,8 @@ namespace PoloronInterfaces
 	public interface IPoloronRenderingService : IService
 	{
 		Form CreateForm();
-		void SetPoloronState(PoloronId id, Point2D location, Vector2D velocity, PoloronState state);
+		void CreatePoloron(PoloronId id, Point2D location, Vector2D velocity, PoloronState state);
+		void CreateGate(Point2D position, Vector2D velocity);
 		void Start();
 		void Stop();
 	}

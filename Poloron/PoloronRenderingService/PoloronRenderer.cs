@@ -21,18 +21,18 @@ namespace PoloronRenderingService
 
 	public class PoloronRenderer : ServiceBase, IPoloronRenderingService
 	{
-		public List<Poloron> Polorons { get { return poloronList; } }
+		public List<Poloron> Polorons { get { return polorons; } }
+		public Gate Gate { get { return gate; } }
 
 		protected IPoloronPhysicsService physics;
 		protected GraphicsPanel surface;
-		protected Dictionary<int, Poloron> poloronMap;
-		protected List<Poloron> poloronList;
+		protected List<Poloron> polorons;
+		protected Gate gate;
 		protected Timer refreshTimer;
 
 		public PoloronRenderer()
 		{
-			poloronMap = new Dictionary<int, Poloron>();
-			poloronList = new List<Poloron>();
+			polorons = new List<Poloron>();
 			refreshTimer = new Timer();
 			refreshTimer.Interval = 1000 / 60;	// 60 times a second.
 			refreshTimer.Tick += UpdateSurface;
@@ -50,7 +50,8 @@ namespace PoloronRenderingService
 			IAppConfigService cfgSvc = ServiceManager.Get<IAppConfigService>();
 			SetupLocationAndSize(form, cfgSvc);
 			surface = SetupRenderingSurface(form, cfgSvc);
-			SetupPoloronColors(cfgSvc);			
+			SetupPoloron(cfgSvc);
+			SetupGate(cfgSvc);
 
 			return form;
 		}
@@ -65,11 +66,17 @@ namespace PoloronRenderingService
 			refreshTimer.Stop();
 		}
 
-		public void SetPoloronState(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
+		// TODO: Config for poloron and gate radius
+
+		public void CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
 		{
 			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 20 };
-			poloronMap[id.Value] = p;
-			poloronList.Add(p);
+			polorons.Add(p);
+		}
+
+		public void CreateGate(Point2D position, Vector2D velocity)
+		{
+			gate = new Gate() { Position = position, Velocity = velocity, Radius = 40 };
 		}
 
 		protected void SetupLocationAndSize(Form form, IAppConfigService cfgSvc)
@@ -90,16 +97,22 @@ namespace PoloronRenderingService
 			return surface;
 		}
 
-		protected void SetupPoloronColors(IAppConfigService cfgSvc)
+		protected void SetupPoloron(IAppConfigService cfgSvc)
 		{
 			surface.NeutralColor = cfgSvc.GetValue("NeutralColor").ToColor();
 			surface.NegativeColor = cfgSvc.GetValue("NegativeColor").ToColor();
 			surface.PositiveColor = cfgSvc.GetValue("PositiveColor").ToColor();
 		}
 
+		protected void SetupGate(IAppConfigService cfgSvc)
+		{
+			surface.GateColor = cfgSvc.GetValue("GateColor").ToColor();
+		}
+
 		protected void UpdateSurface(object sender, EventArgs e)
 		{
 			MovePolorons();
+			MoveGate();
 			EdgeHandler();
 			CollisionHandler();
 			surface.Invalidate();
@@ -110,26 +123,38 @@ namespace PoloronRenderingService
 			Polorons.ForEach(p=>p.Move());
 		}
 
+		protected void MoveGate()
+		{
+			gate.Move();
+		}
+
 		protected void EdgeHandler()
 		{
 			Polorons.ForEach(p =>
 				{
-					physics.LeftEdgeHandler(p);
-					physics.TopEdgeHandler(p);
-					physics.RightEdgeHandler(p, surface.Width);
-					physics.BottomEdgeHandler(p, surface.Height);
+					CheckEdgeCollision(p);
 				});
+
+			CheckEdgeCollision(gate);
+		}
+
+		protected void CheckEdgeCollision(Ball2D ball)
+		{
+			physics.LeftEdgeHandler(ball);
+			physics.TopEdgeHandler(ball);
+			physics.RightEdgeHandler(ball, surface.Width);
+			physics.BottomEdgeHandler(ball, surface.Height);
 		}
 
 		protected void CollisionHandler()
 		{
-			for (int i = 0; i < poloronList.Count(); i++)
+			for (int i = 0; i < polorons.Count(); i++)
 			{
-				for (int j = i + 1; j < poloronList.Count(); j++)
+				for (int j = i + 1; j < polorons.Count(); j++)
 				{
-					if (poloronList[i].Intersects(poloronList[j]))
+					if (polorons[i].Intersects(polorons[j]))
 					{
-						physics.Collide(poloronList[i], poloronList[j]);
+						physics.Collide(polorons[i], polorons[j]);
 					}
 				}
 			}

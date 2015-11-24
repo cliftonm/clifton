@@ -57,7 +57,19 @@ namespace PoloronRenderingService
 			}
 		}
 
+		public Color GateColor
+		{
+			get { return gateColor; }
+			set
+			{
+				gateColor = value;
+				gateBrush = new SolidBrush(gateColor);
+			}
+		}
+
 		protected Brush[] poloronBrushes = new Brush[3];
+		protected Brush gateBrush;
+		protected Color gateColor;
 		protected Color neutralColor;
 		protected Color negativeColor;
 		protected Color positiveColor;
@@ -81,6 +93,7 @@ namespace PoloronRenderingService
 			e.Graphics.FillRectangle(BackgroundBrush, RectRegion);
 			DrawGrid(e.Graphics);
 			DrawPolorons(e.Graphics);
+			DrawGate(e.Graphics);
 		}
 
 		protected void DrawGrid(Graphics gr)
@@ -92,6 +105,11 @@ namespace PoloronRenderingService
 		protected void DrawPolorons(Graphics gr)
 		{
 			renderer.Polorons.ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.LeftEdge, p.TopEdge, p.Diameter, p.Diameter));
+		}
+
+		protected void DrawGate(Graphics gr)
+		{
+			gr.FillEllipse(gateBrush, renderer.Gate.LeftEdge, renderer.Gate.TopEdge, renderer.Gate.Diameter, renderer.Gate.Diameter);
 		}
 
 		protected void DrawVerticalLines(Graphics gr)
