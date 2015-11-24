@@ -36,31 +36,13 @@ namespace PoloronInterfaces
 
 			// Quick check:
 
-			if ((HorizontalDistance(withBall) <= Diameter) &&
-				 (VerticalDistance(withBall) <= Diameter))
+			if ((Position.HorizontalDistance(withBall.Position) <= Diameter) &&
+				 (Position.VerticalDistance(withBall.Position) <= Diameter))
 			{
-				ret = Distance(withBall) <= Diameter;
+				ret = Position.Distance(withBall.Position) <= Diameter;
 			}
 
 			return ret;
-		}
-
-		protected float HorizontalDistance(Ball2D withBall)
-		{
-			return Math.Abs(Position.X - withBall.Position.X);
-		}
-
-		protected float VerticalDistance(Ball2D withBall)
-		{
-			return Math.Abs(Position.Y - withBall.Position.Y);
-		}
-
-		protected float Distance(Ball2D withBall)
-		{
-			float dx = Position.X - withBall.Position.X;
-			float dy = Position.Y - withBall.Position.Y;
-
-			return (float)Math.Sqrt(dx * dx + dy * dy);
 		}
 	}
 }

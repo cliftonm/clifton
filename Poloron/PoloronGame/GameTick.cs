@@ -27,6 +27,7 @@ namespace PoloronGame
 			MoveGate();
 			EdgeHandler();
 			CollisionHandler();
+			ApplyForces();
 			renderer.Render();
 		}
 
@@ -100,6 +101,43 @@ namespace PoloronGame
 			}
 		}
 
+		/// <summary>
+		/// For the moment, apply forces only to the player's poloron.  We might change this later so that the player's action
+		/// also affects the other polorons.
+		/// </summary>
+		private static void ApplyForces()
+		{
+			Poloron player = polorons[0];
 
+			if (player.State != PoloronState.Neutral)
+			{
+				Point2D position = player.Position;
+
+				for (int i = 1; i < polorons.Count; i++)
+				{
+					float distance = position.Distance(polorons[i].Position);
+					float force = (float)750 / (distance * distance);
+					double angle = position.Angle(polorons[i].Position);
+					Vector2D vforce = ApplyForce(player.State, polorons[i].State, force, angle);
+					Console.WriteLine("{0},{1}", vforce.X, vforce.Y);
+					// charging is simply a linear deceleration, but the energy gained is proportional to how close another poloron is.
+					if (player.State == PoloronState.Charging)
+					{
+					}
+					else
+					{
+						player.Velocity.Add(vforce);
+					}
+				}
+			}
+		}
+
+		private static Vector2D ApplyForce(PoloronState state, PoloronState other, float force, double angle)
+		{
+			float multiplier = (state == other) ? force : -force;
+			Vector2D vf = new Vector2D((float)(Math.Cos(angle) * multiplier), (float)(Math.Sin(angle) * multiplier));
+
+			return vf;
+		}
 	}
 }

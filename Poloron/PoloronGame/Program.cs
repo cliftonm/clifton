@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 using Clifton.CoreSemanticTypes;
@@ -13,6 +14,10 @@ namespace PoloronGame
 {
 	static partial class Program
 	{
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		static extern bool AllocConsole();		
+
 		public static IPoloronRenderingService renderer;
 		public static IPoloronPhysicsService physics;
 
@@ -22,6 +27,7 @@ namespace PoloronGame
 		[STAThread]
 		static void Main()
 		{
+			AllocConsole();
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Bootstrap();
@@ -55,10 +61,19 @@ namespace PoloronGame
 			physics = serviceManager.Get<IPoloronPhysicsService>();
 			Form mainForm = renderer.CreateForm();
 			mainForm.Text = "Poloron";
+			/*
 			CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(3, 3), PoloronState.Neutral);
 			CreatePoloron(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(4, 4), PoloronState.Negative);
 			CreatePoloron(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(5, 5), PoloronState.Positive);
 			CreateGate(new Point2D(400, 75), new Vector2D(-3, 2));
+			 */
+
+			CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D((float)0.0, 0), PoloronState.Neutral);
+			// CreatePoloron(PoloronId.Create(1), new Point2D(150, 100), new Vector2D(2, 2), PoloronState.Negative);
+			CreatePoloron(PoloronId.Create(2), new Point2D(200, 150), new Vector2D(0, 0), PoloronState.Positive);
+			// CreatePoloron(PoloronId.Create(2), new Point2D(400, 350), new Vector2D(0, 0), PoloronState.Positive);
+			CreateGate(new Point2D(380, 280), new Vector2D((float)0.0, (float)0.0));
+
 			renderer.Polorons = polorons;
 			renderer.Gate = gate;
 			InitializeGameTick();
