@@ -9,7 +9,7 @@ using PoloronInterfaces;
 
 namespace PoloronRenderingService
 {
-	public class GraphicsPanel : Panel
+	public class GameSurface : Panel
 	{
 		public Brush BackgroundBrush { get; set; }
 		public Rectangle RectRegion { get { return new Rectangle(0, 0, Width, Height); } }
@@ -94,7 +94,7 @@ namespace PoloronRenderingService
 		protected Brush chargingBrush;
 		protected PoloronRenderer renderer;
 
-		public GraphicsPanel(PoloronRenderer renderer, Color backColor)
+		public GameSurface(PoloronRenderer renderer, Color backColor)
 		{
 			this.renderer = renderer;
 			DoubleBuffered = true;

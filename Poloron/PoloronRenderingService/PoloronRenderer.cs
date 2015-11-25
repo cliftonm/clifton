@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -24,8 +25,10 @@ namespace PoloronRenderingService
 		public Control Surface { get { return surface; } }
 		public List<Poloron> Polorons { get; set; }
 		public Gate Gate { get; set; }
+		public int Energy { get; set; }
 
-		protected GraphicsPanel surface;
+		protected GameSurface surface;
+		protected EnergyBar energyBar;
 
 		public PoloronRenderer()
 		{
@@ -42,6 +45,7 @@ namespace PoloronRenderingService
 			IAppConfigService cfgSvc = ServiceManager.Get<IAppConfigService>();
 			SetupLocationAndSize(form, cfgSvc);
 			surface = SetupRenderingSurface(form, cfgSvc);
+			energyBar = SetupEnergyBar(form, cfgSvc);
 			SetupPoloron(cfgSvc);
 			SetupGate(cfgSvc);
 
@@ -51,24 +55,38 @@ namespace PoloronRenderingService
 		public void Render()
 		{
 			surface.Invalidate();
+			energyBar.Invalidate();
 		}
 
 		protected void SetupLocationAndSize(Form form, IAppConfigService cfgSvc)
 		{
 			form.Width = cfgSvc.GetValue("Width").to_i();
-			form.Height = cfgSvc.GetValue("Height").to_i();
+			form.Height = cfgSvc.GetValue("Height").to_i() + 20;
 			form.StartPosition = FormStartPosition.CenterScreen;
 		}
 
-		protected GraphicsPanel SetupRenderingSurface(Form form, IAppConfigService cfgSvc)
+		protected GameSurface SetupRenderingSurface(Form form, IAppConfigService cfgSvc)
 		{
-			GraphicsPanel surface = new GraphicsPanel(this, cfgSvc.GetValue("BackgroundColor").ToColor());
-			surface.Dock = DockStyle.Fill;
+			GameSurface surface = new GameSurface(this, cfgSvc.GetValue("BackgroundColor").ToColor());
+			surface.Width = form.ClientSize.Width;
+			surface.Height = form.ClientSize.Height - 20;
+			surface.Location = new Point(0, 20);
 			surface.GridColor = cfgSvc.GetValue("GridColor").ToColor();
 			surface.GridSpacing = cfgSvc.GetValue("GridSpacing").to_i();
 			form.Controls.Add(surface);
 
 			return surface;
+		}
+
+		protected EnergyBar SetupEnergyBar(Form form, IAppConfigService cfgSvc)
+		{
+			EnergyBar energyBar = new EnergyBar(this, Color.White);
+			energyBar.Width = form.ClientSize.Width - 3;
+			energyBar.Height = 20;
+			energyBar.Location = new Point(0, 0);
+			form.Controls.Add(energyBar);
+
+			return energyBar;
 		}
 
 		protected void SetupPoloron(IAppConfigService cfgSvc)

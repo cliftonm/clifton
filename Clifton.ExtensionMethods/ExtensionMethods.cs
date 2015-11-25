@@ -1078,5 +1078,25 @@ namespace Clifton.ExtensionMethods
 		{
 			return b >= a && b <= c;
 		}
+
+		public static int Max(this int a, int max)
+		{
+			if (a > max)
+			{
+				a = max;
+			}
+
+			return a;
+		}
+
+		public static int Min(this int a, int min)
+		{
+			if (a < min)
+			{
+				a = min;
+			}
+
+			return a;
+		}
 	}
 }

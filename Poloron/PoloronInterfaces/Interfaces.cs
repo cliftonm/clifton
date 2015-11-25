@@ -10,6 +10,7 @@ namespace PoloronInterfaces
 		Control Surface { get; }
 		List<Poloron> Polorons { get; set; }
 		Gate Gate { get; set; }
+		int Energy { get; set; }
 
 		Form CreateForm();
 		void Render();

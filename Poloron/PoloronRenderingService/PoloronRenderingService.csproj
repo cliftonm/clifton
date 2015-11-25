@@ -41,8 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnergyBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="GraphicsPanel.cs">
+    <Compile Include="GameSurface.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PoloronRenderer.cs" />

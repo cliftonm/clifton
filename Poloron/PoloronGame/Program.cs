@@ -107,7 +107,17 @@ namespace PoloronGame
 
 			for (int i = 1; i <= level.Polorons; i++)
 			{
-				Point2D pos = new Point2D(GetPoloronStart(renderer.Surface.Width), GetPoloronStart(renderer.Surface.Height));
+				Point2D pos;
+
+				if (level.Positions.Count == 0)
+				{
+					pos = new Point2D(GetPoloronStart(renderer.Surface.Width), GetPoloronStart(renderer.Surface.Height));
+				}
+				else
+				{
+					pos = new Point2D(level.Positions[i - 1].X, level.Positions[i - 1].Y);
+				}
+
 				Vector2D vel = new Vector2D(0, 0);
 
 				if (level.Moving)
@@ -132,6 +142,7 @@ namespace PoloronGame
 
 			renderer.Polorons = polorons;
 			renderer.Gate = gate;
+			renderer.Energy = 1000;
 		}
 
 		/// <summary>

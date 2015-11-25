@@ -7,11 +7,6 @@ namespace PoloronGame
 	public class GameLevels
 	{
 		public List<Level> Levels { get; set; }
-
-		public GameLevels()
-		{
-			Levels = new List<Level>();
-		}
 	}
 
 	public class Level
@@ -27,5 +22,16 @@ namespace PoloronGame
 
 		[XmlAttribute()]
 		public bool GateMoving { get; set; }
+
+		public List<Position> Positions { get; set; }
+	}
+
+	public class Position
+	{
+		[XmlAttribute()]
+		public int X { get; set; }
+
+		[XmlAttribute()]
+		public int Y { get; set; }
 	}
 }

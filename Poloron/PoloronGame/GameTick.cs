@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
+using Clifton.ExtensionMethods;
+
 using PoloronInterfaces;
 
 namespace PoloronGame
@@ -30,6 +32,9 @@ namespace PoloronGame
 			EdgeHandler();
 			CollisionHandler();
 			ApplyForces();
+			AdjustEnergy();
+			ApplyBrake();
+			SpeedLimit();
 
 			if (levelStarting)
 			{
@@ -149,7 +154,7 @@ namespace PoloronGame
 		{
 			Poloron player = polorons[0];
 
-			if (player.State != PoloronState.Neutral)
+			if ( (player.State == PoloronState.Positive || player.State == PoloronState.Negative) && (renderer.Energy > 0) )
 			{
 				Point2D position = player.Position;
 
@@ -160,16 +165,43 @@ namespace PoloronGame
 					double angle = position.Angle(polorons[i].Position);
 					Vector2D vforce = ApplyForce(player.State, polorons[i].State, force, angle);
 					Console.WriteLine("{0},{1}", vforce.X, vforce.Y);
-					// charging is simply a linear deceleration, but the energy gained is proportional to how close another poloron is.
-					if (player.State == PoloronState.Charging)
-					{
-					}
-					else
-					{
-						player.Velocity.Add(vforce);
-					}
+					player.Velocity.Add(vforce);
 				}
 			}
+		}
+
+		private static void AdjustEnergy()
+		{
+			switch (polorons[0].State)
+			{
+				case PoloronState.Charging:
+					renderer.Energy = (renderer.Energy + 1).Max(1000);
+					break;
+
+				case PoloronState.Negative:
+				case PoloronState.Positive:
+					renderer.Energy = (renderer.Energy - 1).Min(0);
+					break;
+			}
+		}
+
+		private static void ApplyBrake()
+		{
+			if (polorons[0].State == PoloronState.Charging)
+			{
+				polorons[0].Velocity.Decrease(Percent.Create(5));
+			}
+		}
+
+		private static void SpeedLimit()
+		{
+			polorons.ForEach(p =>
+				{
+					if (p.Velocity.Magnitude > 10)
+					{
+						p.Velocity.Scale(10);
+					}
+				});
 		}
 
 		private static Vector2D ApplyForce(PoloronState state, PoloronState other, float force, double angle)
