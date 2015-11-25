@@ -1073,5 +1073,10 @@ namespace Clifton.ExtensionMethods
 
 			return sb.ToString();
 		}
+
+		public static bool Between(this int b, int a, int c)
+		{
+			return b >= a && b <= c;
+		}
 	}
 }

@@ -11,6 +11,8 @@ namespace PoloronGame
 	{
 		public static List<Poloron> polorons = new List<Poloron>();
 		public static Gate gate;
+		public static bool levelStarting;
+		public static bool levelComplete;
 
 		private static Timer refreshTimer;
 
@@ -28,6 +30,42 @@ namespace PoloronGame
 			EdgeHandler();
 			CollisionHandler();
 			ApplyForces();
+
+			if (levelStarting)
+			{
+				if (GateOpeningAnimation())
+				{
+					if (PoloronOpeningAnimation())
+					{
+						levelStarting = false;
+					}
+				}
+			}
+
+			if (!levelComplete)
+			{
+				if (polorons[0].EncompassedBy(gate))
+				{
+					levelComplete = true;
+					polorons[0].Visible = false;
+				}
+			}
+			else
+			{
+				if (GateClosingAnimation())
+				{
+					if (PoloronClosingAnimation())
+					{
+						// Stop();
+						++currentLevel;
+						InitializeLevel(currentLevel);
+						levelComplete = false;
+						levelStarting = true;
+						// Start();
+					}
+				}
+			}
+
 			renderer.Render();
 		}
 
@@ -43,15 +81,17 @@ namespace PoloronGame
 
 		// TODO: Config for poloron and gate radius
 
-		public static void CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
+		public static Poloron CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
 		{
-			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 20 };
+			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 1, Visible = false };
 			polorons.Add(p);
+
+			return p;
 		}
 
 		public static void CreateGate(Point2D position, Vector2D velocity)
 		{
-			gate = new Gate() { Position = position, Velocity = velocity, Radius = 40 };
+			gate = new Gate() { Position = position, Velocity = velocity, Radius = 1, Visible = true };
 		}
 
 		public static void SetState(PoloronId id, PoloronState state)
@@ -138,6 +178,75 @@ namespace PoloronGame
 			Vector2D vf = new Vector2D((float)(Math.Cos(angle) * multiplier), (float)(Math.Sin(angle) * multiplier));
 
 			return vf;
+		}
+
+		/// <summary>
+		/// Close the gate.
+		/// </summary>
+		private static bool GateClosingAnimation()
+		{
+			if (gate.Radius > 1)
+			{
+				gate.Radius -= 1;
+			}
+			else
+			{
+				gate.Visible = false;
+			}
+
+			return gate.Radius == 1;
+		}
+
+		private static bool GateOpeningAnimation()
+		{
+			if (gate.Radius < 40)
+			{
+				gate.Radius += 1;
+			}
+
+			return gate.Radius == 40;
+		}
+
+		/// <summary>
+		/// Remove polorons from surface.
+		/// </summary>
+		private static bool PoloronClosingAnimation()
+		{
+			bool done = false;
+
+			polorons.ForEach(p =>
+				{
+					done = p.Radius == 1;
+
+					if (!done)
+					{
+						p.Radius -= 1;
+					}
+					else
+					{
+						p.Visible = false;
+					}
+				});
+
+			return done;
+		}
+
+		private static bool PoloronOpeningAnimation()
+		{
+			bool done = false;
+
+			polorons.ForEach(p =>
+			{
+				p.Visible=true;
+				done = p.Radius == 20;
+
+				if (!done)
+				{
+					p.Radius += 1;
+				}
+			});
+
+			return done;
 		}
 	}
 }

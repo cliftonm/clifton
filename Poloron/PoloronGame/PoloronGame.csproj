@@ -47,6 +47,7 @@
     <Compile Include="Bootstrap.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="GameTick.cs" />
+    <Compile Include="Level.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -79,6 +80,10 @@
     <ProjectReference Include="..\..\Clifton.CoreSemanticTypes\Clifton.CoreSemanticTypes.csproj">
       <Project>{f17421d0-37db-4aeb-984a-9488abff9186}</Project>
       <Name>Clifton.CoreSemanticTypes</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
+      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
+      <Name>Clifton.ExtensionMethods</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Clifton.ModuleManagement\Clifton.ModuleManagement.csproj">
       <Project>{5c4d4440-75d9-437c-b861-4270653f42ca}</Project>
@@ -126,6 +131,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bin\Debug\Levels.xml" />
     <Content Include="bin\Debug\modules.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

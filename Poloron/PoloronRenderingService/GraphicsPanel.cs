@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 using Clifton.ExtensionMethods;
@@ -117,12 +118,15 @@ namespace PoloronRenderingService
 
 		protected void DrawPolorons(Graphics gr)
 		{
-			renderer.Polorons.ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.LeftEdge, p.TopEdge, p.Diameter, p.Diameter));
+			renderer.Polorons.Where(p => p.Visible).ForEach(p => gr.FillEllipse(poloronBrushes[(int)p.State], p.LeftEdge, p.TopEdge, p.Diameter, p.Diameter));
 		}
 
 		protected void DrawGate(Graphics gr)
 		{
-			gr.FillEllipse(gateBrush, renderer.Gate.LeftEdge, renderer.Gate.TopEdge, renderer.Gate.Diameter, renderer.Gate.Diameter);
+			if (renderer.Gate.Visible)
+			{
+				gr.FillEllipse(gateBrush, renderer.Gate.LeftEdge, renderer.Gate.TopEdge, renderer.Gate.Diameter, renderer.Gate.Diameter);
+			}
 		}
 
 		protected void DrawVerticalLines(Graphics gr)

@@ -39,7 +39,28 @@ namespace PoloronInterfaces
 			if ((Position.HorizontalDistance(withBall.Position) <= Diameter) &&
 				 (Position.VerticalDistance(withBall.Position) <= Diameter))
 			{
+				// Full check:
 				ret = Position.Distance(withBall.Position) <= Diameter;
+			}
+
+			return ret;
+		}
+
+		/// <summary>
+		/// Return true if this ball is completely encompassed by the withBall.
+		/// Assumes withBall.Radius > this.Radius.
+		/// </summary>
+		public bool EncompassedBy(Ball2D withBall)
+		{
+			bool ret = false;
+
+			// Quick check:
+
+			if ((Position.HorizontalDistance(withBall.Position) <= withBall.Radius - Radius) &&
+				 (Position.VerticalDistance(withBall.Position) <= withBall.Radius - Radius))
+			{
+				// Full check:
+				ret = Position.Distance(withBall.Position) <= withBall.Radius - Radius;
 			}
 
 			return ret;
