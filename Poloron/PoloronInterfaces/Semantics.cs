@@ -4,6 +4,7 @@ using Clifton.SemanticProcessorInterfaces;
 namespace PoloronInterfaces
 {
 	public class PoloronId : ImmutableSemanticType<PoloronId, int> { };
+	public class Percent : ImmutableSemanticType<Percent, float> { };
 
 	public class ControllerMembrane : Membrane { }
 
