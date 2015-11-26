@@ -99,9 +99,9 @@ namespace PoloronGame
 		{
 			polorons.Clear();
 			// Player always starts here.
-			CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(0, 0), PoloronState.Neutral);
+			CreatePoloron(PoloronId.Create(0), new Point2D(100, 50), new Vector2D(0, 0), PoloronState.Neutral, 1);
 			// Gate is always at center.
-			CreateGate(new Point2D(380, 280), new Vector2D((float)0.0, (float)0.0));
+			CreateGate(new Point2D(renderer.Surface.Width / 2, renderer.Surface.Height / 2), new Vector2D((float)0.0, (float)0.0));
 			
 			Level level = gameLevels.Levels.Single(l => l.Id == lvl);
 
@@ -119,19 +119,19 @@ namespace PoloronGame
 				}
 
 				Vector2D vel = new Vector2D(0, 0);
+				int mass = 1;
 
-				if (level.Moving)
+				if (level.Moving > i - 1)
 				{
 					vel.X = (float)(rnd.Next(6) - 2.5);
 					vel.Y = (float)(rnd.Next(6) - 2.5);
 				}
-
-				Poloron p = CreatePoloron(PoloronId.Create(i), pos, vel, rnd.Next(2)==0 ? PoloronState.Negative : PoloronState.Positive);
-
-				if (!level.Moving)
+				else
 				{
-					p.Mass = 10000;
+					mass = 10000;
 				}
+
+				Poloron p = CreatePoloron(PoloronId.Create(i), pos, vel, rnd.Next(2)==0 ? PoloronState.Negative : PoloronState.Positive, mass);
 			}
 
 			if (level.GateMoving)

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3928C9CF-2705-40F6-BB52-388C9067BE8A}</ProjectGuid>
+    <ProjectGuid>{1BAB0DDE-04CE-4209-874E-C3AA8DD8BBAC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WebRouterService</RootNamespace>
-    <AssemblyName>WebRouterService</AssemblyName>
+    <RootNamespace>SocketServerService</RootNamespace>
+    <AssemblyName>SocketServerService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,26 +39,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SocketServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Router.cs" />
-    <Compile Include="RouterReceptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
       <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
       <Name>Clifton.ExtensionMethods</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
-      <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
-      <Name>Clifton.Semantics</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.SemanticProcessorInterfaces\Clifton.SemanticProcessorInterfaces.csproj">
       <Project>{8fb66797-9b28-4e70-9184-598bc168f15a}</Project>
       <Name>Clifton.SemanticProcessorInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Clifton.Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
-      <Project>{a49bd2a0-e6a1-4bfd-b957-a9de4cac17f5}</Project>
-      <Name>Clifton.SemanticProcessorService</Name>
+    <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
+      <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
+      <Name>Clifton.Semantics</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Services\Clifton.ServiceInterfaces\Clifton.ServiceInterfaces.csproj">
       <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>

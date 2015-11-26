@@ -58,6 +58,13 @@ namespace WebServerInterfaces
 		void Start();
 	}
 
+	public interface ISocketServerService : IService
+	{
+		bool Terminate { get; set; }
+
+		void Start();
+	}
+
 	public interface IWebWorkflowService : IService
 	{
 		void RegisterPreRouterWorkflow(WorkflowItem<PreRouteWorkflowData> item);

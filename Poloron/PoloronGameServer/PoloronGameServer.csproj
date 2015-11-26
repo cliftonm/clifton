@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{583F0948-927B-43D3-8D1C-218AC4F4C1B6}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <ProjectGuid>{1D3CB69F-5CB0-4AFF-B181-807BB22567B5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PoloronGame</RootNamespace>
-    <AssemblyName>PoloronGame</AssemblyName>
+    <RootNamespace>PoloronGameServer</RootNamespace>
+    <AssemblyName>PoloronGameServer</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -38,62 +38,24 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootstrap.cs" />
-    <Compile Include="Controller.cs" />
-    <Compile Include="GameTick.cs" />
-    <Compile Include="Level.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Clifton.Assertions\Clifton.Assertions.csproj">
-      <Project>{bc365bc6-c446-495e-81bf-d2f40b3eb355}</Project>
-      <Name>Clifton.Assertions</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.CoreSemanticTypes\Clifton.CoreSemanticTypes.csproj">
       <Project>{f17421d0-37db-4aeb-984a-9488abff9186}</Project>
       <Name>Clifton.CoreSemanticTypes</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Clifton.ExtensionMethods\Clifton.ExtensionMethods.csproj">
-      <Project>{9d4ca37e-4c77-4823-9364-4642bbe311c7}</Project>
-      <Name>Clifton.ExtensionMethods</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.ModuleManagement\Clifton.ModuleManagement.csproj">
       <Project>{5c4d4440-75d9-437c-b861-4270653f42ca}</Project>
       <Name>Clifton.ModuleManagement</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Clifton.SemanticProcessorInterfaces\Clifton.SemanticProcessorInterfaces.csproj">
-      <Project>{8fb66797-9b28-4e70-9184-598bc168f15a}</Project>
-      <Name>Clifton.SemanticProcessorInterfaces</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Semantics\Clifton.Semantics.csproj">
       <Project>{ff4e6842-adc8-4671-90be-b7493393b995}</Project>
@@ -107,6 +69,10 @@
       <Project>{3fa7fe77-f12d-49b7-b2ba-1cd3bc076cde}</Project>
       <Name>Clifton.AppConfigService</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.Services\Clifton.ConsoleLoggerService\Clifton.ConsoleLoggerService.csproj">
+      <Project>{efcb5e1b-4173-4cd8-880a-c04c7c7b957c}</Project>
+      <Name>Clifton.ConsoleLoggerService</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Clifton.Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
       <Project>{a49bd2a0-e6a1-4bfd-b957-a9de4cac17f5}</Project>
       <Name>Clifton.SemanticProcessorService</Name>
@@ -115,25 +81,44 @@
       <Project>{f902df43-1bea-49be-b9e4-06028df26bb0}</Project>
       <Name>Clifton.ServiceInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PoloronInputControllerService\PoloronInputControllerService.csproj">
-      <Project>{668056d9-5c8c-4f4d-ad6e-c78c6a652aec}</Project>
-      <Name>PoloronInputControllerService</Name>
+    <ProjectReference Include="..\..\web\SocketServerService\SocketServerService.csproj">
+      <Project>{1bab0dde-04ce-4209-874e-c3aa8dd8bbac}</Project>
+      <Name>SocketServerService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PoloronInterfaces\PoloronInterfaces.csproj">
-      <Project>{c3310e72-4995-4722-83e9-a8e04d5fb279}</Project>
-      <Name>PoloronInterfaces</Name>
+    <ProjectReference Include="..\..\Web\WebDefaultWorkflowService\WebDefaultWorkflowService.csproj">
+      <Project>{92594ece-c1fa-45a1-8983-f6c4b5256a6a}</Project>
+      <Name>WebDefaultWorkflowService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PoloronPhysicsService\PoloronPhysicsService.csproj">
-      <Project>{94b1ec73-74d3-4643-8298-ead696c6133c}</Project>
-      <Name>PoloronPhysicsService</Name>
+    <ProjectReference Include="..\..\Web\WebFileResponseService\WebFileResponseService.csproj">
+      <Project>{8faa63b3-d6fd-4adc-9363-3f2115b25b8c}</Project>
+      <Name>WebFileResponseService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PoloronRenderingService\PoloronRenderingService.csproj">
-      <Project>{487aa693-e11a-4f63-84d2-d1de8bee94a2}</Project>
-      <Name>PoloronRenderingService</Name>
+    <ProjectReference Include="..\..\Web\WebResponseService\WebResponseService.csproj">
+      <Project>{6ce0e464-a10c-4bf3-9f35-b3f564aa794c}</Project>
+      <Name>WebResponseService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Web\WebRouterService\WebRouterService.csproj">
+      <Project>{3928c9cf-2705-40f6-bb52-388c9067be8a}</Project>
+      <Name>WebRouterService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Web\WebServerInterfaces\WebServerInterfaces.csproj">
+      <Project>{766eff32-e2af-4dce-b1b6-e3f4285c662d}</Project>
+      <Name>WebServerInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Web\WebServerSemantics\WebServerSemantics.csproj">
+      <Project>{3e181d4b-2c52-4d5f-9e34-0eeffc77d8e5}</Project>
+      <Name>WebServerSemantics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Web\WebServerService\WebServerService.csproj">
+      <Project>{0cd29a69-3ecb-44e1-a185-a961c595c4bd}</Project>
+      <Name>WebServerService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Web\WebWorkflowService\WebWorkflowService.csproj">
+      <Project>{b478d39d-11dd-405e-be7c-83f4389c34c8}</Project>
+      <Name>WebWorkflowService</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="bin\Debug\Levels.xml" />
     <Content Include="bin\Debug\modules.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

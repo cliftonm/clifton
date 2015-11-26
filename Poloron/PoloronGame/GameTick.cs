@@ -62,7 +62,12 @@ namespace PoloronGame
 					if (PoloronClosingAnimation())
 					{
 						// Stop();
-						++currentLevel;
+						// Go back to level 1
+						if (++currentLevel > gameLevels.Levels.Count)
+						{
+							currentLevel = 1;
+						}
+
 						InitializeLevel(currentLevel);
 						levelComplete = false;
 						levelStarting = true;
@@ -86,9 +91,9 @@ namespace PoloronGame
 
 		// TODO: Config for poloron and gate radius
 
-		public static Poloron CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state)
+		public static Poloron CreatePoloron(PoloronId id, Point2D position, Vector2D velocity, PoloronState state, int mass)
 		{
-			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 1, Visible = false };
+			Poloron p = new Poloron() { Id = id, Position = position, Velocity = velocity, State = state, Radius = 1, Visible = false, Mass=mass };
 			polorons.Add(p);
 
 			return p;

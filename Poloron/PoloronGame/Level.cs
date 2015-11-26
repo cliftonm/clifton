@@ -18,7 +18,7 @@ namespace PoloronGame
 		public int Polorons { get; set; }
 
 		[XmlAttribute()]
-		public bool Moving { get; set; }
+		public int Moving { get; set; }
 
 		[XmlAttribute()]
 		public bool GateMoving { get; set; }
