@@ -74,6 +74,11 @@ namespace WebServerService
 				{
 					byte[] nextPacket = null;
 					byte[] packet = GetPacket(handler, ref nextPacket);
+					ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, SocketPacket>(p =>
+						{
+							p.Socket = handler;
+							p.Packet = packet;
+						});
 				}
 			}
 			catch

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
 
 using Clifton.SemanticProcessorInterfaces;
 using Clifton.SemanticProcessorService;
@@ -11,6 +12,7 @@ namespace WebServerSemantics
 	public class UriExtension : ImmutableSemanticType<UriExtension, string> { }
 	public class HttpVerb : ImmutableSemanticType<HttpVerb, string> { }
 
+	public class SocketMembrane : Membrane { }
 	public class WebServerMembrane : Membrane { }
 
 	/// <summary>
@@ -19,6 +21,12 @@ namespace WebServerSemantics
 	public class Route : ISemanticType
 	{
 		public HttpListenerContext Context { get; set; }
+	}
+
+	public class SocketPacket : ISemanticType
+	{
+		public Socket Socket { get; set; }
+		public byte[] Packet { get; set; }
 	}
 
 	/// <summary>
