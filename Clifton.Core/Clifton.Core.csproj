@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{54E73707-81C4-4C7F-9739-446C6D7D5FEA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Clifton.Core</RootNamespace>
+    <AssemblyName>Clifton.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Clifton.Core.Assertions\Assert.cs" />
+    <Compile Include="Clifton.Core.Db\DbFieldNameAttribute.cs" />
+    <Compile Include="Clifton.Core.Db\DbService.cs" />
+    <Compile Include="Clifton.Core.Db\DefaultValue.cs" />
+    <Compile Include="Clifton.Core.Db\Extensions.cs" />
+    <Compile Include="Clifton.Core.Db\ForeignKey.cs" />
+    <Compile Include="Clifton.Core.Db\IDbService.cs" />
+    <Compile Include="Clifton.Core.Db\IViewInfo.cs" />
+    <Compile Include="Clifton.Core.Db\PrimaryKey.cs" />
+    <Compile Include="Clifton.Core.Db\TableFieldInfo.cs" />
+    <Compile Include="Clifton.Core.Db\TableForeignKey.cs" />
+    <Compile Include="Clifton.Core.Db\TableGraph.cs" />
+    <Compile Include="Clifton.Core.Db\TableInfo.cs" />
+    <Compile Include="Clifton.Core.Db\ViewFieldInfo.cs" />
+    <Compile Include="Clifton.Core.Db\ViewInfo.cs" />
+    <Compile Include="Clifton.Core.Db\ViewSchema.cs" />
+    <Compile Include="Clifton.Core.Db\ViewTableInfo.cs" />
+    <Compile Include="Clifton.Core.ExtensionMethods\DistinctBy.cs" />
+    <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="Clifton.Core.ModuleManagement\IModule.cs" />
+    <Compile Include="Clifton.Core.ModuleManagement\IModuleManager.cs" />
+    <Compile Include="Clifton.Core.ModuleManagement\ModuleManager.cs" />
+    <Compile Include="Clifton.Core.Semantics\SemanticTypes.cs" />
+    <Compile Include="Clifton.Core.Semantics\ImmutableSemanticType.cs" />
+    <Compile Include="Clifton.Core.Semantics\Interfaces.cs" />
+    <Compile Include="Clifton.Core.Semantics\Membrane.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IAppConfigService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IConfigService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleCriticalExceptionService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleLoggerService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\ICriticalExceptionService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IDatabaseServices.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\ILoggerService.cs" />
+    <Compile Include="Clifton.Core.ServiceManagement\IService.cs" />
+    <Compile Include="Clifton.Core.ServiceManagement\IServiceManager.cs" />
+    <Compile Include="Clifton.Core.ServiceManagement\ServiceBase.cs" />
+    <Compile Include="Clifton.Core.ServiceManagement\ServiceManager.cs" />
+    <Compile Include="Clifton.Core.StateManagement\IStateContext.cs" />
+    <Compile Include="Clifton.Core.StateManagement\StateInfo.cs" />
+    <Compile Include="Clifton.Core.StateManagement\StateManager.cs" />
+    <Compile Include="Clifton.Core.StateManagement\StateTransition.cs" />
+    <Compile Include="Clifton.Core.Utils\Converter.cs" />
+    <Compile Include="Clifton.Core.Utils\PasswordHash.cs" />
+    <Compile Include="Clifton.Core.Utils\Serialization.cs" />
+    <Compile Include="Clifton.Core.Workflow\Workflow.cs" />
+    <Compile Include="Clifton.Core.Workflow\WorkflowContinuation.cs" />
+    <Compile Include="Clifton.Core.Workflow\WorkflowItem.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.Core", "Clifton.Core.csproj", "{54E73707-81C4-4C7F-9739-446C6D7D5FEA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.AppConfigService", "Services\Clifton.AppConfigService\Clifton.AppConfigService.csproj", "{28EC665D-37C1-41D4-BD96-3005A7078630}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.ConsoleCriticalExceptionService", "Services\Clifton.ConsoleCriticalExceptionService\Clifton.ConsoleCriticalExceptionService.csproj", "{78B647EF-64BB-4B83-BFFB-9AF797D3042D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.ConsoleLoggerService", "Services\Clifton.ConsoleLoggerService\Clifton.ConsoleLoggerService.csproj", "{5DEC169A-D073-4744-B202-56CC95E4D0B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.DatabaseService", "Services\Clifton.DatabaseService\Clifton.DatabaseService.csproj", "{CC5FC049-F7C3-486B-B67B-700CA008EF22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.SemanticProcessorService", "Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj", "{B716A014-8C9F-4A24-83A4-ACBAE19C28C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{54E73707-81C4-4C7F-9739-446C6D7D5FEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54E73707-81C4-4C7F-9739-446C6D7D5FEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54E73707-81C4-4C7F-9739-446C6D7D5FEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54E73707-81C4-4C7F-9739-446C6D7D5FEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28EC665D-37C1-41D4-BD96-3005A7078630}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28EC665D-37C1-41D4-BD96-3005A7078630}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28EC665D-37C1-41D4-BD96-3005A7078630}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28EC665D-37C1-41D4-BD96-3005A7078630}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78B647EF-64BB-4B83-BFFB-9AF797D3042D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78B647EF-64BB-4B83-BFFB-9AF797D3042D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78B647EF-64BB-4B83-BFFB-9AF797D3042D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78B647EF-64BB-4B83-BFFB-9AF797D3042D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DEC169A-D073-4744-B202-56CC95E4D0B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DEC169A-D073-4744-B202-56CC95E4D0B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DEC169A-D073-4744-B202-56CC95E4D0B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DEC169A-D073-4744-B202-56CC95E4D0B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC5FC049-F7C3-486B-B67B-700CA008EF22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC5FC049-F7C3-486B-B67B-700CA008EF22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC5FC049-F7C3-486B-B67B-700CA008EF22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC5FC049-F7C3-486B-B67B-700CA008EF22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B716A014-8C9F-4A24-83A4-ACBAE19C28C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B716A014-8C9F-4A24-83A4-ACBAE19C28C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B716A014-8C9F-4A24-83A4-ACBAE19C28C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B716A014-8C9F-4A24-83A4-ACBAE19C28C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{28EC665D-37C1-41D4-BD96-3005A7078630} = {D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}
+		{78B647EF-64BB-4B83-BFFB-9AF797D3042D} = {D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}
+		{5DEC169A-D073-4744-B202-56CC95E4D0B8} = {D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}
+		{CC5FC049-F7C3-486B-B67B-700CA008EF22} = {D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}
+		{B716A014-8C9F-4A24-83A4-ACBAE19C28C5} = {D09F6EA0-A3DC-4B8C-BAC0-6872901FCEF0}
+	EndGlobalSection
+EndGlobal
