@@ -28,7 +28,10 @@ namespace Clifton.Core.Web.WebSocketService
 	{
 		protected override void OnMessage(MessageEventArgs e)
 		{
+			Console.WriteLine(e.Data);
+
 			IService service = e.CallerContext as IService;
+			Send("--->" + e.Data);
 		}
 	}
 }

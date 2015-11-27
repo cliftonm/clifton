@@ -10,5 +10,6 @@ namespace Clifton.Core.Web.WebInterfaces
 	public interface IWebSocketClientService : IService
 	{
 		void Start(string ipAddress, int port, string path);
+		void Send(string msg);
 	}
 }

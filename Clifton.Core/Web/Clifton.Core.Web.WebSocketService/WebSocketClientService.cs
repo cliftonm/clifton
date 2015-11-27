@@ -15,15 +15,23 @@ namespace Clifton.Core.Web.WebSocketService
 {
 	public class WebSocketClientService : ServiceBase, IWebSocketClientService
 	{
+		protected WebSocket wsc;
+
 		public void Start(string address, int port, string path)
 		{
-			IPAddress ipaddr = new IPAddress(address.Split('.').Select(a => (byte)a.to_i()).ToArray());
+			// IPAddress ipaddr = new IPAddress(address.Split('.').Select(a => (byte)a.to_i()).ToArray());
 			// WebSocketServer wss = new WebSocketServer(ipaddr, port, this);
-			WebSocket wsc = new WebSocket(address + ":" + port, this);
+			wsc = new WebSocket(address + ":"+port+path, this);
 			wsc.OnMessage += OnMessage;
+			wsc.Connect();
 		}
 
-		void OnMessage(object sender, MessageEventArgs e)
+		public void Send(string msg)
+		{
+			wsc.Send(msg);
+		}
+
+		private void OnMessage(object sender, MessageEventArgs e)
 		{
 			IService service = e.CallerContext as IService;
 		}
