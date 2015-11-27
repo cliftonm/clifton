@@ -80,6 +80,7 @@
     <Compile Include="Clifton.Core.StateManagement\StateInfo.cs" />
     <Compile Include="Clifton.Core.StateManagement\StateManager.cs" />
     <Compile Include="Clifton.Core.StateManagement\StateTransition.cs" />
+    <Compile Include="Clifton.Core.ThreadQueue\ThreadedQueue.cs" />
     <Compile Include="Clifton.Core.Utils\Converter.cs" />
     <Compile Include="Clifton.Core.Utils\PasswordHash.cs" />
     <Compile Include="Clifton.Core.Utils\Serialization.cs" />
