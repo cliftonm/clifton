@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Clifton.Core.ServiceManagement
+﻿namespace Clifton.Core.ServiceManagement
 {
 	public interface IService
 	{

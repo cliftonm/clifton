@@ -4,7 +4,7 @@ using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.ConsoleCriticalExceptionService
+namespace Clifton.Core.Services.ConsoleCriticalExceptionService
 {
 	public class ConsoleCriticalExceptionModule : IModule
 	{
