@@ -1,49 +1,36 @@
 ﻿using System;
 
 using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.Services.ConsoleCriticalExceptionService
+namespace Clifton.ConsoleLoggerService
 {
-	public class ConsoleCriticalExceptionModule : IModule
+	public class LoggerModule : IModule
 	{
-		public virtual void InitializeServices(IServiceManager serviceManager)
+		public void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.RegisterSingleton<IConsoleCriticalExceptionService, ConsoleCriticalException>();
+			serviceManager.RegisterSingleton<IConsoleLoggerService, LoggerService>();
 		}
 	}
 
-	public class ConsoleCriticalException : ServiceBase, IConsoleCriticalExceptionService
+	public class LoggerService : ServiceBase, IConsoleLoggerService
 	{
-		public override void Initialize(IServiceManager svcMgr)
+		public virtual void Log(LogMessage msg)
 		{
-			base.Initialize(svcMgr);
-			AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss : ") + msg.Value);
 		}
 
-		protected virtual void GlobalExceptionHandler(object sender, UnhandledExceptionEventArgs e)
+		public virtual void Log(ExceptionMessage msg)
 		{
-			try
-			{
-				ILoggerService logger = ServiceManager.Get<ILoggerService>();
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + msg.Value);
+		}
 
-				if (e.ExceptionObject is Exception)
-				{
-					logger.Log((Exception)e.ExceptionObject);
-				}
-				else
-				{
-					logger.Log(ExceptionMessage.Create(e.ExceptionObject.GetType().Name));
-				}
-
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(ex.Message + "\r\n" + ex.StackTrace);
-			}
-
-			Environment.Exit(1);
+		public virtual void Log(Exception ex)
+		{
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.Message);
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.StackTrace);
 		}
 	}
 }
