@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
+using Clifton.Core.Semantics;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Workflow;
 
@@ -26,9 +28,16 @@ namespace Clifton.WebInterfaces
 	{
 	}
 
-	public interface IRouterService : IService
+	public interface IPublicRouterService : IService
 	{
-		void RegisterSemanticRoute(string path, Type t, RouteType routeType = RouteType.PublicRoute, uint roleMask = 0);
+		Dictionary<string, RouteInfo> Routes { get; }
+		void RegisterSemanticRoute<T>(string path) where T : SemanticRoute;
+	}
+
+	public interface IAuthenticatingRouterService : IService
+	{
+		Dictionary<string, RouteInfo> Routes { get; }
+		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.PublicRoute, uint roleMask = 0) where T : SemanticRoute;
 	}
 
 	public interface IWebSessionService : IService
@@ -53,7 +62,8 @@ namespace Clifton.WebInterfaces
 
 	public interface IWebServerService : IService
 	{
-		void Start();
+		List<IPAddress> GetLocalHostIPs();
+		void Start(string ip, int port);
 	}
 
 	public interface IWebWorkflowService : IService

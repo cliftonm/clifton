@@ -68,6 +68,11 @@ namespace Clifton.Core.ServiceManagement
 			singletons.ForEach(kvp => kvp.Value.FinishedInitialization());
 		}
 
+		public virtual bool Exists<T>() where T : IService
+		{
+			return interfaceServiceMap.ContainsKey(typeof(T));
+		}
+
 		public virtual T Get<T>()
 			where T : IService
 		{
@@ -177,8 +182,7 @@ namespace Clifton.Core.ServiceManagement
 		protected void VerifyRegistered<T>()
 			where T : IService
 		{
-			Type t = typeof(T);
-			Assert.That(interfaceServiceMap.ContainsKey(t), "The service " + GetName<T>() + " has not been registered.");
+			Assert.That(Exists<T>(), "The service " + GetName<T>() + " has not been registered.");
 		}
 
 		/// <summary>

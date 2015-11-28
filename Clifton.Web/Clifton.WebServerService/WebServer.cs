@@ -23,6 +23,13 @@ namespace Clifton.WebServerService
 		}
 	}
 
+	/// <summary>
+	/// Required service dependencies:
+	///   ILoggerService
+	///   ISemanticProcessor
+	/// Optional:
+	///   IWebWorkflowService, for setting up a workflow for pre/post processing of route/responses.
+	/// </summary>
     public class WebServer : ServiceBase, IWebServerService
     {
 		protected HttpListener listener;
@@ -36,17 +43,27 @@ namespace Clifton.WebServerService
 			semProc = ServiceManager.Get<ISemanticProcessor>();
 		}
 
-		public virtual void Start()
+		/// <summary>
+		/// Returns list of IP addresses assigned to localhost network devices, such as hardwired ethernet, wireless, etc.
+		/// </summary>
+		public List<IPAddress> GetLocalHostIPs()
 		{
-			IConfigService cfg = ServiceManager.Get<IConfigService>();
+			IPHostEntry host;
+			host = Dns.GetHostEntry(Dns.GetHostName());
+			List<IPAddress> ret = host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork).ToList();
+
+			return ret;
+		}
+
+		public virtual void Start(string ip, int port)
+		{
 			listener = new HttpListener();
-			string ip = cfg.GetValue("IP");
-			int port = cfg.GetValue("Port").to_i();
 			string url = UrlWithPort(ip, port);
 			logger.Log(LogMessage.Create("Listening on " + ip + " (port " + port + ")"));
 			listener.Prefixes.Add(url);
 
-			if (cfg.GetValue("UseLocalIP").to_b())
+			/*
+			if (useLocalIP)
 			{
 				List<IPAddress> localHostIPs = GetLocalHostIPs();
 				localHostIPs.ForEach(localip =>
@@ -55,9 +72,11 @@ namespace Clifton.WebServerService
 					logger.Log(LogMessage.Create("Listening on http://" + localip + " (port " + port + ")"));
 					listener.Prefixes.Add(url);
 				});
-				
 			}
+			*/
 
+			// SSL Support.  TODO: Figure out a better way to do this than the convoluted approach commented out here.
+			/*
 			if ( (port != 80) && (cfg.GetValue("ServeWebPages").to_b()) )
 			{
 				// For an Amazon EC2 instance, the listening port cannot be localhost, it has to be the non-elastic IP!
@@ -74,6 +93,7 @@ namespace Clifton.WebServerService
 				//logger.Log(LogMessage.Create("Listening on " + ip + "  (port 80)"));
 				//listener.Prefixes.Add("http://localhost/");
 			}
+			*/
 
 			listener.Start();
 			Task.Run(() => WaitForConnection(listener));
@@ -90,14 +110,21 @@ namespace Clifton.WebServerService
 				logger.Log(LogMessage.Create(context.Verb().Value + ": " + context.Path().Value));
 
 				// If the pre-router lets us continue, the route the request.
-				if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
+				if (ServiceManager.Exists<IWebWorkflowService>())
 				{
-					semProc.ProcessInstance<WebServerMembrane, Route>(r => r.Context = context);
+					if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
+					{
+						semProc.ProcessInstance<WebServerMembrane, Route>(r => r.Context = context);
+					}
+					else
+					{
+						// Otherwise just close the response.
+						context.Response.Close();
+					}
 				}
 				else
 				{
-					// Otherwise just close the response.
-					context.Response.Close();
+					semProc.ProcessInstance<WebServerMembrane, Route>(r => r.Context = context);
 				}
 			}
 		}
@@ -113,18 +140,6 @@ namespace Clifton.WebServerService
 			{
 				ret = url + ":" + port.ToString() + "/";
 			}
-
-			return ret;
-		}
-
-		/// <summary>
-		/// Returns list of IP addresses assigned to localhost network devices, such as hardwired ethernet, wireless, etc.
-		/// </summary>
-		protected List<IPAddress> GetLocalHostIPs()
-		{
-			IPHostEntry host;
-			host = Dns.GetHostEntry(Dns.GetHostName());
-			List<IPAddress> ret = host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork).ToList();
 
 			return ret;
 		}

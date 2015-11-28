@@ -33,6 +33,12 @@ namespace Clifton.Core.ServiceManagement
 			where S : IService;
 
 		/// <summary>
+		/// Returns true if the service exists.  Useful for testing whether
+		/// a service has been included in the application.
+		/// </summary>
+		bool Exists<T>() where T : IService;
+
+		/// <summary>
 		/// If the service is specifically instance-only or singleton-only, we can use this method.
 		/// </summary>
 		T Get<T>() where T : IService;

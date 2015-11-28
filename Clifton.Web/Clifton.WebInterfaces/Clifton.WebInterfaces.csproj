@@ -45,6 +45,7 @@
     <Compile Include="PostRouteWorkflowData.cs" />
     <Compile Include="PreRouteWorkflowData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RouteInfo.cs" />
     <Compile Include="Semantics.cs" />
   </ItemGroup>
   <ItemGroup>
