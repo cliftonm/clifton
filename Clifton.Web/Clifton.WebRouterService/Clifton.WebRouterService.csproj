@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0A5483C7-CBCF-4033-8D92-CDFCF7856B54}</ProjectGuid>
+    <ProjectGuid>{10B322CD-1942-4D60-A20A-FC3AE0B04FF3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Clifton.WebInterfaces</RootNamespace>
-    <AssemblyName>Clifton.WebInterfaces</AssemblyName>
+    <RootNamespace>Clifton.WebRouterService</RootNamespace>
+    <AssemblyName>Clifton.WebRouterService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -39,18 +42,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums.cs" />
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="Interfaces.cs" />
-    <Compile Include="PostRouteWorkflowData.cs" />
-    <Compile Include="PreRouteWorkflowData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Semantics.cs" />
+    <Compile Include="Router.cs" />
+    <Compile Include="RouterReceptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Clifton.Core\Clifton.Core.csproj">
       <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
       <Name>Clifton.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Clifton.WebInterfaces\Clifton.WebInterfaces.csproj">
+      <Project>{0a5483c7-cbcf-4033-8d92-cdfcf7856b54}</Project>
+      <Name>Clifton.WebInterfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
