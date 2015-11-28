@@ -442,7 +442,7 @@ namespace WebSocketSharp.Server
     /// <param name="data">
     /// An array of <see cref="byte"/> that represents the binary data to send.
     /// </param>
-    protected void Send (byte[] data)
+    public void Send (byte[] data)
     {
       if (_websocket != null)
         _websocket.Send (data);
@@ -457,7 +457,7 @@ namespace WebSocketSharp.Server
     /// <param name="file">
     /// A <see cref="FileInfo"/> that represents the file to send.
     /// </param>
-    protected void Send (FileInfo file)
+    public void Send (FileInfo file)
     {
       if (_websocket != null)
         _websocket.Send (file);
@@ -472,7 +472,7 @@ namespace WebSocketSharp.Server
     /// <param name="data">
     /// A <see cref="string"/> that represents the text data to send.
     /// </param>
-    protected void Send (string data)
+    public void Send (string data)
     {
       if (_websocket != null)
         _websocket.Send (data);

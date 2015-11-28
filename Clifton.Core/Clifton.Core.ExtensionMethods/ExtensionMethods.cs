@@ -518,6 +518,11 @@ namespace Clifton.Core.ExtensionMethods
 			return Convert.ToBoolean(src);
 		}
 
+		public static float to_f(this string src)
+		{
+			return (float)Convert.ToDouble(src);
+		}
+
 		public static double to_d(this string src)
 		{
 			return Convert.ToDouble(src);
@@ -1097,6 +1102,11 @@ namespace Clifton.Core.ExtensionMethods
 			}
 
 			return a;
+		}
+
+		public static void Until(this int start, int max, Action<int> action)
+		{
+			for (int i = start; i < max; i++) action(i);
 		}
 	}
 }

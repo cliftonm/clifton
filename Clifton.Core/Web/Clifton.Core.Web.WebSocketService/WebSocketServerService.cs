@@ -7,6 +7,7 @@ using WebSocketSharp.Server;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Web.WebInterfaces;
@@ -28,10 +29,12 @@ namespace Clifton.Core.Web.WebSocketService
 	{
 		protected override void OnMessage(MessageEventArgs e)
 		{
-			Console.WriteLine(e.Data);
-
 			IService service = e.CallerContext as IService;
-			Send("--->" + e.Data);
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ServerSocketMessage>(msg => 
+				{
+					msg.Text = e.Data;
+					msg.Session = this;
+				});
 		}
 	}
 }

@@ -17,6 +17,12 @@ namespace Clifton.Core.ThreadQueue
 			queue = new ConcurrentQueue<T>();
 			sem = new Semaphore(0, Int32.MaxValue);
 			thread = new Thread(new ParameterizedThreadStart(ProcessQueueItem));
+			thread.IsBackground = true;
+		}
+
+		public void Start()
+		{
+			thread.Start();
 		}
 
 		public void Enqueue(T item)
@@ -27,12 +33,15 @@ namespace Clifton.Core.ThreadQueue
 
 		public void ProcessQueueItem(object arg)
 		{
-			sem.WaitOne();
-			T item;
-
-			if (queue.TryDequeue(out item))
+			while (true)
 			{
-				processAction(item);
+				sem.WaitOne();
+				T item;
+
+				if (queue.TryDequeue(out item))
+				{
+					processAction(item);
+				}
 			}
 		}
 	}

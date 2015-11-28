@@ -7,6 +7,7 @@ using WebSocketSharp.Server;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Web.WebInterfaces;
@@ -34,6 +35,10 @@ namespace Clifton.Core.Web.WebSocketService
 		private void OnMessage(object sender, MessageEventArgs e)
 		{
 			IService service = e.CallerContext as IService;
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ClientSocketMessage>(msg =>
+				{
+					msg.Text = e.Data;
+				});
 		}
 	}
 }
