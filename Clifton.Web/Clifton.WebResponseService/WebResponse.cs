@@ -88,7 +88,7 @@ namespace Clifton.WebResponseService
 		/// </summary>
 		public void Process(ISemanticProcessor proc, IMembrane membrane, HtmlResponse resp)
 		{
-			proc.ServiceManager.Get<IWebWorkflowService>().PostRouter(resp.Context, resp);
+			proc.ServiceManager.IfExists<IWebWorkflowService>(wws => wws.PostRouter(resp.Context, resp));
 			byte[] utf8data = resp.Html.to_Utf8();
 			resp.Context.Response.ContentType = "text/html";
 			resp.Context.Response.ContentEncoding = Encoding.UTF8;
