@@ -38,6 +38,8 @@ namespace Clifton.Core.ServiceManagement
 		/// </summary>
 		bool Exists<T>() where T : IService;
 
+		bool IfExists<T>(Action<T> action) where T : IService;
+
 		/// <summary>
 		/// If the service is specifically instance-only or singleton-only, we can use this method.
 		/// </summary>

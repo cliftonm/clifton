@@ -73,6 +73,19 @@ namespace Clifton.Core.ServiceManagement
 			return interfaceServiceMap.ContainsKey(typeof(T));
 		}
 
+		public virtual bool IfExists<T>(Action<T> action) where T : IService
+		{
+			bool ret = Exists<T>();
+
+			if (ret)
+			{
+				T service = Get<T>();
+				action(service);
+			}
+
+			return ret;
+		}
+
 		public virtual T Get<T>()
 			where T : IService
 		{
