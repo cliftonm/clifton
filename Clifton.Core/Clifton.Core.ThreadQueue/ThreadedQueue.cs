@@ -31,7 +31,7 @@ namespace Clifton.Core.ThreadQueue
 			sem.Release();
 		}
 
-		public void ProcessQueueItem(object arg)
+		protected void ProcessQueueItem(object arg)
 		{
 			while (true)
 			{
