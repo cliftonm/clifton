@@ -88,6 +88,20 @@ namespace Clifton.WebDefaultWorkflowService
 				}
 			}
 
+			newhtml = Replace(newhtml, "@CurrentYear@", (src, token) => src.Replace(token, DateTime.Now.Year.ToString()));
+
+			return newhtml;
+		}
+
+		protected string Replace(string html, string token, Func<string, string, string> replaceWith)
+		{
+			string newhtml = html;
+
+			while (newhtml.Contains(token))
+			{
+				newhtml = replaceWith(newhtml, token);
+			}
+
 			return newhtml;
 		}
 	}
