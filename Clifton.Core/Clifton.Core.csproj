@@ -87,6 +87,7 @@
     <Compile Include="Clifton.Core.Utils\ConcurrentList.cs" />
     <Compile Include="Clifton.Core.Utils\Converter.cs" />
     <Compile Include="Clifton.Core.Utils\PasswordHash.cs" />
+    <Compile Include="Clifton.Core.Utils\ProcessHelper.cs" />
     <Compile Include="Clifton.Core.Utils\RestCall.cs" />
     <Compile Include="Clifton.Core.Utils\Serialization.cs" />
     <Compile Include="Clifton.Core.Workflow\Workflow.cs" />
