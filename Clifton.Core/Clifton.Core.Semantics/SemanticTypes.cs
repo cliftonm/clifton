@@ -1,8 +1,17 @@
 ﻿using System;
 
-
 namespace Clifton.Core.Semantics
 {
+	public class ST_Exception : ISemanticType
+	{
+		public Exception Exception { get; protected set; }
+
+		public ST_Exception(Exception ex)
+		{
+			this.Exception = ex;
+		}
+	}
+
 	public class XmlFileName : ImmutableSemanticType<XmlFileName, string> { };
 	public class FullPath : ImmutableSemanticType<FullPath, string> { };
 	public class AssemblyFileName : ImmutableSemanticType<AssemblyFileName, string> { }

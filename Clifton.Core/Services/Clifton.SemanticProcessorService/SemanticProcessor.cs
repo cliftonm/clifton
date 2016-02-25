@@ -17,16 +17,6 @@ using Clifton.Core.Utils;
 
 namespace Clifton.Core.Services.SemanticProcessorService
 {
-	public class ST_Exception : ISemanticType
-	{
-		public Exception Exception { get; protected set; }
-
-		public ST_Exception(Exception ex)
-		{
-			this.Exception = ex;
-		}
-	}
-
 	public abstract class ProcessCall
 	{
 		public IReceptor Receptor { get; set; }
