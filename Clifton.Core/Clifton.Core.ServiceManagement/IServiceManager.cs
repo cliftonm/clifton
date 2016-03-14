@@ -33,6 +33,12 @@ namespace Clifton.Core.ServiceManagement
 			where S : IService;
 
 		/// <summary>
+		/// Associate a concrete instance provided by the caller with its specific interface.
+		/// </summary>
+		void RegisterSingleton<I>(IService svc)
+			where I : IService;
+
+		/// <summary>
 		/// Returns true if the service exists.  Useful for testing whether
 		/// a service has been included in the application.
 		/// </summary>

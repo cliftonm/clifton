@@ -63,6 +63,18 @@ namespace Clifton.Core.ServiceManagement
 			CreateAndRegisterSingleton<I>();
 		}
 
+		/// <summary>
+		/// Associate a concrete instance provided by the caller with its specific interface.
+		/// </summary>
+		public virtual void RegisterSingleton<I>(IService svc)
+			where I : IService
+		{
+			Type t = typeof(I);
+			singletons[t] = svc;
+			interfaceServiceMap[t] = svc.GetType();
+			constructionOption[t] = ConstructionOption.AlwaysSingleton;
+		}
+
 		public override void FinishedInitialization()
 		{
 			singletons.ForEach(kvp => kvp.Value.FinishedInitialization());
