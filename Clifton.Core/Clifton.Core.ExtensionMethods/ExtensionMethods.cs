@@ -36,6 +36,11 @@ namespace Clifton.Core.ExtensionMethods
 			return b;
 		}
 
+		public static void IfElse(this bool b, Action ifTrue, Action ifFalse)
+		{
+			if (b) ifTrue(); else ifFalse();
+		}
+
 		// Type is...
 		public static bool Is<T>(this object obj, Action<T> action)
 		{

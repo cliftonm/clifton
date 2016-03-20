@@ -37,7 +37,7 @@ namespace Clifton.WebInterfaces
 	public interface IAuthenticatingRouterService : IService
 	{
 		Dictionary<string, RouteInfo> Routes { get; }
-		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.PublicRoute, uint roleMask = 0) where T : SemanticRoute;
+		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.AuthenticatedRoute, uint roleMask = 0) where T : SemanticRoute;
 	}
 
 	public interface IWebSessionService : IService

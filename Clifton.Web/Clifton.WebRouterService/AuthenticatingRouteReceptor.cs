@@ -29,7 +29,7 @@ namespace Clifton.WebRouterService
 	{
 		public void Process(ISemanticProcessor proc, IMembrane membrane, Route route)
 		{
-			IPublicRouterService routerService = proc.ServiceManager.Get<IPublicRouterService>();
+			IAuthenticatingRouterService routerService = proc.ServiceManager.Get<IAuthenticatingRouterService>();
 			HttpListenerContext context = route.Context;
 			string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 			HttpVerb verb = context.Verb();
