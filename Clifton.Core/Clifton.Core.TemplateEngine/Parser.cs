@@ -54,6 +54,7 @@ namespace Clifton.Core.TemplateEngine
 			{
 				// Append a non-code line.
 				string parsedLine = VariableReplacement(line);
+				parsedLine = parsedLine.Replace("\"", "\\\"");
 				sb.AppendLine("sb.Append" + (parsedLine + Constants.CRLF).Quote().Parens() + ";");
 			}
 		}
@@ -69,6 +70,7 @@ namespace Clifton.Core.TemplateEngine
 				// Preserve leading whitespace.
 				string literal = line.LeftOf(Constants.LITERAL) + line.RightOf(Constants.LITERAL);
 				string parsedLiteral = VariableReplacement(literal);
+				parsedLiteral = parsedLiteral.Replace("\"", "\\\"");
 				sb.AppendLine("sb.Append" + (parsedLiteral + Constants.CRLF).Quote().Parens() + ";");
 			}
 			else
