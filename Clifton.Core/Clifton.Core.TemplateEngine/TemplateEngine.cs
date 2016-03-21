@@ -15,6 +15,7 @@ namespace Clifton.Core.TemplateEngine
 		public List<string> References { get; protected set; }
 
 		protected Dictionary<Guid, IRuntimeAssembly> cachedAssemblies;
+		protected bool useDynamic;
 
 		public TemplateEngine()
 		{
@@ -33,6 +34,7 @@ namespace Clifton.Core.TemplateEngine
 
 		public void UsesDynamic()
 		{
+			useDynamic = true;
 			References.Add("Microsoft.CSharp.dll");
 			References.Add(typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location);
 		}
@@ -199,9 +201,16 @@ public class RuntimeCompiled : IRuntimeAssembly
 		{
 			parms.ForEachWithIndex((parm, idx) =>
 			{
-				Type t = parm.GetType();
-				string typeName = t.IsClass ? "I" + t.Name : t.Name;
-				sb.Append(typeName + " " + names[idx] + " = (" + typeName + ")paramList[" + idx + "];\r\n");
+				if (useDynamic)
+				{
+					sb.Append("dynamic " + names[idx] + " = paramList[" + idx + "];\r\n");
+				}
+				else
+				{
+					Type t = parm.GetType();
+					string typeName = t.IsClass ? "I" + t.Name : t.Name;
+					sb.Append(typeName + " " + names[idx] + " = (" + typeName + ")paramList[" + idx + "];\r\n");
+				}
 			});
 		}
 
