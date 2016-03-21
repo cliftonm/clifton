@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.Core.TemplateEngine", "Clifton.Core.TemplateEngine.csproj", "{85CBF0B3-3304-44B9-8497-C662121C68AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{B6993512-AE3E-4DEA-A6A0-0A11106ABA2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelInterface", "ModelInterface\ModelInterface.csproj", "{3E648939-EADF-438B-A288-66F5177574D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{85CBF0B3-3304-44B9-8497-C662121C68AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85CBF0B3-3304-44B9-8497-C662121C68AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85CBF0B3-3304-44B9-8497-C662121C68AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85CBF0B3-3304-44B9-8497-C662121C68AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6993512-AE3E-4DEA-A6A0-0A11106ABA2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6993512-AE3E-4DEA-A6A0-0A11106ABA2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6993512-AE3E-4DEA-A6A0-0A11106ABA2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6993512-AE3E-4DEA-A6A0-0A11106ABA2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E648939-EADF-438B-A288-66F5177574D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E648939-EADF-438B-A288-66F5177574D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E648939-EADF-438B-A288-66F5177574D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E648939-EADF-438B-A288-66F5177574D7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
