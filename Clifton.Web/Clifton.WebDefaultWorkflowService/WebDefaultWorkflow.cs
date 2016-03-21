@@ -10,6 +10,7 @@ using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
+using Clifton.Core.TemplateEngine;
 using Clifton.Core.Workflow;
 
 using Clifton.WebInterfaces;
@@ -29,15 +30,25 @@ namespace Clifton.WebDefaultWorkflowService
 
 	public class WebDefaultWorkflow : ServiceBase, IWebDefaultWorkflowService
 	{
+		protected TemplateEngine templateEngine;
+
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();
+			InitializeTemplateEngine();
+
 			ServiceManager.Get<IWebWorkflowService>().RegisterPreRouterWorkflow(new WorkflowItem<PreRouteWorkflowData>(PreRouter));
 			
 			// Only called for HTML responses:
 			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterInjectLayout));
 			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterRendering));
 			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterProcessTokens));
+		}
+
+		protected void InitializeTemplateEngine()
+		{
+			templateEngine = new TemplateEngine();
+			templateEngine.UsesDynamic();
 		}
 
 		protected WorkflowState PreRouter(WorkflowContinuation<PreRouteWorkflowData> wc, PreRouteWorkflowData data)
@@ -47,125 +58,12 @@ namespace Clifton.WebDefaultWorkflowService
 
 		protected WorkflowState PostRouterRendering(WorkflowContinuation<PostRouteWorkflowData> wc, PostRouteWorkflowData data)
 		{
-			string render = data.HtmlResponse.Html.Between("<!-- Render:", "-->");
-
-			if (!String.IsNullOrEmpty(render))
-			{
-				// Remove the render metadata code.
-				data.HtmlResponse.Html = data.HtmlResponse.Html.LeftOf("<!-- Render:") + data.HtmlResponse.Html.RightOf("<!-- Render:").RightOf("-->");
-				List<string> renderCmds = render.Split("\r\n".ToCharArray()).Where(s => !String.IsNullOrEmpty(s.Trim())).Select(s => s.Trim()).ToList();
-				data.HtmlResponse.Html = ProcessRenderingCommands(data.Context, data.HtmlResponse.Html, renderCmds);
-			}
+			string template = data.HtmlResponse.Html;
+			IWebSessionService sessionSvc = ServiceManager.Get<IWebSessionService>();
+			string newHtml = templateEngine.Parse(template, new string[] { "session", "context" }, new object[] { sessionSvc, data.Context });
+			data.HtmlResponse.Html = newHtml;
 
 			return WorkflowState.Continue;
-		}
-
-		// Very bare bones for now!
-		protected string ProcessRenderingCommands(HttpListenerContext context, string html, List<string> renderCmds)
-		{
-			string ret = html;
-
-			foreach (string cmdLine in renderCmds)
-			{
-				string cmd = cmdLine.LeftOf("(");
-				string args = cmdLine.RightOf("(").LeftOfRightmostOf(")");
-				string id = args.LeftOf(",").Trim();
-				string fncWithParms = args.RightOf(",").Trim();
-				string fnc = fncWithParms.LeftOf("(");
-				string fncParms = fncWithParms.Between("(", ")");
-				bool notResult = fnc[0]=='!';
-
-				if (notResult)
-				{
-					fnc=fnc.Substring(1);
-				}
-
-				bool fncRet = false;
-
-				switch (fnc.ToLower())
-				{
-					case "role":
-						fncRet = false; // ServiceManager.Get<IWebSessionService>().IsAuthenticated(context);
-						break;
-
-					case "authenticated":
-						fncRet = ServiceManager.Get<IWebSessionService>().IsAuthenticated(context);
-						break;
-				}
-
-				if (notResult)
-				{
-					fncRet = !fncRet;
-				}
-
-				if (fncRet)
-				{
-					switch (cmd.ToLower())
-					{
-						case "remove":
-							ret = RemoveElementWithId(ret, id);
-							break;
-					}
-				}
-			}
-
-			return ret;
-		}
-
-		// Very bare bones for now!
-		protected string RemoveElementWithId(string html, string id)
-		{
-			int idx = html.IndexOf(id);
-
-			if (idx != -1)
-			{
-				// scan left until we encounter <
-				while (html[idx] != '<') --idx;
-
-				++idx;		// ignore <
-				int startTagIdx = idx;
-
-				// scan right until we encounter ' ' (we know the tag doesn't end in > because it has an id attribute)
-				while (html[idx] != ' ') ++idx;
-
-				string tag = html.Substring(startTagIdx, idx - startTagIdx);
-
-				// For dealing with nesting.
-				string startTagOption1 = "<" + tag + " ";
-				string startTagOption2 = "<" + tag + ">";
-
-				// TODO: no support for tags that don't end in this format.
-				// Is nesting implemented correctly?
-				string endTag = "</" + tag + ">";
-				int endTagIdx = startTagIdx + tag.Length;
-				int nestLevel = 0;
-				string remainder;
-
-				// Nested tag support.
-				do
-				{
-					remainder = html.Substring(endTagIdx);
-
-					if (remainder.BeginsWith(startTagOption1) || remainder.BeginsWith(startTagOption2))
-					{
-						++nestLevel;
-					}
-					else if (remainder.BeginsWith(endTag))
-					{
-						--nestLevel;
-					}
-
-					++endTagIdx;
-
-				} while ( (!remainder.StartsWith(endTag)) || (nestLevel >= 0) );
-				
-				string htmlLeft = html.Substring(0, startTagIdx - 1);
-				string htmlRight = html.Substring(endTagIdx + endTag.Length - 1);
-
-				html = htmlLeft + htmlRight;
-			}
-
-			return html;
 		}
 
 		protected WorkflowState PostRouterInjectLayout(WorkflowContinuation<PostRouteWorkflowData> wc, PostRouteWorkflowData data)

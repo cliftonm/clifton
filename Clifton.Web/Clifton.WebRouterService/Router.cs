@@ -46,6 +46,11 @@ namespace Clifton.WebRouterService
 
 	public class AuthenticatingWebRouter : RouterBase, IAuthenticatingRouterService
 	{
+		public bool IsAuthenticatedRoute(string path)
+		{
+			return routes.ContainsKey(path);
+		}
+
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();

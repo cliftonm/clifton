@@ -94,9 +94,13 @@ namespace Clifton.WebRouterService
 			}
 			else
 			{
-				// Put the context on the bus for some service to pick up.
-				// All unhandled context are assumed to be public routes.
-				proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
+				// Only issue the UnhandledContext if this is not an authenticated route.
+				if (!proc.ServiceManager.Get<IAuthenticatingRouterService>().IsAuthenticatedRoute(searchRoute))
+				{
+					// Put the context on the bus for some service to pick up.
+					// All unhandled context are assumed to be public routes.
+					proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
+				}
 			}
 		}
 

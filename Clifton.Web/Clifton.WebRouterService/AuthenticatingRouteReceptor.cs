@@ -157,12 +157,14 @@ namespace Clifton.WebRouterService
 					}
 				}
 			}
+/* Nothing for the authenticated router to do.  Let the public router handle it. 
 			else
 			{
 				// Put the context on the bus for some service to pick up.
 				// All unhandled context are assumed to be public routes.
 				proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
 			}
+ */ 
 		}
 
 		protected string GetSearchRoute(HttpVerb verb, UriPath path)

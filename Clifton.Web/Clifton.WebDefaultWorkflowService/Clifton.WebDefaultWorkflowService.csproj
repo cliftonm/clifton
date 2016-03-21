@@ -47,6 +47,10 @@
       <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
       <Name>Clifton.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Clifton.Core\Clifton.Core.TemplateEngine\Clifton.Core.TemplateEngine.csproj">
+      <Project>{85cbf0b3-3304-44b9-8497-c662121c68ae}</Project>
+      <Name>Clifton.Core.TemplateEngine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Clifton.WebInterfaces\Clifton.WebInterfaces.csproj">
       <Project>{0a5483c7-cbcf-4033-8d92-cdfcf7856b54}</Project>
       <Name>Clifton.WebInterfaces</Name>
