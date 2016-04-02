@@ -38,5 +38,26 @@ namespace Clifton.WebInterfaces
 		{
 			return context.Request.RemoteEndPoint.Address;
 		}
+
+		/// <summary>
+		/// Redirect to the designated page.
+		/// </summary>
+		public static void Redirect(this HttpListenerContext context, string url)
+		{
+			// URL should not begin with a /, as we inject it here.
+			// This check is made here so that if the programmer accidentally puts in a leading slash, we catch it here.
+			if (url.BeginsWith("/"))
+			{
+				url = url.Substring(1);
+			}
+
+			url = url.Replace('\\', '/');
+			HttpListenerRequest request = context.Request;
+			HttpListenerResponse response = context.Response;
+			response.StatusCode = (int)HttpStatusCode.Redirect;
+			string redirectUrl = request.Url.Scheme + "://" + request.Url.Host + "/" + url;
+			response.Redirect(redirectUrl);
+			response.Close();
+		}
 	}
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -31,10 +30,10 @@ namespace Clifton.WebRouterService
 		{
 			IAuthenticatingRouterService routerService = proc.ServiceManager.Get<IAuthenticatingRouterService>();
 			HttpListenerContext context = route.Context;
-			string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 			HttpVerb verb = context.Verb();
 			UriPath path = context.Path();
 			string searchRoute = GetSearchRoute(verb, path);
+			string data = route.Data;
 			RouteInfo routeInfo;
 
 			// TODO: Session manager may not exist.  How do we handle services that are missing?
@@ -157,14 +156,12 @@ namespace Clifton.WebRouterService
 					}
 				}
 			}
-/* Nothing for the authenticated router to do.  Let the public router handle it. 
 			else
 			{
 				// Put the context on the bus for some service to pick up.
 				// All unhandled context are assumed to be public routes.
 				proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
 			}
- */ 
 		}
 
 		protected string GetSearchRoute(HttpVerb verb, UriPath path)

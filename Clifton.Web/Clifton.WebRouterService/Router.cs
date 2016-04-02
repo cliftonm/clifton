@@ -17,7 +17,7 @@ namespace Clifton.WebRouterService
 	{
 		public void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.RegisterSingleton<IPublicRouterService, PublicWebRouter>();
+			// serviceManager.RegisterSingleton<IPublicRouterService, PublicWebRouter>();
 			serviceManager.RegisterSingleton<IAuthenticatingRouterService, AuthenticatingWebRouter>();
 		}
 	}
@@ -29,6 +29,7 @@ namespace Clifton.WebRouterService
 		protected Dictionary<string, RouteInfo> routes = new Dictionary<string, RouteInfo>();
 	}
 
+	/*
 	public class PublicWebRouter : RouterBase, IPublicRouterService
 	{
 		public override void FinishedInitialization()
@@ -43,6 +44,7 @@ namespace Clifton.WebRouterService
 			routes[path] = new RouteInfo(typeof(T));
 		}
 	}
+	*/
 
 	public class AuthenticatingWebRouter : RouterBase, IAuthenticatingRouterService
 	{
@@ -60,7 +62,8 @@ namespace Clifton.WebRouterService
 
 		public void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.PublicRoute, uint roleMask = 0) where T : SemanticRoute
 		{
-			routes[path] = new RouteInfo(typeof(T), routeType, roleMask);
+			// TODO: we set the path part to lowercase.  Kludgy.
+			routes[path.LeftOf(":") + ":" + path.RightOf(":").ToLower()] = new RouteInfo(typeof(T), routeType, roleMask);
 		}
 	}
 }

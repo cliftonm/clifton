@@ -29,6 +29,7 @@ namespace Clifton.WebInterfaces
 	public class Route : ISemanticType
 	{
 		public HttpListenerContext Context { get; set; }
+		public string Data { get; set; }
 	}
 
 	/// <summary>
@@ -106,12 +107,4 @@ namespace Clifton.WebInterfaces
 		public HttpListenerContext Context { get; set; }
 		public string Script { get; set; }
 	}
-
-	public class Login : SemanticRoute
-	{
-		public string Username { get; set; }
-		public string Password { get; set; }
-	}
-
-	public class Logout : SemanticRoute { }
 }

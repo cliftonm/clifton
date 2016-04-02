@@ -28,11 +28,11 @@ namespace Clifton.WebInterfaces
 	{
 	}
 
-	public interface IPublicRouterService : IService
-	{
-		Dictionary<string, RouteInfo> Routes { get; }
-		void RegisterSemanticRoute<T>(string path) where T : SemanticRoute;
-	}
+	//public interface IPublicRouterService : IService
+	//{
+	//	Dictionary<string, RouteInfo> Routes { get; }
+	//	void RegisterSemanticRoute<T>(string path) where T : SemanticRoute;
+	//}
 
 	public interface IAuthenticatingRouterService : IService
 	{
@@ -64,7 +64,7 @@ namespace Clifton.WebInterfaces
 	public interface IWebServerService : IService
 	{
 		List<IPAddress> GetLocalHostIPs();
-		void Start(string ip, int port);
+		void Start(string ip, int[] ports);
 	}
 
 	public interface IWebWorkflowService : IService

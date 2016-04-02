@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -55,12 +56,16 @@ namespace Clifton.WebServerService
 			return ret;
 		}
 
-		public virtual void Start(string ip, int port)
+		public virtual void Start(string ip, int[] ports)
 		{
 			listener = new HttpListener();
-			string url = UrlWithPort(ip, port);
-			logger.Log(LogMessage.Create("Listening on " + ip + " (port " + port + ")"));
-			listener.Prefixes.Add(url);
+
+			foreach (int port in ports)
+			{
+				string url = IpWithPort(ip, port);
+				logger.Log(LogMessage.Create("Listening on " + ip + " (port " + port + ")"));
+				listener.Prefixes.Add(url);
+			}
 
 			/*
 			if (useLocalIP)
@@ -108,13 +113,14 @@ namespace Clifton.WebServerService
 				// Wait for a connection.  Return to caller while we wait.
 				HttpListenerContext context = listener.GetContext();
 				logger.Log(LogMessage.Create(context.Verb().Value + ": " + context.Path().Value));
+				string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 
 				// If the pre-router lets us continue, the route the request.
 				if (ServiceManager.Exists<IWebWorkflowService>())
 				{
 					if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
 					{
-						semProc.ProcessInstance<WebServerMembrane, Route>(r => r.Context = context);
+						ProcessRoute(context, data);
 					}
 					else
 					{
@@ -124,21 +130,34 @@ namespace Clifton.WebServerService
 				}
 				else
 				{
-					semProc.ProcessInstance<WebServerMembrane, Route>(r => r.Context = context);
+					ProcessRoute(context, data);
 				}
 			}
+		}
+
+		protected void ProcessRoute(HttpListenerContext context, string data)
+		{
+			semProc.ProcessInstance<WebServerMembrane, Route>(r =>
+			{
+				r.Context = context;
+				r.Data = data;
+			});
 		}
 
 		/// <summary>
 		/// Returns the url appended with a / for port 80, otherwise, the [url]:[port]/ if the port is not 80.
 		/// </summary>
-		protected string UrlWithPort(string url, int port)
+		protected string IpWithPort(string ip, int port)
 		{
-			string ret = url + "/";
+			string ret;
 
-			if (port != 80)
+			if (port == 80)
 			{
-				ret = url + ":" + port.ToString() + "/";
+				ret = "http://" + ip + "/";
+			}
+			else
+			{
+				ret = "https://" + ip + ":" + port.ToString() + "/";
 			}
 
 			return ret;

@@ -31,7 +31,6 @@ namespace Clifton.WebRouterService
 		{
 			IPublicRouterService routerService = proc.ServiceManager.Get<IPublicRouterService>();
 			HttpListenerContext context = route.Context;
-			string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 			HttpVerb verb = context.Verb();
 			UriPath path = context.Path();
 			string searchRoute = GetSearchRoute(verb, path);
@@ -40,6 +39,7 @@ namespace Clifton.WebRouterService
 			// Semantic routes can be either public or authenticated.
 			if (routerService.Routes.TryGetValue(searchRoute, out routeInfo))
 			{
+				string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 				Type receptorSemanticType = routeInfo.ReceptorSemanticType;
 				SemanticRoute semanticRoute = (SemanticRoute)Activator.CreateInstance(receptorSemanticType);
 				semanticRoute.PostData = data;
@@ -90,9 +90,9 @@ namespace Clifton.WebRouterService
 
 				// Must be done AFTER populating the object -- sometimes the json converter nulls the base class!
 				semanticRoute.Context = context;
-				proc.ProcessInstance<WebServerMembrane>(semanticRoute, true);
+				proc.ProcessInstance<WebServerMembrane>(semanticRoute, true);		// TODO: Why execute on this thread?
 			}
-			else
+			else if (verb.Value == "GET")
 			{
 				// Only issue the UnhandledContext if this is not an authenticated route.
 				if (!proc.ServiceManager.Get<IAuthenticatingRouterService>().IsAuthenticatedRoute(searchRoute))
@@ -101,6 +101,14 @@ namespace Clifton.WebRouterService
 					// All unhandled context are assumed to be public routes.
 					proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
 				}
+			}
+			else
+			{
+				proc.ProcessInstance<WebServerMembrane, ExceptionResponse>(e =>
+					{
+						e.Context = context;
+						e.Exception = new Exception("Route " + searchRoute + " not defined.");
+					});
 			}
 		}
 

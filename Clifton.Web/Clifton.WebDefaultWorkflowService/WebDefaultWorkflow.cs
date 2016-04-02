@@ -42,7 +42,6 @@ namespace Clifton.WebDefaultWorkflowService
 			// Only called for HTML responses:
 			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterInjectLayout));
 			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterRendering));
-			ServiceManager.Get<IWebWorkflowService>().RegisterPostRouterWorkflow(new WorkflowItem<PostRouteWorkflowData>(PostRouterProcessTokens));
 		}
 
 		protected void InitializeTemplateEngine()
@@ -73,50 +72,6 @@ namespace Clifton.WebDefaultWorkflowService
 			data.HtmlResponse.Html = text.Replace("<% content %>", data.HtmlResponse.Html);
 
 			return WorkflowState.Continue;
-		}
-
-		protected WorkflowState PostRouterProcessTokens(WorkflowContinuation<PostRouteWorkflowData> wc, PostRouteWorkflowData data)
-		{
-			data.HtmlResponse.Html = ProcessTokens(data.Context, data.HtmlResponse.Html);
-
-			return WorkflowState.Continue;
-		}
-
-		protected string ProcessTokens(HttpListenerContext context, string html)
-		{
-			string newhtml = html;
-
-			while (newhtml.Contains("@Session."))
-			{
-				string sessionToken = newhtml.Between("@Session.", "@");
-				string defaultValue = String.Empty;
-
-				// Does it have a default value?
-				if (sessionToken.Contains("("))
-				{
-					defaultValue = sessionToken.Between('(', ')');
-					sessionToken = sessionToken.LeftOf("(");
-				}
-
-				if (String.IsNullOrEmpty(sessionToken))
-				{
-					ServiceManager.Get<ILoggerService>().Log(ExceptionMessage.Create("Missing session token or bad format"));
-					break;
-				}
-				else
-				{
-					string newVal = ServiceManager.Get<IWebSessionService>().GetSessionObject(context, sessionToken);
-					newVal.IfNull(() => newVal = defaultValue);
-					newhtml = newhtml.LeftOf('@') + newVal + newhtml.RightOf('@').RightOf('@');
-				}
-			}
-
-			newhtml = Replace(newhtml, "@CurrentYear@", (src, token) => src.Replace(token, DateTime.Now.Year.ToString()));
-
-			// TODO: Get from application config.
-			newhtml = Replace(newhtml, "@AppName@", (src, token) => src.Replace(token, "ByteStruck"));
-
-			return newhtml;
 		}
 
 		protected string Replace(string html, string token, Func<string, string, string> replaceWith)
