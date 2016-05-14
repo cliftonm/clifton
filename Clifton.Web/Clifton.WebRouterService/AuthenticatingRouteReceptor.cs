@@ -93,7 +93,7 @@ namespace Clifton.WebRouterService
 								{
 									// TODO: Convert to property type.
 									// TODO: value needs to be re-encoded to handle special characters.
-									pi.SetValue(semanticRoute, keyVal[1]);
+									pi.SetValue(semanticRoute, Uri.UnescapeDataString(keyVal[1]));
 								}
 							}
 						}
@@ -105,13 +105,13 @@ namespace Clifton.WebRouterService
 
 						foreach (string key in nvc.AllKeys)
 						{
-							PropertyInfo pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
+							PropertyInfo pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
 							if (pi != null)
 							{
 								// TODO: Convert to property type.
 								// TODO: value needs to be re-encoded to handle special characters.
-								pi.SetValue(semanticRoute, nvc[key]);
+								pi.SetValue(semanticRoute, Uri.UnescapeDataString(nvc[key]));
 							}
 						}
 					}
