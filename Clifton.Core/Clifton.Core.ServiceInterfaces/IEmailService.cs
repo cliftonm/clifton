@@ -21,6 +21,28 @@ namespace Clifton.Core.ServiceInterfaces
 
 		public List<string> Cc { get; set; }
 		public List<string> Bcc { get; set; }
+
+		public Email()
+		{
+			To = new List<string>();
+			Cc = new List<string>();
+			Bcc = new List<string>();
+		}
+
+		public void AddTo(string to)
+		{
+			To.Add(to);
+		}
+
+		public void AddCc(string cc)
+		{
+			Cc.Add(cc);
+		}
+
+		public void AddBcc(string bcc)
+		{
+			Bcc.Add(bcc);
+		}
 	}
 
 	public interface IEmailService : IService
