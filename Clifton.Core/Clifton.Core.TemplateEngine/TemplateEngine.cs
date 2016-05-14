@@ -46,7 +46,7 @@ namespace Clifton.Core.TemplateEngine
 
 			if (!IsCached(template, out t))
 			{
-				string code = Parser.Parse(template);
+				string code = new Parser().Parse(template);
 				StringBuilder sb = new StringBuilder(String.Join("\r\n", Usings));
 				sb.Append(GetClassBoilerplate());
 				sb.Append(code);
@@ -67,7 +67,7 @@ namespace Clifton.Core.TemplateEngine
 
 			if (!IsCached(template, out t))
 			{
-				string code = Parser.Parse(template);
+				string code = new Parser().Parse(template);
 				StringBuilder sb = new StringBuilder(String.Join("\r\n", Usings));
 				sb.Append(GetClassBoilerplate());
 				InitializeParameters(sb, parms);
@@ -90,7 +90,7 @@ namespace Clifton.Core.TemplateEngine
 
 			if (!IsCached(template, out t))
 			{
-				string code = Parser.Parse(template);
+				string code = new Parser().Parse(template);
 				StringBuilder sb = new StringBuilder(String.Join("\r\n", Usings));
 				sb.Append(GetClassBoilerplate());
 				InitializeParameters(sb, names, parms);
@@ -112,7 +112,7 @@ namespace Clifton.Core.TemplateEngine
 
 			if (!IsCached(template, out t))
 			{
-				string code = Parser.Parse(template);
+				string code = new Parser().Parse(template);
 				StringBuilder sb = new StringBuilder(String.Join("\r\n", Usings));
 				sb.Append(GetClassBoilerplate());
 				InitializeParameters(sb, parms);

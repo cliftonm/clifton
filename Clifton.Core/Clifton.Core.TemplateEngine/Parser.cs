@@ -7,14 +7,15 @@ using Clifton.Core.ExtensionMethods;
 
 namespace Clifton.Core.TemplateEngine
 {
-	public static class Parser
+	public class Parser
 	{
-		public static string Parse(string text)
+		protected bool inCode = false;
+
+		public string Parse(string text)
 		{
 			StringBuilder sb = new StringBuilder();
 			sb.AppendLine("StringBuilder sb = new StringBuilder();");
 			List<string> lines = GetLines(text);
-			bool inCode = false;
 
 			// Here we assume that the START_CODE_BLOCK and END_CODE_BLOCK are always at the beginning of a line.
 			// Embedded code with { } (or other tokens) are always indented!
@@ -39,12 +40,12 @@ namespace Clifton.Core.TemplateEngine
 		/// <summary>
 		/// Returns the text split into lines with any trailing whitespace trimmed.
 		/// </summary>
-		private static List<string> GetLines(string text)
+		private List<string> GetLines(string text)
 		{
 			return text.Split(new char[] { '\r', '\n' }).Select(s => s.TrimEnd()).ToList();
 		}
 
-		private static void AppendNonCodeLine(StringBuilder sb, string line, ref bool inCode)
+		private void AppendNonCodeLine(StringBuilder sb, string line, ref bool inCode)
 		{
 			if (line.BeginsWith(Constants.START_CODE_BLOCK))
 			{
@@ -59,7 +60,7 @@ namespace Clifton.Core.TemplateEngine
 			}
 		}
 
-		private static void AppendCodeOrLiteralLine(StringBuilder sb, string line, ref bool inCode)
+		private void AppendCodeOrLiteralLine(StringBuilder sb, string line, ref bool inCode)
 		{
 			if (line.BeginsWith(Constants.END_CODE_BLOCK))
 			{
@@ -69,8 +70,9 @@ namespace Clifton.Core.TemplateEngine
 			{
 				// Preserve leading whitespace.
 				string literal = line.LeftOf(Constants.LITERAL) + line.RightOf(Constants.LITERAL);
-				string parsedLiteral = VariableReplacement(literal);
+				string parsedLiteral = InLiteralVariableReplacement(literal);
 				parsedLiteral = parsedLiteral.Replace("\"", "\\\"");
+				parsedLiteral = parsedLiteral.Replace("@>", "\"");
 				sb.AppendLine("sb.Append" + (parsedLiteral + Constants.CRLF).Quote().Parens() + ";");
 			}
 			else
@@ -80,10 +82,36 @@ namespace Clifton.Core.TemplateEngine
 			}
 		}
 
-		private static string VariableReplacement(string line)
+		private string InLiteralVariableReplacement(string line)
 		{
-			string parsedLine = String.Empty;
 			string remainder = line;
+			string parsedLine = String.Empty;
+
+			// Special handling for cases when you don't want to terminate an embedded variable with a whitespace
+			// Example usage: @:alert("<@model.Str@>")
+
+			while (remainder.Contains("<@"))
+			{
+				string left = remainder.LeftOf("<@");
+				string right = remainder.RightOf("@>");
+
+				// Force close of string builder, inject variable name, append with new string builder.
+				parsedLine += left + "@> + " + remainder.Between("<@", "@>") + ".ToString() +@>";
+				remainder = right;
+			}
+
+			parsedLine += remainder;
+
+			return parsedLine;
+		}
+  
+		private string VariableReplacement(string line)
+		{
+			string remainder = line;
+			string parsedLine = String.Empty;
+
+			// Regular handling:
+			// Example usage: @:alert("foobar")
 
 			while (remainder.Contains("@"))
 			{
