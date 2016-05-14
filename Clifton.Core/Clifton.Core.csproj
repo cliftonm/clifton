@@ -35,6 +35,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -74,6 +76,7 @@
     <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleLoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\ICriticalExceptionService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IDatabaseServices.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IDbContextService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IEmailService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\ILoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IMessageBoxLoggerService.cs" />

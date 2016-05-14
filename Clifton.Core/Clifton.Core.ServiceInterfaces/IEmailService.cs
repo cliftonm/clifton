@@ -6,7 +6,9 @@ using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ServiceInterfaces
 {
-	public class Email
+	public class EmailClientMembrane : Membrane { }
+
+	public class Email : ISemanticType
 	{
 		/// <summary>
 		/// If null, will get the from address from App.config

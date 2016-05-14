@@ -605,6 +605,19 @@ namespace Clifton.Core.ExtensionMethods
 			return "\"" + src + "\"";
 		}
 
+		/// <summary>
+		/// Exchanges ' for " and " for '
+		/// Javascript JSON support, which must be formatted like '{"foo":"bar"}'
+		/// </summary>
+		public static string ExchangeQuoteSingleQuote(this String src)
+		{
+			string ret = src.Replace("'", "\0xFF");
+			ret = ret.Replace("\"", "'");
+			ret = ret.Replace("\0xFF", "\"");
+
+			return ret;
+		}
+
 		public static string Spaced(this String src)
 		{
 			return " " + src + " ";
