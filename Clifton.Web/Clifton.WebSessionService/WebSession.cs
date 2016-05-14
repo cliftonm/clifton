@@ -143,7 +143,7 @@ namespace Clifton.WebSessionService
 
 			if (sessionObjects.TryGetValue(objectName, out val))
 			{
-				ret = val.ToString();
+				ret = (val == null ? "" : val.ToString());
 			}
 
 			return ret;
