@@ -10,6 +10,7 @@ namespace Clifton.Core.TemplateEngine
 	public class Parser
 	{
 		protected bool inCode = false;
+		protected bool inLiteralBlock = false;
 
 		public string Parse(string text)
 		{
@@ -25,7 +26,14 @@ namespace Clifton.Core.TemplateEngine
 				switch (inCode)
 				{
 					case false:
-						AppendNonCodeLine(sb, line, ref inCode);
+						if (inLiteralBlock)
+						{
+							AppendCodeOrLiteralLine(sb, line, ref inCode);
+						}
+						else
+						{
+							AppendNonCodeLine(sb, line, ref inCode);
+						}
 						break;
 
 					case true:
@@ -66,14 +74,25 @@ namespace Clifton.Core.TemplateEngine
 			{
 				inCode = false;
 			}
-			else if (line.Trim().BeginsWith(Constants.LITERAL))
+			else if (line.Trim().BeginsWith(Constants.LITERAL) || inLiteralBlock)
 			{
-				// Preserve leading whitespace.
-				string literal = line.LeftOf(Constants.LITERAL) + line.RightOf(Constants.LITERAL);
-				string parsedLiteral = InLiteralVariableReplacement(literal);
-				parsedLiteral = parsedLiteral.Replace("\"", "\\\"");
-				parsedLiteral = parsedLiteral.Replace("@>", "\"");
-				sb.AppendLine("sb.Append" + (parsedLiteral + Constants.CRLF).Quote().Parens() + ";");
+				if (line.BeginsWith(Constants.END_LITERAL_BLOCK))
+				{
+					inLiteralBlock = false;
+				}
+				else
+				{
+					// Preserve leading whitespace.
+					string literal = line.LeftOf(Constants.LITERAL) + line.RightOf(Constants.LITERAL);
+					string parsedLiteral = InLiteralVariableReplacement(literal);
+					parsedLiteral = parsedLiteral.Replace("\"", "\\\"");
+					parsedLiteral = parsedLiteral.Replace("@>", "\"");
+					sb.AppendLine("sb.Append" + (parsedLiteral + Constants.CRLF).Quote().Parens() + ";");
+				}
+			}
+			else if (line.BeginsWith(Constants.START_LITERAL_BLOCK))
+			{
+				inLiteralBlock = true;
 			}
 			else
 			{

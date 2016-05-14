@@ -13,5 +13,7 @@ namespace Clifton.Core.TemplateEngine
 		public const string EOL = ";" + Constants.CRLF;
 		public const string CRLF = "\\r\\n";
 		public const string LITERAL = "@:";
+		public const string START_LITERAL_BLOCK = "@[";
+		public const string END_LITERAL_BLOCK = "@]";
 	}
 }
