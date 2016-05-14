@@ -137,7 +137,7 @@ namespace Clifton.WebSessionService
 
 		public virtual string GetSessionObject(HttpListenerContext context, string objectName)
 		{
-			string ret = null;
+			string ret = "";
 			Dictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
 			object val;
 

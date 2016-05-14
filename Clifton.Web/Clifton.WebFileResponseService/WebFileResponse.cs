@@ -65,6 +65,17 @@ namespace Clifton.WebFileResponseService
 						});
 						break;
 
+					case "woff":
+					case "woff2":
+					case "ttf":
+						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
+						{
+							r.Context = context;
+							r.ContentType = "font/" + ext;
+							r.BinaryData = ReadBinaryFile(path);
+						});
+						break;
+
 					case "js":
 						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, JavascriptResponse>(r =>
 						{

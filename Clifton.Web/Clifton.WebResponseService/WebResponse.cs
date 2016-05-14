@@ -72,6 +72,15 @@ namespace Clifton.WebResponseService
 			resp.Context.Response.Close();
 		}
 
+		public void Process(ISemanticProcessor proc, IMembrane membrane, FontResponse resp)
+		{
+			resp.Context.Response.ContentType = resp.ContentType;
+			resp.Context.Response.ContentEncoding = Encoding.UTF8;
+			resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
+			resp.Context.Response.OutputStream.Write(resp.BinaryData, 0, resp.BinaryData.Length);
+			resp.Context.Response.Close();
+		}
+
 		public void Process(ISemanticProcessor proc, IMembrane membrane, DataResponse resp)
 		{
 			byte[] utf8data = resp.Data.ToBase64().to_Utf8();

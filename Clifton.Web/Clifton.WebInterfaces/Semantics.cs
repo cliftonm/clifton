@@ -83,6 +83,13 @@ namespace Clifton.WebInterfaces
 		public byte[] BinaryData { get; set; }
 	}
 
+	public class FontResponse : ISemanticType
+	{
+		public HttpListenerContext Context { get; set; }
+		public string ContentType { get; set; }
+		public byte[] BinaryData { get; set; }
+	}
+
 	public class DataResponse : ISemanticType
 	{
 		public HttpListenerContext Context { get; set; }
