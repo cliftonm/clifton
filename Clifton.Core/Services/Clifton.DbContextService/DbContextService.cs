@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
@@ -61,7 +62,22 @@ namespace Clifton.DbContextService
 		{
 			return context.Query<T>(whereClause).Count() != 0;
 		}
-}
+
+		public void Insert<T>(T record) where T : class, IEntity
+		{
+			context.Insert(record);
+		}
+
+		public List<T> Query<T>(Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+		{
+			return context.Query(whereClause);
+		}
+
+		public void Update<T>(T record) where T : class, IEntity
+		{
+			context.Update(record);
+		}
+	}
 
 	public class DbContextReceptor : IReceptor
 	{

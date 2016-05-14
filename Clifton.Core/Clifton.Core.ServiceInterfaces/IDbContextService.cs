@@ -22,6 +22,9 @@ namespace Clifton.Core.ServiceInterfaces
 		void InitializeContext(DataContext context);
 		void CreateDatabaseAndTablesIfNotExists();
 		bool RecordExists<T>(Expression<Func<T, bool>> whereClause) where T : class, IEntity;
+		void Insert<T>(T record) where T : class, IEntity;
+		void Update<T>(T record) where T : class, IEntity;
+		List<T> Query<T>(Expression<Func<T, bool>> whereClause = null) where T : class, IEntity;
 	}
 
 	public class UniqueAttribute : Attribute { }
