@@ -149,6 +149,20 @@ namespace Clifton.WebSessionService
 			return ret;
 		}
 
+		public virtual dynamic GetSessionObjectAsDynamic(HttpListenerContext context, string objectName)
+		{
+			dynamic ret = null;
+			Dictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
+			object val;
+
+			if (sessionObjects.TryGetValue(objectName, out val))
+			{
+				ret = val;
+			}
+
+			return ret;
+		}
+
 		public virtual void SetSessionObject(HttpListenerContext context, string objectName, object val)
 		{
 			Dictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
