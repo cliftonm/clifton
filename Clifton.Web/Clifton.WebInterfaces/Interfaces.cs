@@ -8,6 +8,11 @@ using Clifton.Core.Workflow;
 
 namespace Clifton.WebInterfaces
 {
+	public interface IWebDefaultWorkflowService : IService 
+	{
+		void RegisterAppTemplateObject(string name, object obj);
+	}
+
     public interface IWebSocketServerService : IService
     {
 		void Start(string ipAddress, int port, string path);
@@ -48,6 +53,7 @@ namespace Clifton.WebInterfaces
 		void Logout(HttpListenerContext context);
 		string GetSessionObject(HttpListenerContext context, string objectName);
 		T GetSessionObject<T>(HttpListenerContext context, string objectName);
+		dynamic GetSessionObjectAsDynamic(HttpListenerContext context, string objectName);
 		void SetSessionObject(HttpListenerContext context, string objectName, object val);
 		SessionState GetState(HttpListenerContext context);
 		bool IsAuthenticated(HttpListenerContext context);

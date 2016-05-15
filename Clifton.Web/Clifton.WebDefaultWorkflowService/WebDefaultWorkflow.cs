@@ -17,9 +17,6 @@ using Clifton.WebInterfaces;
 
 namespace Clifton.WebDefaultWorkflowService
 {
-	// We don't expose this interface because this service doesn't do anything other than initialize the web workflow.
-	public interface IWebDefaultWorkflowService : IService { }
-
 	public class WebWorkflowModule : IModule
 	{
 		public void InitializeServices(IServiceManager serviceManager)
@@ -31,6 +28,17 @@ namespace Clifton.WebDefaultWorkflowService
 	public class WebDefaultWorkflow : ServiceBase, IWebDefaultWorkflowService
 	{
 		protected TemplateEngine templateEngine;
+		protected Dictionary<string, object> appTemplateObjects;
+
+		public WebDefaultWorkflow()
+		{
+			appTemplateObjects = new Dictionary<string, object>();
+		}
+
+		public void RegisterAppTemplateObject(string name, object obj)
+		{
+			appTemplateObjects[name] = obj;
+		}
 
 		public override void FinishedInitialization()
 		{
@@ -59,7 +67,11 @@ namespace Clifton.WebDefaultWorkflowService
 		{
 			string template = data.HtmlResponse.Html;
 			IWebSessionService sessionSvc = ServiceManager.Get<IWebSessionService>();
-			string newHtml = templateEngine.Parse(template, new string[] { "session", "context" }, new object[] { sessionSvc, data.Context });
+			List<string> objectNames = new List<string>() { "session", "context" };
+			List<object> objects = new List<object>() { sessionSvc, data.Context };
+			objectNames.AddRange(appTemplateObjects.Keys);
+			objects.AddRange(appTemplateObjects.Values);
+			string newHtml = templateEngine.Parse(template, objectNames.ToArray(), objects.ToArray());
 			data.HtmlResponse.Html = newHtml;
 
 			return WorkflowState.Continue;
