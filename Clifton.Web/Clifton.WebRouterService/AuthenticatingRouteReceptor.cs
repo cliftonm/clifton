@@ -132,7 +132,6 @@ namespace Clifton.WebRouterService
 								r.Message = "authenticationRequired";		// used in clifton.spa.js to handle SPA error responses
 								r.StatusCode = 403;
 							});
-
 							break;
 
 						case SessionState.Authenticated:
@@ -151,7 +150,6 @@ namespace Clifton.WebRouterService
 								r.Message = "sessionExpired";				// used in clifton.spa.js to handle SPA error responses
 								r.StatusCode = 401;
 							});
-
 							break;
 					}
 				}
