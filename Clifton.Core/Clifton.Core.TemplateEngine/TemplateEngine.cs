@@ -127,14 +127,16 @@ namespace Clifton.Core.TemplateEngine
 			return ret;
 		}
 
-		public bool IsCached(string template)
-		{
-			return cachedAssemblies.ContainsKey(GetHash(template));
-		}
+		//public bool IsCached(string template)
+		//{
+		//	return cachedAssemblies.ContainsKey(GetHash(template));
+		//}
 
 		public bool IsCached(string template, out IRuntimeAssembly t)
 		{
-			return cachedAssemblies.TryGetValue(GetHash(template), out t);
+			t = null;
+			return false;
+			// return cachedAssemblies.TryGetValue(GetHash(template), out t);
 		}
 
 		public virtual Guid GetHash(string template)

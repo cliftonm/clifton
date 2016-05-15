@@ -63,7 +63,7 @@ namespace Clifton.Core.TemplateEngine
 			{
 				// Append a non-code line.
 				string parsedLine = VariableReplacement(line);
-				parsedLine = parsedLine.Replace("\"", "\\\"");
+				parsedLine = parsedLine.Replace("\"", "\\\"").Replace("_!!_", "\"");
 				sb.AppendLine("sb.Append" + (parsedLine + Constants.CRLF).Quote().Parens() + ";");
 			}
 		}
@@ -146,8 +146,9 @@ namespace Clifton.Core.TemplateEngine
 				else
 				{
 					// Force close quote, inject variable name, append with + "
-					parsedLine += left + "\" + " + right.LeftOf(' ') + ".ToString() + \"";
-					remainder = " " + right.RightOf(' ');		// everything after the token.
+					// We use _!!_ to indicate an unescaped "
+					parsedLine += left + "_!!_ + " + right.LeftOf('@').Replace("\"", "_!!_") + ".ToString() + _!!_";
+					remainder = right.RightOf('@');		// everything after the token.
 				}
 			}
 
