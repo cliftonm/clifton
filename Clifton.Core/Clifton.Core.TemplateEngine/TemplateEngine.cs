@@ -134,9 +134,7 @@ namespace Clifton.Core.TemplateEngine
 
 		public bool IsCached(string template, out IRuntimeAssembly t)
 		{
-			t = null;
-			return false;
-			// return cachedAssemblies.TryGetValue(GetHash(template), out t);
+			return cachedAssemblies.TryGetValue(GetHash(template), out t);
 		}
 
 		public virtual Guid GetHash(string template)
