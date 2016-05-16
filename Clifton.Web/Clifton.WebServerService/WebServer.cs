@@ -113,24 +113,36 @@ namespace Clifton.WebServerService
 				// Wait for a connection.  Return to caller while we wait.
 				HttpListenerContext context = listener.GetContext();
 				logger.Log(LogMessage.Create(context.Verb().Value + ": " + context.Path().Value));
-				string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 
-				// If the pre-router lets us continue, the route the request.
-				if (ServiceManager.Exists<IWebWorkflowService>())
+				// Redirect to HTTPS if not local and not secure.
+				if (!context.Request.IsLocal && !context.Request.IsSecureConnection)
 				{
-					if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
-					{
-						ProcessRoute(context, data);
-					}
-					else
-					{
-						// Otherwise just close the response.
-						context.Response.Close();
-					}
+					logger.Log(LogMessage.Create("Redirecting to HTTPS"));
+					string redirectUrl = context.Request.Url.ToString().Replace("http:", "https:");
+					context.Response.Redirect(redirectUrl);
+					context.Response.Close();
 				}
 				else
 				{
-					ProcessRoute(context, data);
+					string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
+
+					// If the pre-router lets us continue, the route the request.
+					if (ServiceManager.Exists<IWebWorkflowService>())
+					{
+						if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
+						{
+							ProcessRoute(context, data);
+						}
+						else
+						{
+							// Otherwise just close the response.
+							context.Response.Close();
+						}
+					}
+					else
+					{
+						ProcessRoute(context, data);
+					}
 				}
 			}
 		}
