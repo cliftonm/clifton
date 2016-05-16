@@ -60,10 +60,10 @@ namespace Clifton.WebRouterService
 			semProc.Register<WebServerMembrane, AuthenticatingRouterReceptor>();
 		}
 
-		public void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.PublicRoute, uint roleMask = 0) where T : SemanticRoute
+		public void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.PublicRoute, Role roleMask = Role.None) where T : SemanticRoute
 		{
 			// TODO: we set the path part to lowercase.  Kludgy.
-			routes[path.LeftOf(":") + ":" + path.RightOf(":").ToLower()] = new RouteInfo(typeof(T), routeType, roleMask);
+			routes[path.LeftOf(":") + ":" + path.RightOf(":").ToLower()] = new RouteInfo(typeof(T), routeType, (uint)roleMask);
 		}
 	}
 }

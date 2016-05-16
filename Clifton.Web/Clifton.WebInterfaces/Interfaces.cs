@@ -43,7 +43,7 @@ namespace Clifton.WebInterfaces
 	{
 		Dictionary<string, RouteInfo> Routes { get; }
 		bool IsAuthenticatedRoute(string path);
-		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.AuthenticatedRoute, uint roleMask = 0) where T : SemanticRoute;
+		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.AuthenticatedRoute, Role role = Role.None) where T : SemanticRoute;
 	}
 
 	public interface IWebSessionService : IService
