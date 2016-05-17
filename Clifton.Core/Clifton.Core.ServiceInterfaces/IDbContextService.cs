@@ -12,9 +12,7 @@ using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ServiceInterfaces
 {
-	public interface ITable { }
-
-	public interface IEntity : ITable
+	public interface IEntity
 	{
 		int? Id { get; set; }
 	}

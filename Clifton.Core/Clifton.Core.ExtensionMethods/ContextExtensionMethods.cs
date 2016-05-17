@@ -120,13 +120,13 @@ namespace Clifton.Core.ExtensionMethods
 			if (whereClause == null)
 			{
 				var records = model.Property.GetValue(context, null);
-				data = ((System.Data.Linq.ITable)records).Cast<T>().ToList();
+				data = ((ITable)records).Cast<T>().ToList();
 			}
 			else
 			{
 				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
 				var records = model.Property.GetValue(context, null);
-				data = ((System.Data.Linq.ITable)records).Cast<T>().Where(whereClause).ToList();
+				data = ((ITable)records).Cast<T>().Where(whereClause).ToList();
 				//int count = records.Count();
 			}
 
@@ -143,37 +143,18 @@ namespace Clifton.Core.ExtensionMethods
 			if (whereClause == null)
 			{
 				var records = model.Property.GetValue(context, null);
-				count = ((System.Data.Linq.ITable)records).Cast<T>().Count();
+				count = ((ITable)records).Cast<T>().Count();
 			}
 			else
 			{
 				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
 				var records = model.Property.GetValue(context, null);
-				count = ((System.Data.Linq.ITable)records).Cast<T>().Count();
-				//int count = records.Count();
+				count = ((ITable)records).Cast<T>().Count();
 			}
 
 			return count;
 		}
 
-		/*
-				public static List<T> Query<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
-				{
-					DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
-					List<T> data;
-
-					if (whereClause == null)
-					{
-						data = newContext.GetTable<T>().ToList();
-					}
-					else
-					{
-						data = newContext.GetTable<T>().Where(whereClause).ToList();
-					}
-
-					return data;
-				}
-		*/
 		/// <summary>
 		/// Create an extension method Insert on the context that auto-populates the Id.
 		/// The record is immediately inserted as well.
@@ -184,7 +165,6 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
 			T cloned = CloneEntity(data);
-			// context.GetTable<T>().Attach(cloned);
 			newContext.GetTable<T>().InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
 			// select seq from sqlite_sequence where name="table_name"
@@ -200,7 +180,7 @@ namespace Clifton.Core.ExtensionMethods
 			T cloned = CloneEntityOfConcreteType(data);
 			EntityProperty model = GetEntityProperty(newContext, cloned);
 			var records = model.Property.GetValue(newContext, null);
-			((System.Data.Linq.ITable)records).InsertOnSubmit(cloned);
+			((ITable)records).InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
 			// select seq from sqlite_sequence where name="table_name"
 			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == data.GetType().Name select s.seq).Single());
