@@ -493,6 +493,20 @@ namespace Clifton.Core.ExtensionMethods
 			return val > otherVal ? val : otherVal;
 		}
 
+		public static double ToPosix(this DateTime date)
+		{
+			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+
+			return (date - start).TotalSeconds;
+		}
+
+		public static DateTime FromPosix(this double posix)
+		{
+			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+
+			return start.AddSeconds(posix).ToLocalTime();
+		}
+
 		public static string DateFromPosix(this string s, string format = "MM-dd-yy")
 		{
 			DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
