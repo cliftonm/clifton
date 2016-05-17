@@ -67,39 +67,6 @@ namespace Clifton.WebServerService
 				listener.Prefixes.Add(url);
 			}
 
-			/*
-			if (useLocalIP)
-			{
-				List<IPAddress> localHostIPs = GetLocalHostIPs();
-				localHostIPs.ForEach(localip =>
-				{
-					url = UrlWithPort("http://" + localip.ToString(), port);
-					logger.Log(LogMessage.Create("Listening on http://" + localip + " (port " + port + ")"));
-					listener.Prefixes.Add(url);
-				});
-			}
-			*/
-
-			// SSL Support.  TODO: Figure out a better way to do this than the convoluted approach commented out here.
-			/*
-			if ( (port != 80) && (cfg.GetValue("ServeWebPages").to_b()) )
-			{
-				// For an Amazon EC2 instance, the listening port cannot be localhost, it has to be the non-elastic IP!
-				// Firewalled on EC2, port 80 is open only for localhost testing on dev box.
-				string url80 = UrlWithPort(ip, 80);
-				logger.Log(LogMessage.Create("Listening on " + ip + " (port 80)"));
-				listener.Prefixes.Add(url80);
-
-				// Enable HTTPS listener
-				string url443 = UrlWithPort(ip, 443);
-				logger.Log(LogMessage.Create("Listening on " + ip + " (port 443)"));
-				listener.Prefixes.Add(url443);
-
-				//logger.Log(LogMessage.Create("Listening on " + ip + "  (port 80)"));
-				//listener.Prefixes.Add("http://localhost/");
-			}
-			*/
-
 			listener.Start();
 			Task.Run(() => WaitForConnection(listener));
 		}

@@ -11,8 +11,6 @@ using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-using Clifton.DbContextService.ExtensionMethods;
-
 namespace Clifton.DbContextService
 {
 	public class DbContextModule : IModule
@@ -26,6 +24,8 @@ namespace Clifton.DbContextService
 	public class DbContextService : ServiceBase, IDbContextService
 	{
 		protected DataContext context;
+
+		public DataContext Context { get { return context; } }
 
 		public override void FinishedInitialization()
 		{
@@ -58,24 +58,47 @@ namespace Clifton.DbContextService
 				});
 		}
 
-		public bool RecordExists<T>(Expression<Func<T, bool>> whereClause) where T : class, IEntity
+		public bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity
 		{
-			return context.Query<T>(whereClause).Count() != 0;
+			return context.Count<T>(whereClause) != 0;
 		}
 
-		public void Insert<T>(T record) where T : class, IEntity
+		public bool RecordExists<T>(Func<T, bool> whereClause, out int id) where T : class, IEntity
 		{
-			context.Insert(record);
+			id = -1;
+			var records = context.Query<T>(whereClause);
+			bool exists = false;
+
+			if (records.Count() == 1)
+			{
+				id = (int)records[0].Id;
+				exists = true;
+			}
+
+			return exists;
 		}
 
-		public List<T> Query<T>(Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+		public bool RecordOfTypeExists<T>(IEntity entity, Func<T, bool> whereClause, out int id) where T : class, IEntity
 		{
-			return context.Query(whereClause);
-		}
+			id = -1;
+			var records = context.QueryOfConreteType<T>(entity, whereClause);
+			bool exists = false;
 
-		public void Update<T>(T record) where T : class, IEntity
-		{
-			context.Update(record);
+			switch(records.Count())
+			{
+				case 0:
+					break;
+
+				case 1:
+					id = (int)records[0].Id;
+					exists = true;
+					break;
+
+				default:
+					throw new ApplicationException("Not a unique key.");
+			}
+
+			return exists;
 		}
 	}
 

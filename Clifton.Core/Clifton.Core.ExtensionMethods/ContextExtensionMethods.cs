@@ -11,12 +11,12 @@ using System.Text;
 
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
-using System.Data.SQLite;
+// using System.Data.SQLite;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ServiceInterfaces;
 
-namespace Clifton.DbContextService.ExtensionMethods
+namespace Clifton.Core.ExtensionMethods
 {
 	[Table]
 	public class sqlite_sequence
@@ -25,6 +25,11 @@ namespace Clifton.DbContextService.ExtensionMethods
 		public string name { get; set; }
 		[Column, Required]
 		public int seq { get; set; }
+	}
+
+	public class EntityProperty
+	{
+		public PropertyInfo Property { get; set; }
 	}
 
 	public static class ContextExtensionMethods
@@ -44,7 +49,21 @@ namespace Clifton.DbContextService.ExtensionMethods
 				return (T)ser.ReadObject(ms);
 			}
 		}
-		public static List<T> Query<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+
+		public static T CloneEntityOfConcreteType<T>(this T originalEntity)
+		{
+			Type entityType = typeof(T);
+			DataContractSerializer ser = new DataContractSerializer(entityType, new Type[] {originalEntity.GetType()});
+
+			using (MemoryStream ms = new MemoryStream())
+			{
+				ser.WriteObject(ms, originalEntity);
+				ms.Position = 0;
+				return (T)ser.ReadObject(ms);
+			}
+		}
+
+		public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
 			List<T> data;
@@ -61,6 +80,100 @@ namespace Clifton.DbContextService.ExtensionMethods
 			return data;
 		}
 
+		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			int count = 0;
+
+			if (whereClause == null)
+			{
+				count = newContext.GetTable<T>().Count();
+			}
+			else
+			{
+				count = newContext.GetTable<T>().Where(whereClause).Count();
+			}
+
+			return count;
+		}
+
+		private static EntityProperty GetEntityProperty(DataContext context, IEntity entity)
+		{
+			EntityProperty property = (from prop in context.GetType().GetProperties()
+						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
+						 && prop.GetMethod.ReturnType.GenericTypeArguments[0].Name == entity.GetType().Name
+						 select new EntityProperty
+						 {
+							 Property = prop,
+						 }).Single();
+
+			return property;
+		}
+
+		public static List<T> QueryOfConreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			// TODO: What is this? newContext.Mapping;
+			List<T> data = new List<T>();
+			EntityProperty model = GetEntityProperty(newContext, entity);
+
+			if (whereClause == null)
+			{
+				var records = model.Property.GetValue(context, null);
+				data = ((System.Data.Linq.ITable)records).Cast<T>().ToList();
+			}
+			else
+			{
+				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
+				var records = model.Property.GetValue(context, null);
+				data = ((System.Data.Linq.ITable)records).Cast<T>().Where(whereClause).ToList();
+				//int count = records.Count();
+			}
+
+			return data;
+		}
+
+		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			// TODO: What is this? newContext.Mapping;
+			int count = 0;
+			EntityProperty model = GetEntityProperty(newContext, entity);
+
+			if (whereClause == null)
+			{
+				var records = model.Property.GetValue(context, null);
+				count = ((System.Data.Linq.ITable)records).Cast<T>().Count();
+			}
+			else
+			{
+				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
+				var records = model.Property.GetValue(context, null);
+				count = ((System.Data.Linq.ITable)records).Cast<T>().Count();
+				//int count = records.Count();
+			}
+
+			return count;
+		}
+
+		/*
+				public static List<T> Query<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+				{
+					DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+					List<T> data;
+
+					if (whereClause == null)
+					{
+						data = newContext.GetTable<T>().ToList();
+					}
+					else
+					{
+						data = newContext.GetTable<T>().Where(whereClause).ToList();
+					}
+
+					return data;
+				}
+		*/
 		/// <summary>
 		/// Create an extension method Insert on the context that auto-populates the Id.
 		/// The record is immediately inserted as well.
@@ -76,6 +189,21 @@ namespace Clifton.DbContextService.ExtensionMethods
 			newContext.SubmitChanges();
 			// select seq from sqlite_sequence where name="table_name"
 			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == typeof(T).Name select s.seq).Single());
+			data.Id = id;
+
+			return id;
+		}
+
+		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
+		{
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			T cloned = CloneEntityOfConcreteType(data);
+			EntityProperty model = GetEntityProperty(newContext, cloned);
+			var records = model.Property.GetValue(newContext, null);
+			((System.Data.Linq.ITable)records).InsertOnSubmit(cloned);
+			newContext.SubmitChanges();
+			// select seq from sqlite_sequence where name="table_name"
+			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == data.GetType().Name select s.seq).Single());
 			data.Id = id;
 
 			return id;

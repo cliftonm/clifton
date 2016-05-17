@@ -48,7 +48,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ContextExtensionMethods.cs" />
     <Compile Include="DbContextService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
