@@ -29,6 +29,8 @@ namespace Clifton.Core.ServiceInterfaces
 		public abstract int? Id { get; set; }
 		[XmlIgnore]
 		public abstract string Name { get; set; }
+		[XmlIgnore]
+		public abstract int DisplayOrder { get; set; }
 	}
 
 	//[Table]

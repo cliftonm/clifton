@@ -99,23 +99,33 @@ namespace Clifton.Core.ExtensionMethods
 
 		private static EntityProperty GetEntityProperty(DataContext context, IEntity entity)
 		{
+			return GetEntityProperty(context, entity.GetType().Name);
+		}
+
+		private static EntityProperty GetEntityProperty(DataContext context, string tableName)
+		{
 			EntityProperty property = (from prop in context.GetType().GetProperties()
-						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
-						 && prop.GetMethod.ReturnType.GenericTypeArguments[0].Name == entity.GetType().Name
-						 select new EntityProperty
-						 {
-							 Property = prop,
-						 }).Single();
+									   where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
+									   && prop.GetMethod.ReturnType.GenericTypeArguments[0].Name == tableName
+									   select new EntityProperty
+									   {
+										   Property = prop,
+									   }).Single();
 
 			return property;
 		}
 
 		public static List<T> QueryOfConreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
+			return context.QueryOfConreteType(entity.GetType().Name, whereClause);
+		}
+
+		public static List<T> QueryOfConreteType<T>(this DataContext context, string tableName, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
 			// TODO: What is this? newContext.Mapping;
 			List<T> data = new List<T>();
-			EntityProperty model = GetEntityProperty(newContext, entity);
+			EntityProperty model = GetEntityProperty(newContext, tableName);
 
 			if (whereClause == null)
 			{
