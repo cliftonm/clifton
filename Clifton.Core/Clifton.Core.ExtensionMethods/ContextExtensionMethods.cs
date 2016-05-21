@@ -80,6 +80,23 @@ namespace Clifton.Core.ExtensionMethods
 			return data;
 		}
 
+		public static T Single<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			List<T> data;
+
+			if (whereClause == null)
+			{
+				data = newContext.GetTable<T>().ToList();
+			}
+			else
+			{
+				data = newContext.GetTable<T>().Where(whereClause).ToList();
+			}
+
+			return data[0];
+		}
+
 		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
