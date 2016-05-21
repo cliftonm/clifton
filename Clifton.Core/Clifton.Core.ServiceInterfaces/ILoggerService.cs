@@ -10,6 +10,7 @@ namespace Clifton.Core.ServiceInterfaces
 
 	public interface ILoggerService : IService
 	{
+		void Log(string msg);
 		void Log(LogMessage msg);
 		void Log(ExceptionMessage msg);
 		void Log(Exception ex);

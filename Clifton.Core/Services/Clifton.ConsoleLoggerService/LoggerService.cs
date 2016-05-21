@@ -23,6 +23,11 @@ namespace Clifton.ConsoleLoggerService
 			ServiceManager.Get<ISemanticProcessor>().Register<LoggerMembrane, LoggerReceptor>();
 		}
 
+		public virtual void Log(string msg)
+		{
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss : ") + msg);
+		}
+
 		public virtual void Log(LogMessage msg)
 		{
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss : ") + msg.Value);
@@ -45,6 +50,11 @@ namespace Clifton.ConsoleLoggerService
 		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_Exception exception)
 		{
 			proc.ServiceManager.Get<IConsoleLoggerService>().Log(exception.Exception);
+		}
+
+		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_CompilerError error)
+		{
+			proc.ServiceManager.Get<IConsoleLoggerService>().Log(error.Error);
 		}
 	}
 }

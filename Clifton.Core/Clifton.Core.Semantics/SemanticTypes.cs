@@ -12,6 +12,23 @@ namespace Clifton.Core.Semantics
 		}
 	}
 
+	/// <summary>
+	/// Used by TemplateEngine and other runtime compiler services.
+	/// </summary>
+	public class ST_CompilerError : ISemanticType
+	{
+		public string Error {get; set;}
+
+		public ST_CompilerError()
+		{
+		}
+
+		public ST_CompilerError(string err)
+		{
+			Error = err;
+		}
+	}
+
 	public class XmlFileName : ImmutableSemanticType<XmlFileName, string> { };
 	public class FullPath : ImmutableSemanticType<FullPath, string> { };
 	public class AssemblyFileName : ImmutableSemanticType<AssemblyFileName, string> { }

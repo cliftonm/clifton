@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 using Clifton.Core.ExtensionMethods;
+using Clifton.Core.Semantics;
 
 namespace Clifton.Core.TemplateEngine
 {
@@ -16,8 +17,9 @@ namespace Clifton.Core.TemplateEngine
 
 		protected Dictionary<Guid, IRuntimeAssembly> cachedAssemblies;
 		protected bool useDynamic;
+		protected ISemanticProcessor proc;
 
-		public TemplateEngine()
+		public TemplateEngine(ISemanticProcessor proc = null)
 		{
 			Usings = new List<string>();
 			References = new List<string>();
@@ -173,6 +175,7 @@ public class RuntimeCompiled : IRuntimeAssembly
 
 			if (assy == null)
 			{
+				proc.IfNotNull((p) => errors.ForEach(errMsg => p.ProcessInstance<LoggerMembrane, ST_CompilerError>(err => err.Error = errMsg)));
 				throw new TemplateEngineException(errors);
 			}
 			else
