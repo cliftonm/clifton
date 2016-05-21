@@ -11,6 +11,7 @@ using Newtonsoft.Json.Linq;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.Semantics;
 using Clifton.Core.ServiceManagement;
+using Clifton.Core.Utils;
 using Clifton.WebInterfaces;
 
 namespace Clifton.WebRouterService
@@ -75,12 +76,18 @@ namespace Clifton.WebRouterService
 					if (!String.IsNullOrEmpty(data))
 					{
 						// Is it JSON?
+						// NOTE: "JSON" is passed in as a string, not object.  So this is what it looks like in the Javascript:
+						// $.post("/geeks/createProfile", '{ "profileName": "foobar" }'
+						// Note the surrounding ' marks
 						if (data[0] == '{')
 						{
 							JsonConvert.PopulateObject(data, semanticRoute);
 						}
 						else
 						{
+							// Instead here, the data is passed in as an object, which comes in as params.  The Javascript for this looks like:
+							// $.post("/geeks/createProfile", { "profileName": profileName }
+							// Note the lack of surrounding ' around the { }
 							// Example: "username=sdfsf&password=sdfsdf&LoginButton=Login"
 							string[] parms = data.Split('&');
 
@@ -93,7 +100,8 @@ namespace Clifton.WebRouterService
 								{
 									// TODO: Convert to property type.
 									// TODO: value needs to be re-encoded to handle special characters.
-									pi.SetValue(semanticRoute, Uri.UnescapeDataString(keyVal[1]));
+									object valOfType = Converter.Convert(Uri.UnescapeDataString(keyVal[1]), pi.PropertyType);
+									pi.SetValue(semanticRoute, valOfType);
 								}
 							}
 						}
