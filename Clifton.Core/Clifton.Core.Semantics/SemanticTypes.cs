@@ -29,6 +29,15 @@ namespace Clifton.Core.Semantics
 		}
 	}
 
+	public class ST_Log : ISemanticType
+	{
+		public string Message { get; set; }
+
+		public ST_Log()
+		{
+		}
+	}
+
 	public class XmlFileName : ImmutableSemanticType<XmlFileName, string> { };
 	public class FullPath : ImmutableSemanticType<FullPath, string> { };
 	public class AssemblyFileName : ImmutableSemanticType<AssemblyFileName, string> { }

@@ -47,6 +47,11 @@ namespace Clifton.ConsoleLoggerService
 
 	public class LoggerReceptor : IReceptor
 	{
+		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_Log msg)
+		{
+			proc.ServiceManager.Get<IConsoleLoggerService>().Log(msg.Message);
+		}
+
 		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_Exception exception)
 		{
 			proc.ServiceManager.Get<IConsoleLoggerService>().Log(exception.Exception);

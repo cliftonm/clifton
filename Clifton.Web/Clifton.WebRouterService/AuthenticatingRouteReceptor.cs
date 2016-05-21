@@ -98,9 +98,8 @@ namespace Clifton.WebRouterService
 
 								if (pi != null)
 								{
-									// TODO: Convert to property type.
-									// TODO: value needs to be re-encoded to handle special characters.
-									object valOfType = Converter.Convert(Uri.UnescapeDataString(keyVal[1]), pi.PropertyType);
+									// TODO: Should handling of "+" be before or after the UnescapedDataString call?
+									object valOfType = Converter.Convert(Uri.UnescapeDataString(keyVal[1].Replace('+', ' ')), pi.PropertyType);
 									pi.SetValue(semanticRoute, valOfType);
 								}
 							}
@@ -117,9 +116,10 @@ namespace Clifton.WebRouterService
 
 							if (pi != null)
 							{
-								// TODO: Convert to property type.
-								// TODO: value needs to be re-encoded to handle special characters.
-								pi.SetValue(semanticRoute, Uri.UnescapeDataString(nvc[key]));
+								// pi.SetValue(semanticRoute, Uri.UnescapeDataString(nvc[key].Replace('+', ' ')));
+								// TODO: Should handling of "+" be before or after the UnescapedDataString call?
+								object valOfType = Converter.Convert(Uri.UnescapeDataString(nvc[key].Replace('+', ' ')), pi.PropertyType);
+								pi.SetValue(semanticRoute, valOfType);
 							}
 						}
 					}
@@ -164,6 +164,7 @@ namespace Clifton.WebRouterService
 			}
 			else
 			{
+				proc.ProcessInstance<LoggerMembrane, ST_Log>(msg => msg.Message = "Using default handler: " + verb.Value + ": " + path.Value);
 				// Put the context on the bus for some service to pick up.
 				// All unhandled context are assumed to be public routes.
 				proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
