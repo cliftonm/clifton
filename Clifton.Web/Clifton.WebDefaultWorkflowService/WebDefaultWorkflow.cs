@@ -54,7 +54,7 @@ namespace Clifton.WebDefaultWorkflowService
 
 		protected void InitializeTemplateEngine()
 		{
-			templateEngine = new TemplateEngine();
+			templateEngine = new TemplateEngine(ServiceManager.Get<ISemanticProcessor>());
 			templateEngine.UsesDynamic();
 		}
 
