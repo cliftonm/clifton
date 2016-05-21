@@ -17,6 +17,12 @@ namespace Clifton.ConsoleLoggerService
 
 	public class LoggerService : ServiceBase, IConsoleLoggerService
 	{
+		public override void FinishedInitialization()
+		{
+			base.FinishedInitialization();
+			ServiceManager.Get<ISemanticProcessor>().Register<LoggerMembrane, LoggerReceptor>();
+		}
+
 		public virtual void Log(LogMessage msg)
 		{
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss : ") + msg.Value);
@@ -31,6 +37,14 @@ namespace Clifton.ConsoleLoggerService
 		{
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.Message);
 			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss EXCEPTION : ") + ex.StackTrace);
+		}
+	}
+
+	public class LoggerReceptor : IReceptor
+	{
+		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_Exception exception)
+		{
+			proc.ServiceManager.Get<IConsoleLoggerService>().Log(exception.Exception);
 		}
 	}
 }
