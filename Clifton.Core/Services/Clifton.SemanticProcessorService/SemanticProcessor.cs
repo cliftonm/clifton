@@ -640,17 +640,20 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			catch (Exception ex)
 			{
 				Exception ex2 = ex;
+				// Prevent recursion if the exception process itself throws an exception.
+				if (!(rc.SemanticInstance is ST_Exception))
+				{
+					ProcessInstance(Logger, new ST_Exception(ex), true);
+				}
 
 				while (ex2.InnerException != null)
 				{
 					ex2 = ex2.InnerException;
-				}
-
-				// System.Diagnostics.Debug.WriteLine(ex.Message + "\r\n" + ex2.StackTrace);
-				// Prevent recursion if the exception process itself throws an exception.
-				if (!(rc.SemanticInstance is ST_Exception))
-				{
-					ProcessInstance(Logger, new ST_Exception(ex2), true);
+					// Prevent recursion if the exception process itself throws an exception.
+					if (!(rc.SemanticInstance is ST_Exception))
+					{
+						ProcessInstance(Logger, new ST_Exception(ex2), true);
+					}
 				}
 			}
 			finally

@@ -71,8 +71,15 @@ namespace Clifton.WebDefaultWorkflowService
 			List<object> objects = new List<object>() { sessionSvc, data.Context };
 			objectNames.AddRange(appTemplateObjects.Keys);
 			objects.AddRange(appTemplateObjects.Values);
-			string newHtml = templateEngine.Parse(template, objectNames.ToArray(), objects.ToArray());
-			data.HtmlResponse.Html = newHtml;
+			try
+			{
+				string newHtml = templateEngine.Parse(template, objectNames.ToArray(), objects.ToArray());
+				data.HtmlResponse.Html = newHtml;
+			}
+			catch (Exception ex)
+			{
+				ServiceManager.Get<ILoggerService>().Log(ex);
+			}
 
 			return WorkflowState.Continue;
 		}
