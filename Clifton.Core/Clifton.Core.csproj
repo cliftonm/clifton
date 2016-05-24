@@ -79,6 +79,7 @@
     <Compile Include="Clifton.Core.ServiceInterfaces\ICriticalExceptionService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IDatabaseServices.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IDbContextService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IEmailExceptionLoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IEmailService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\ILoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IMessageBoxLoggerService.cs" />

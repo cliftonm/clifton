@@ -63,7 +63,8 @@ namespace Clifton.EmailService
 			}
 			catch (Exception ex)
 			{
-				ServiceManager.Get<ILoggerService>().Log(ex);
+				// ServiceManager.Get<ILoggerService>().Log(ex);
+				ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex2 => ex2.Exception = ex);
 			}
 		}
 	}

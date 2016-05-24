@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
@@ -26,15 +27,13 @@ namespace Clifton.Core.Services.ConsoleCriticalExceptionService
 		{
 			try
 			{
-				ILoggerService logger = ServiceManager.Get<ILoggerService>();
-
 				if (e.ExceptionObject is Exception)
 				{
-					logger.Log((Exception)e.ExceptionObject);
+					ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex2 => ex2.Exception = ((Exception)e.ExceptionObject));
 				}
 				else
 				{
-					logger.Log(ExceptionMessage.Create(e.ExceptionObject.GetType().Name));
+					ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_ExceptionObject>(em=> em.ExceptionMessage = ExceptionMessage.Create(e.ExceptionObject.GetType().Name));
 				}
 
 			}

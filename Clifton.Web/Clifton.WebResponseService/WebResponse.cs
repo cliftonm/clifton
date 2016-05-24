@@ -34,7 +34,8 @@ namespace Clifton.WebResponseService
 	{
 		public void Process(ISemanticProcessor proc, IMembrane membrane, ExceptionResponse resp)
 		{
-			proc.ServiceManager.Get<ILoggerService>().Log(LogMessage.Create(resp.Exception.Message));
+			// proc.ServiceManager.Get<ILoggerService>().Log(LogMessage.Create(resp.Exception.Message));
+			proc.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex => ex.Exception = resp.Exception);
 			resp.Context.Response.StatusCode = 500;
 			resp.Context.Response.ContentType = "text/text";
 			resp.Context.Response.ContentEncoding = Encoding.UTF8;

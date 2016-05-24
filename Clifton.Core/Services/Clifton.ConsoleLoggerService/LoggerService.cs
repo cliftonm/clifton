@@ -66,6 +66,11 @@ namespace Clifton.ConsoleLoggerService
 			proc.ServiceManager.Get<IConsoleLoggerService>().Log(exception.Exception);
 		}
 
+		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_ExceptionObject exception)
+		{
+			proc.ServiceManager.Get<IConsoleLoggerService>().Log(exception.ExceptionMessage.Value);
+		}
+
 		public void Process(ISemanticProcessor proc, IMembrane membrane, ST_CompilerError error)
 		{
 			proc.ServiceManager.Get<IConsoleLoggerService>().Log(error.Error);

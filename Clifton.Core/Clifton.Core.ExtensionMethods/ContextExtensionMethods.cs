@@ -195,10 +195,14 @@ namespace Clifton.Core.ExtensionMethods
 			newContext.GetTable<T>().InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
 			// select seq from sqlite_sequence where name="table_name"
+#if SQLITE
 			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == typeof(T).Name select s.seq).Single());
 			data.Id = id;
+#else
+			data.Id = cloned.Id;
+#endif
 
-			return id;
+			return (int)data.Id;
 		}
 
 		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
@@ -210,10 +214,15 @@ namespace Clifton.Core.ExtensionMethods
 			((ITable)records).InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
 			// select seq from sqlite_sequence where name="table_name"
+#if SQLITE
 			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == data.GetType().Name select s.seq).Single());
 			data.Id = id;
-
 			return id;
+#else
+			data.Id = cloned.Id;
+#endif
+
+			return (int)data.Id;
 		}
 
 		public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
@@ -277,12 +286,17 @@ namespace Clifton.Core.ExtensionMethods
 							isUnique = Attribute.IsDefined(prop, typeof(UniqueAttribute)),
 						};
 
+#if SQLITE
 			StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+#else
+			StringBuilder sb = new StringBuilder("if not exists (select * from sys.tables t where t.name = '" + type.Name + "') create table ");
+#endif
 			sb.Append(type.Name);
 			sb.Append("(");
 			List<string> fields = new List<string>();
 
 			// Note leading spaces in the type names.
+#if SQLITE
 			Dictionary<Type, string> typeMap = new Dictionary<Type, string>()
 			{
 				{typeof(string), " TEXT"},
@@ -296,13 +310,32 @@ namespace Clifton.Core.ExtensionMethods
 				{typeof(byte[]), " BLOB"},
 				{typeof(Guid), " BLOB"},
 			};
-
+#else
+			Dictionary<Type, string> typeMap = new Dictionary<Type, string>()
+			{
+				{typeof(string), " NVARCHAR(MAX)"},			// NVARCHAR supports Unicode.  TEXT is deprecated.  VARCHAR is just 8 bit chars.
+				{typeof(int), " INTEGER"},
+				{typeof(int?), " INTEGER"},
+				{typeof(long), " INTEGER"},
+				{typeof(float), " FLOAT"},
+				{typeof(double), " FLOAT"},
+				{typeof(bool), " BIT"},
+				{typeof(DateTime), " datetime2"},
+				{typeof(byte[]), " BLOB"},
+				{typeof(Guid), " UNIQUEIDENTIFIER"},
+			};
+#endif
 			props.ForEach(p =>
 			{
 				StringBuilder sbField = new StringBuilder(p.name);
 
+#if SQLITE
 				if (p.isPrimaryKey) sbField.Append(" INTEGER PRIMARY KEY ASC AUTOINCREMENT");
 				if (!p.isPrimaryKey) sbField.Append(typeMap[p.type]);
+#else
+				if (!p.isPrimaryKey) sbField.Append(typeMap[p.type]);
+				if (p.isPrimaryKey) sbField.Append(" INTEGER PRIMARY KEY IDENTITY(1, 1)");
+#endif
 				if (p.isRequired && !p.isPrimaryKey) sbField.Append(" NOT NULL");
 				if (p.isUnique && !p.isPrimaryKey) sbField.Append(" UNIQUE");
 				fields.Add(sbField.ToString());

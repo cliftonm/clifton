@@ -1,14 +1,34 @@
 ﻿using System;
 
+using Clifton.Core.ServiceInterfaces;
+
 namespace Clifton.Core.Semantics
 {
 	public class ST_Exception : ISemanticType
 	{
-		public Exception Exception { get; protected set; }
+		public Exception Exception { get; set; }
+
+		public ST_Exception()
+		{
+		}
 
 		public ST_Exception(Exception ex)
 		{
-			this.Exception = ex;
+			Exception = ex;
+		}
+	}
+
+	public class ST_ExceptionObject : ISemanticType
+	{
+		public ExceptionMessage ExceptionMessage { get; set; }
+
+		public ST_ExceptionObject()
+		{
+		}
+
+		public ST_ExceptionObject(ExceptionMessage ex)
+		{
+			ExceptionMessage = ex;
 		}
 	}
 
