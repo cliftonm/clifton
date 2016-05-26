@@ -18,6 +18,11 @@ namespace Clifton.MessageBoxLoggerService
 
 	public class LoggerService : ServiceBase, IMessageBoxLoggerService
 	{
+		public virtual void Log(string msg)
+		{
+			MessageBox.Show(msg, "Logger", MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
+
 		public virtual void Log(LogMessage msg)
 		{
 			MessageBox.Show(msg.Value, "Logger", MessageBoxButtons.OK, MessageBoxIcon.Error);
