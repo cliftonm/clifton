@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
+using System.Data.Linq;
+using System.Data.Linq.Mapping;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using System.IO;
@@ -9,8 +12,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
-using System.Data.Linq;
-using System.Data.Linq.Mapping;
 // using System.Data.SQLite;
 
 using Clifton.Core.ExtensionMethods;
@@ -31,6 +32,8 @@ namespace Clifton.Core.ExtensionMethods
 	{
 		public PropertyInfo Property { get; set; }
 	}
+
+	// !!! Note that a new SqlConnection must always be created so that we're not using the state of any existing context. !!!
 
 	public static class ContextExtensionMethods
 	{
@@ -65,7 +68,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			List<T> data;
 
 			if (whereClause == null)
@@ -82,7 +86,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static T Single<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			List<T> data;
 
 			if (whereClause == null)
@@ -99,7 +104,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			int count = 0;
 
 			if (whereClause == null)
@@ -139,7 +145,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static List<T> QueryOfConreteType<T>(this DataContext context, string tableName, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			// TODO: What is this? newContext.Mapping;
 			List<T> data = new List<T>();
 			EntityProperty model = GetEntityProperty(newContext, tableName);
@@ -162,7 +169,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			// TODO: What is this? newContext.Mapping;
 			int count = 0;
 			EntityProperty model = GetEntityProperty(newContext, entity);
@@ -190,7 +198,8 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static int Insert<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			T cloned = CloneEntity(data);
 			newContext.GetTable<T>().InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
@@ -207,7 +216,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			T cloned = CloneEntityOfConcreteType(data);
 			EntityProperty model = GetEntityProperty(newContext, cloned);
 			var records = model.Property.GetValue(newContext, null);
@@ -227,7 +237,8 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			T cloned = CloneEntity(data);													// Disconnect from any other context.
 			var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
 			newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
@@ -241,7 +252,8 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static void Update<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { context.Connection });
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 			record.CopyFrom(data);
 			newContext.SubmitChanges();
