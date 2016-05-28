@@ -12,28 +12,18 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
-// using System.Data.SQLite;
-
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ExtensionMethods
 {
-	[Table]
-	public class sqlite_sequence
-	{
-		[Column, Required]
-		public string name { get; set; }
-		[Column, Required]
-		public int seq { get; set; }
-	}
-
 	public class EntityProperty
 	{
 		public PropertyInfo Property { get; set; }
 	}
 
 	// !!! Note that a new SqlConnection must always be created so that we're not using the state of any existing context. !!!
+	// TODO: Probably should be wrapped in a "using" statement so it gets disposed immediately.
 
 	public static class ContextExtensionMethods
 	{
@@ -193,8 +183,6 @@ namespace Clifton.Core.ExtensionMethods
 		/// <summary>
 		/// Create an extension method Insert on the context that auto-populates the Id.
 		/// The record is immediately inserted as well.
-		/// Because of the nightmare of auto-incrementing PK's in SQLite, this all has to be done
-		/// in a separate data context.  Also, data contexts are supposed to be transactional, so how TF are you supposed to actually use Linq2Sql???
 		/// </summary>
 		public static int Insert<T>(this DataContext context, T data) where T : class, IEntity
 		{
@@ -203,13 +191,7 @@ namespace Clifton.Core.ExtensionMethods
 			T cloned = CloneEntity(data);
 			newContext.GetTable<T>().InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
-			// select seq from sqlite_sequence where name="table_name"
-#if SQLITE
-			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == typeof(T).Name select s.seq).Single());
-			data.Id = id;
-#else
 			data.Id = cloned.Id;
-#endif
 
 			return (int)data.Id;
 		}
@@ -223,14 +205,7 @@ namespace Clifton.Core.ExtensionMethods
 			var records = model.Property.GetValue(newContext, null);
 			((ITable)records).InsertOnSubmit(cloned);
 			newContext.SubmitChanges();
-			// select seq from sqlite_sequence where name="table_name"
-#if SQLITE
-			int id = Convert.ToInt32((from s in newContext.GetTable<sqlite_sequence>() where s.name == data.GetType().Name select s.seq).Single());
-			data.Id = id;
-			return id;
-#else
 			data.Id = cloned.Id;
-#endif
 
 			return (int)data.Id;
 		}
@@ -245,15 +220,13 @@ namespace Clifton.Core.ExtensionMethods
 			newContext.SubmitChanges();
 		}
 
-		/// <summary>
-		/// WTF?  We have to query the record, because contexts are transactional (another WTF!!!) and because when we insert a record (above),
-		/// we have to set the Id ourselves because the Linq2SQLite doesn't do this for us, and that creates an Update transaction, and we 
-		/// can't have that because you can't update PK's in Linq2Sql, and Linq2Sql is such a fucking kludge as a result.
-		/// </summary>
 		public static void Update<T>(this DataContext context, T data) where T : class, IEntity
 		{
+			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
+			// so that the update then updates only the fields changed.
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			// newContext.Log = Console.Out;
 			T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 			record.CopyFrom(data);
 			newContext.SubmitChanges();
@@ -273,6 +246,8 @@ namespace Clifton.Core.ExtensionMethods
 							isPrimaryKey = ((ColumnAttribute)prop.GetCustomAttribute(typeof(ColumnAttribute))).IsPrimaryKey,
 						};
 
+			// TODO: Do we still need to check for PK?
+			// TODO: Do we need to check ourselves for field value changes?  Is Linq2Sql updating the entire record?
 			props.Where(p => !p.isPrimaryKey).ForEach(p =>
 			{
 				p.property.SetValue(dest, p.property.GetValue(src));
@@ -298,31 +273,12 @@ namespace Clifton.Core.ExtensionMethods
 							isUnique = Attribute.IsDefined(prop, typeof(UniqueAttribute)),
 						};
 
-#if SQLITE
-			StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-#else
 			StringBuilder sb = new StringBuilder("if not exists (select * from sys.tables t where t.name = '" + type.Name + "') create table ");
-#endif
 			sb.Append(type.Name);
 			sb.Append("(");
 			List<string> fields = new List<string>();
 
 			// Note leading spaces in the type names.
-#if SQLITE
-			Dictionary<Type, string> typeMap = new Dictionary<Type, string>()
-			{
-				{typeof(string), " TEXT"},
-				{typeof(int), " INTEGER"},
-				{typeof(int?), " INTEGER"},
-				{typeof(long), " INTEGER"},
-				{typeof(float), " REAL"},
-				{typeof(double), " REAL"},
-				{typeof(bool), " INTEGER"},
-				{typeof(DateTime), " NUMERIC"},
-				{typeof(byte[]), " BLOB"},
-				{typeof(Guid), " BLOB"},
-			};
-#else
 			Dictionary<Type, string> typeMap = new Dictionary<Type, string>()
 			{
 				{typeof(string), " NVARCHAR(MAX)"},			// NVARCHAR supports Unicode.  TEXT is deprecated.  VARCHAR is just 8 bit chars.
@@ -336,18 +292,13 @@ namespace Clifton.Core.ExtensionMethods
 				{typeof(byte[]), " BLOB"},
 				{typeof(Guid), " UNIQUEIDENTIFIER"},
 			};
-#endif
+
 			props.ForEach(p =>
 			{
 				StringBuilder sbField = new StringBuilder(p.name);
 
-#if SQLITE
-				if (p.isPrimaryKey) sbField.Append(" INTEGER PRIMARY KEY ASC AUTOINCREMENT");
-				if (!p.isPrimaryKey) sbField.Append(typeMap[p.type]);
-#else
 				if (!p.isPrimaryKey) sbField.Append(typeMap[p.type]);
 				if (p.isPrimaryKey) sbField.Append(" INTEGER PRIMARY KEY IDENTITY(1, 1)");
-#endif
 				if (p.isRequired && !p.isPrimaryKey) sbField.Append(" NOT NULL");
 				if (p.isUnique && !p.isPrimaryKey) sbField.Append(" UNIQUE");
 				fields.Add(sbField.ToString());
