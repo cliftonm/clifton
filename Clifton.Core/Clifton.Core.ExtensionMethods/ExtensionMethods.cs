@@ -137,6 +137,21 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
+		/// If not null, return the evaluation of the function, otherwise return the default value.
+		/// </summary>
+		public static R IfNotNull<T, R>(this T obj, R defaultValue, Func<T, R> func)
+		{
+			R ret = defaultValue;
+
+			if (obj != null)
+			{
+				ret = func(obj);
+			}
+
+			return ret;
+		}
+
+		/// <summary>
 		/// If the boolean is true, performs the specified action.
 		/// </summary>
 		public static bool Then(this bool b, Action f)
