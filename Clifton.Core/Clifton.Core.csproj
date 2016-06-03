@@ -38,6 +38,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Linq" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -65,8 +66,8 @@
     <Compile Include="Clifton.Core.ExtensionMethods\ContextExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\DistinctBy.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
+    <Compile Include="Clifton.Core.ExtensionMethods\WinFormExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\Attributes.cs" />
-    <Compile Include="Clifton.Core.ModelTableManagement\DbContextService.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\IEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\INamedEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\MappedRecord.cs" />
