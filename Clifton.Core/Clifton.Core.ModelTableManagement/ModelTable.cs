@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 
 using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
@@ -16,9 +17,9 @@ namespace Clifton.Core.ModelTableManagement
 		protected T newInstance;
 		protected List<IEntity> items;
 		protected ModelMgr modelMgr;
-		protected DbContextService db;
+		protected IDbContextService db;
 
-		public ModelTable(ModelMgr modelMgr, DbContextService db, DataTable backingTable, List<IEntity> modelCollection)
+		public ModelTable(ModelMgr modelMgr, IDbContextService db, DataTable backingTable, List<IEntity> modelCollection)
 		{
 			this.modelMgr = modelMgr;
 			this.db = db;

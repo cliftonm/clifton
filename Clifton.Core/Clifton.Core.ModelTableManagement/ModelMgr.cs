@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 
 using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
@@ -35,10 +36,12 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public event EventHandler<ModelPropertyChangedEventArgs> PropertyChanged;
 
-		protected Dictionary<Type, List<IEntity>> mappedRecords;
-		protected DbContextService db;
+		public IDbContextService DbContextService { get { return db; } }
 
-		public ModelMgr(DbContextService db)
+		protected Dictionary<Type, List<IEntity>> mappedRecords;
+		protected IDbContextService db;
+
+		public ModelMgr(IDbContextService db)
 		{
 			this.db = db;
 			mappedRecords = new Dictionary<Type, List<IEntity>>();
@@ -51,8 +54,10 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Type recType = typeof(T);
 			if (!mappedRecords.ContainsKey(recType)) mappedRecords[recType] = new List<IEntity>();
-			(from rec in db.Context.GetTable<T>() select rec).ForEach(m => mappedRecords[recType].Add(m));
-			mappedRecords[recType].ForEach(m => AddRow(dv, (T)m));		// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			(from rec in db.Context.GetTable<T>() select rec).ForEach(m =>
+				{
+					AddRow(dv, (T)m);			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+				});
 		}
 
 		/// <summary>
@@ -108,21 +113,23 @@ namespace Clifton.Core.ModelTableManagement
 		}
 
 		/// <summary>
-		/// Appends a DataRow from the fields in the model.
+		/// Appends a DataRow from the fields in the model and adds the row to the underlying model collection.
 		/// </summary>
 		public void AddRow<T>(DataView view, T model) where T : MappedRecord
 		{
 			DataRow row = NewRow(view, model);
 			view.Table.Rows.Add(row);
+			AddRecordToCollection(model);
 		}
 
 		/// <summary>
-		/// Inserts a DataRow from the fields in the model.
+		/// Inserts a DataRow from the fields in the model and adds the row to the underlying model collection.
 		/// </summary>
 		public void InsertRow<T>(DataView view, T model) where T : MappedRecord
 		{
 			DataRow row = NewRow(view, model);
 			view.Table.Rows.InsertAt(row, 0);
+			AddRecordToCollection(model);
 		}
 
 		/// <summary>
@@ -218,6 +225,13 @@ namespace Clifton.Core.ModelTableManagement
 			return record;
 		}
 
+		public List<T> GetRows<T>(Func<T, bool> predicate) where T : MappedRecord
+		{
+			List<T> records = mappedRecords[typeof(T)].Cast<T>().Where(predicate).ToList();
+
+			return records;
+		}
+
 		protected object DbNullConverter(object val)
 		{
 			return (val == DBNull.Value ? null : val);
@@ -236,6 +250,11 @@ namespace Clifton.Core.ModelTableManagement
 				row[fieldName] = val ?? DBNull.Value;
 				row.Table.Columns[fieldName].ReadOnly = lastState;
 			}
+		}
+
+		protected void AddRecordToCollection(MappedRecord record)
+		{
+			mappedRecords[record.GetType()].Add((IEntity)record);
 		}
 
 		protected DataRow NewRow<T>(DataView view, T model) where T : MappedRecord
