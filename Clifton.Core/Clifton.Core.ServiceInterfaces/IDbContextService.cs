@@ -7,37 +7,12 @@ using System.Linq.Expressions;
 
 using System.Xml.Serialization;
 
+using Clifton.Core.ModelTableManagement;
 using Clifton.Core.Semantics;
 using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ServiceInterfaces
 {
-	public interface IEntity
-	{
-		int? Id { get; set; }
-	}
-
-	public interface INamedEntity : IEntity
-	{
-		string Name { get; set; }
-	}
-
-	[Table]
-	public abstract class NamedEntity : IEntity
-	{
-		[XmlIgnore]
-		public abstract int? Id { get; set; }
-		[XmlIgnore]
-		public abstract string Name { get; set; }
-		[XmlIgnore]
-		public abstract int DisplayOrder { get; set; }
-	}
-
-	//[Table]
-	//public abstract class NamedEntity
-	//{
-	//}
-
 	public interface IDbContextService : IService
 	{
 		void InitializeContext(DataContext context);
@@ -48,6 +23,5 @@ namespace Clifton.Core.ServiceInterfaces
 		DataContext Context { get; }
 	}
 
-	public class UniqueAttribute : Attribute { }
 	public class DbContextMembrane : Membrane { }
 }

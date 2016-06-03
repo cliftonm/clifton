@@ -538,6 +538,11 @@ namespace Clifton.Core.ExtensionMethods
 			return dt.ToString(format);
 		}
 
+		public static string to_s(this int i)
+		{
+			return i.ToString();
+		}
+
 		public static long to_l(this string src)
 		{
 			long ret = 0;

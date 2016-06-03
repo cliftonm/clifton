@@ -1,38 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
 using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ModelTableManagement;
-using Clifton.Core.ModuleManagement;
-using Clifton.Core.Semantics;
-using Clifton.Core.ServiceInterfaces;
-using Clifton.Core.ServiceManagement;
 
-namespace Clifton.DbContextService
+namespace Clifton.Core.ModelTableManagement
 {
-	public class DbContextModule : IModule
-	{
-		public void InitializeServices(IServiceManager serviceManager)
-		{
-			serviceManager.RegisterSingleton<IDbContextService, DbContextService>();
-		}
-	}
-
-	public class DbContextService : ServiceBase, IDbContextService
+	public class DbContextService
 	{
 		protected DataContext context;
 
 		public DataContext Context { get { return context; } }
 
-		public override void FinishedInitialization()
+		public DbContextService(DataContext context)
 		{
-			base.FinishedInitialization();
-			ISemanticProcessor semProc = ServiceManager.Get<ISemanticProcessor>();
-			semProc.Register<EmailClientMembrane, DbContextReceptor>();
+			this.context = context;
 		}
 
 		public void InitializeContext(DataContext context)
@@ -45,18 +28,18 @@ namespace Clifton.DbContextService
 			var models = from prop in context.GetType().GetProperties()
 						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
 						 select new
-							 {
-								 Property = prop,
-							 };
+						 {
+							 Property = prop,
+						 };
 
 			// Get the generic type returned by the method in the context and create the table if missing.
 			models.ForEach(m =>
-				{
-					PropertyInfo p = m.Property;
-					Type t = p.GetMethod.ReturnType;
-					Type gt = t.GenericTypeArguments[0].UnderlyingSystemType;
-					context.CreateTableIfNotExists(gt);
-				});
+			{
+				PropertyInfo p = m.Property;
+				Type t = p.GetMethod.ReturnType;
+				Type gt = t.GenericTypeArguments[0].UnderlyingSystemType;
+				context.CreateTableIfNotExists(gt);
+			});
 		}
 
 		public bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity
@@ -85,7 +68,7 @@ namespace Clifton.DbContextService
 			var records = context.QueryOfConreteType<T>(entity, whereClause);
 			bool exists = false;
 
-			switch(records.Count())
+			switch (records.Count())
 			{
 				case 0:
 					break;
@@ -101,9 +84,5 @@ namespace Clifton.DbContextService
 
 			return exists;
 		}
-	}
-
-	public class DbContextReceptor : IReceptor
-	{
 	}
 }

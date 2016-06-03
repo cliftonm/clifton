@@ -13,7 +13,7 @@ using System.Runtime.Serialization;
 using System.Text;
 
 using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ServiceInterfaces;
+using Clifton.Core.ModelTableManagement;
 
 namespace Clifton.Core.ExtensionMethods
 {
@@ -46,7 +46,7 @@ namespace Clifton.Core.ExtensionMethods
 		public static T CloneEntityOfConcreteType<T>(this T originalEntity)
 		{
 			Type entityType = typeof(T);
-			DataContractSerializer ser = new DataContractSerializer(entityType, new Type[] {originalEntity.GetType()});
+			DataContractSerializer ser = new DataContractSerializer(entityType, new Type[] { originalEntity.GetType() });
 
 			using (MemoryStream ms = new MemoryStream())
 			{
@@ -190,6 +190,7 @@ namespace Clifton.Core.ExtensionMethods
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			T cloned = CloneEntity(data);
 			newContext.GetTable<T>().InsertOnSubmit(cloned);
+			newContext.Log = Console.Out;
 			newContext.SubmitChanges();
 			data.Id = cloned.Id;
 
@@ -204,6 +205,7 @@ namespace Clifton.Core.ExtensionMethods
 			EntityProperty model = GetEntityProperty(newContext, cloned);
 			var records = model.Property.GetValue(newContext, null);
 			((ITable)records).InsertOnSubmit(cloned);
+			newContext.Log = Console.Out;
 			newContext.SubmitChanges();
 			data.Id = cloned.Id;
 
@@ -217,6 +219,20 @@ namespace Clifton.Core.ExtensionMethods
 			T cloned = CloneEntity(data);													// Disconnect from any other context.
 			var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
 			newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
+			newContext.Log = Console.Out;
+			newContext.SubmitChanges();
+		}
+
+		public static void DeleteOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
+		{
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
+			EntityProperty model = GetEntityProperty(newContext, data);
+			var records = model.Property.GetValue(newContext, null);
+			var recordsToDelete = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id);	 // Cast to (int) is required because there's no mapping for int?
+			((ITable)records).DeleteAllOnSubmit(recordsToDelete);						// We know it's only one record.
+			newContext.Log = Console.Out;
 			newContext.SubmitChanges();
 		}
 
@@ -226,9 +242,23 @@ namespace Clifton.Core.ExtensionMethods
 			// so that the update then updates only the fields changed.
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			// newContext.Log = Console.Out;
+			newContext.Log = Console.Out;
 			T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 			record.CopyFrom(data);
+			newContext.SubmitChanges();
+		}
+
+		public static void UpdateOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
+		{
+			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
+			// so that the update then updates only the fields changed.
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			EntityProperty model = GetEntityProperty(newContext, data);
+			var records = model.Property.GetValue(newContext, null);
+			T record = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
+			record.CopyFrom(data);
+			newContext.Log = Console.Out;
 			newContext.SubmitChanges();
 		}
 
@@ -237,7 +267,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static void CopyFrom<T>(this T dest, T src) where T : IEntity
 		{
-			Type type = typeof(T);
+			Type type = src.GetType(); // typeof(T);
 			var props = from prop in type.GetProperties()
 						where Attribute.IsDefined(prop, typeof(ColumnAttribute))
 						select new
@@ -289,6 +319,7 @@ namespace Clifton.Core.ExtensionMethods
 				{typeof(double), " FLOAT"},
 				{typeof(bool), " BIT"},
 				{typeof(DateTime), " datetime2"},
+				{typeof(DateTime?), " datetime2"},
 				{typeof(byte[]), " BLOB"},
 				{typeof(Guid), " UNIQUEIDENTIFIER"},
 			};
