@@ -95,6 +95,14 @@ namespace Clifton.Core.ModelTableManagement
 			}
 
 			modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+
+			// Comboboxes do not fire a DataRowAction.Change RowChanged event when closing the dialog, 
+			// these fire only when the use changes the selected row, so we persist the change now if not
+			// a detached record (as in, it must exist in the database.)
+			if (e.Row.RowState != DataRowState.Detached)
+			{
+				db.Context.UpdateOfConcreteType(instance);
+			}
 		}
 	}
 }

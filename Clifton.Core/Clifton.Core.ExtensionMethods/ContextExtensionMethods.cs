@@ -60,15 +60,22 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			List<T> data;
+			List<T> data = null;
 
-			if (whereClause == null)
+			try
 			{
-				data = newContext.GetTable<T>().ToList();
+				if (whereClause == null)
+				{
+					data = newContext.GetTable<T>().ToList();
+				}
+				else
+				{
+					data = newContext.GetTable<T>().Where(whereClause).ToList();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				data = newContext.GetTable<T>().Where(whereClause).ToList();
+				LogException(ex);
 			}
 
 			return data;
@@ -78,18 +85,28 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			List<T> data;
+			List<T> data = null;
+			T ret = null;
 
-			if (whereClause == null)
+			try
 			{
-				data = newContext.GetTable<T>().ToList();
+				if (whereClause == null)
+				{
+					data = newContext.GetTable<T>().ToList();
+				}
+				else
+				{
+					data = newContext.GetTable<T>().Where(whereClause).ToList();
+				}
+
+				ret = data[0];
 			}
-			else
+			catch (Exception ex)
 			{
-				data = newContext.GetTable<T>().Where(whereClause).ToList();
+				LogException(ex);
 			}
 
-			return data[0];
+			return ret;
 		}
 
 		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
@@ -98,13 +115,20 @@ namespace Clifton.Core.ExtensionMethods
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			int count = 0;
 
-			if (whereClause == null)
+			try
 			{
-				count = newContext.GetTable<T>().Count();
+				if (whereClause == null)
+				{
+					count = newContext.GetTable<T>().Count();
+				}
+				else
+				{
+					count = newContext.GetTable<T>().Where(whereClause).Count();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				count = newContext.GetTable<T>().Where(whereClause).Count();
+				LogException(ex);
 			}
 
 			return count;
@@ -117,13 +141,21 @@ namespace Clifton.Core.ExtensionMethods
 
 		private static EntityProperty GetEntityProperty(DataContext context, string tableName)
 		{
-			EntityProperty property = (from prop in context.GetType().GetProperties()
-									   where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
-									   && prop.GetMethod.ReturnType.GenericTypeArguments[0].Name == tableName
-									   select new EntityProperty
-									   {
-										   Property = prop,
-									   }).Single();
+			EntityProperty property = null;
+			try
+			{
+				property = (from prop in context.GetType().GetProperties()
+							where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
+							&& prop.GetMethod.ReturnType.GenericTypeArguments[0].Name == tableName
+							select new EntityProperty
+							{
+								Property = prop,
+							}).Single();
+			}
+			catch
+			{
+				throw new ApplicationException("Can't acquire Entity from Context.  Does the entity " + tableName + " have a getter entry in the Context class?");
+			}
 
 			return property;
 		}
@@ -139,19 +171,27 @@ namespace Clifton.Core.ExtensionMethods
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			// TODO: What is this? newContext.Mapping;
 			List<T> data = new List<T>();
-			EntityProperty model = GetEntityProperty(newContext, tableName);
 
-			if (whereClause == null)
+			try
 			{
-				var records = model.Property.GetValue(context, null);
-				data = ((ITable)records).Cast<T>().ToList();
+				EntityProperty model = GetEntityProperty(newContext, tableName);
+
+				if (whereClause == null)
+				{
+					var records = model.Property.GetValue(context, null);
+					data = ((ITable)records).Cast<T>().ToList();
+				}
+				else
+				{
+					// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
+					var records = model.Property.GetValue(context, null);
+					data = ((ITable)records).Cast<T>().Where(whereClause).ToList();
+					//int count = records.Count();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
-				var records = model.Property.GetValue(context, null);
-				data = ((ITable)records).Cast<T>().Where(whereClause).ToList();
-				//int count = records.Count();
+				LogException(ex);
 			}
 
 			return data;
@@ -163,18 +203,26 @@ namespace Clifton.Core.ExtensionMethods
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
 			// TODO: What is this? newContext.Mapping;
 			int count = 0;
-			EntityProperty model = GetEntityProperty(newContext, entity);
 
-			if (whereClause == null)
+			try
 			{
-				var records = model.Property.GetValue(context, null);
-				count = ((ITable)records).Cast<T>().Count();
+				EntityProperty model = GetEntityProperty(newContext, entity);
+
+				if (whereClause == null)
+				{
+					var records = model.Property.GetValue(context, null);
+					count = ((ITable)records).Cast<T>().Count();
+				}
+				else
+				{
+					// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
+					var records = model.Property.GetValue(context, null);
+					count = ((ITable)records).Cast<T>().Count();
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				// var records = newContext.GetType().GetProperty(collectionName).GetValue(context, null);
-				var records = model.Property.GetValue(context, null);
-				count = ((ITable)records).Cast<T>().Count();
+				LogException(ex);
 			}
 
 			return count;
@@ -188,11 +236,18 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			T cloned = CloneEntity(data);
-			newContext.GetTable<T>().InsertOnSubmit(cloned);
-			newContext.Log = Console.Out;
-			newContext.SubmitChanges();
-			data.Id = cloned.Id;
+			try
+			{
+				T cloned = CloneEntity(data);
+				newContext.GetTable<T>().InsertOnSubmit(cloned);
+				newContext.Log = Console.Out;
+				newContext.SubmitChanges();
+				data.Id = cloned.Id;
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 
 			return (int)data.Id;
 		}
@@ -201,13 +256,20 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			T cloned = CloneEntityOfConcreteType(data);
-			EntityProperty model = GetEntityProperty(newContext, cloned);
-			var records = model.Property.GetValue(newContext, null);
-			((ITable)records).InsertOnSubmit(cloned);
-			newContext.Log = Console.Out;
-			newContext.SubmitChanges();
-			data.Id = cloned.Id;
+			try
+			{
+				T cloned = CloneEntityOfConcreteType(data);
+				EntityProperty model = GetEntityProperty(newContext, cloned);
+				var records = model.Property.GetValue(newContext, null);
+				((ITable)records).InsertOnSubmit(cloned);
+				newContext.Log = Console.Out;
+				newContext.SubmitChanges();
+				data.Id = cloned.Id;
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 
 			return (int)data.Id;
 		}
@@ -216,24 +278,38 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			T cloned = CloneEntity(data);													// Disconnect from any other context.
-			var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
-			newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
-			newContext.Log = Console.Out;
-			newContext.SubmitChanges();
+			try
+			{
+				T cloned = CloneEntity(data);													// Disconnect from any other context.
+				var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
+				newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
+				newContext.Log = Console.Out;
+				newContext.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 		}
 
 		public static void DeleteOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
-			EntityProperty model = GetEntityProperty(newContext, data);
-			var records = model.Property.GetValue(newContext, null);
-			var recordsToDelete = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id);	 // Cast to (int) is required because there's no mapping for int?
-			((ITable)records).DeleteAllOnSubmit(recordsToDelete);						// We know it's only one record.
-			newContext.Log = Console.Out;
-			newContext.SubmitChanges();
+			try
+			{
+				T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
+				EntityProperty model = GetEntityProperty(newContext, data);
+				var records = model.Property.GetValue(newContext, null);
+				var recordsToDelete = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id);	 // Cast to (int) is required because there's no mapping for int?
+				((ITable)records).DeleteAllOnSubmit(recordsToDelete);						// We know it's only one record.
+				newContext.Log = Console.Out;
+				newContext.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 		}
 
 		public static void Update<T>(this DataContext context, T data) where T : class, IEntity
@@ -242,10 +318,17 @@ namespace Clifton.Core.ExtensionMethods
 			// so that the update then updates only the fields changed.
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			newContext.Log = Console.Out;
-			T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
-			record.CopyFrom(data);
-			newContext.SubmitChanges();
+			try
+			{
+				newContext.Log = Console.Out;
+				T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
+				record.CopyFrom(data);
+				newContext.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 		}
 
 		public static void UpdateOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
@@ -254,18 +337,25 @@ namespace Clifton.Core.ExtensionMethods
 			// so that the update then updates only the fields changed.
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			EntityProperty model = GetEntityProperty(newContext, data);
-			var records = model.Property.GetValue(newContext, null);
-			T record = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
-			record.CopyFrom(data);
-			newContext.Log = Console.Out;
-			newContext.SubmitChanges();
+			try
+			{
+				EntityProperty model = GetEntityProperty(newContext, data);
+				var records = model.Property.GetValue(newContext, null);
+				T record = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
+				record.CopyFrom(data);
+				newContext.Log = Console.Out;
+				newContext.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
 		}
 
 		/// <summary>
 		/// Copy all properties decorated with Column attribute except the PK column.
 		/// </summary>
-		public static void CopyFrom<T>(this T dest, T src) where T : IEntity
+		private static void CopyFrom<T>(this T dest, T src) where T : IEntity
 		{
 			Type type = src.GetType(); // typeof(T);
 			var props = from prop in type.GetProperties()
@@ -339,6 +429,11 @@ namespace Clifton.Core.ExtensionMethods
 			sb.Append(")");
 
 			context.ExecuteCommand(sb.ToString());
+		}
+
+		private static void LogException(Exception ex)
+		{
+			System.Windows.Forms.MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace, "ContextExtensionMethod Exception", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
 		}
 	}
 }

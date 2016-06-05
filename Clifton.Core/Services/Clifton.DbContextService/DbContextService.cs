@@ -40,7 +40,7 @@ namespace Clifton.DbContextService
 			this.context = context;
 		}
 
-		public void CreateDatabaseAndTablesIfNotExists()
+		public bool CreateDatabaseAndTablesIfNotExists()
 		{
 			var models = from prop in context.GetType().GetProperties()
 						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
@@ -57,6 +57,10 @@ namespace Clifton.DbContextService
 					Type gt = t.GenericTypeArguments[0].UnderlyingSystemType;
 					context.CreateTableIfNotExists(gt);
 				});
+
+			// TODO: Determine whether tables exist!
+			// TODO: Even better, figure out the migrations based on the current schema vs. the model schema!
+			return false;
 		}
 
 		public bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity

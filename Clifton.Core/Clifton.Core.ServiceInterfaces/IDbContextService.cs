@@ -16,7 +16,12 @@ namespace Clifton.Core.ServiceInterfaces
 	public interface IDbContextService : IService
 	{
 		void InitializeContext(DataContext context);
-		void CreateDatabaseAndTablesIfNotExists();
+
+		/// <summary>
+		/// Returns true if tables were created.
+		/// </summary>
+		bool CreateDatabaseAndTablesIfNotExists();
+
 		bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity;
 		bool RecordExists<T>(Func<T, bool> whereClause, out int id) where T : class, IEntity;
 		bool RecordOfTypeExists<T>(IEntity entity, Func<T, bool> whereClause, out int id) where T : class, IEntity;

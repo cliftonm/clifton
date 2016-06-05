@@ -7,17 +7,34 @@ using System.Data.Linq.Mapping;
 using System.Linq;
 using System.Reflection;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
+	public class ExtDataColumn : DataColumn
+	{
+		public bool Visible { get; set; }
+
+		public ExtDataColumn(string colName, Type colType, bool visible)
+			: base(colName, colType)
+		{
+			Visible = visible;
+		}
+	}
+
 	public class Field
 	{
 		public string Name { get; set; }
 		public string DisplayName { get; set; }
 		public Type Type { get; set; }
 		public bool ReadOnly { get; set; }
+		public bool Visible { get; set; }
+		public bool IsColumn { get; set; }
+		public bool IsDisplayField { get; set; }
+
+		public bool IsTableField { get { return IsColumn || IsDisplayField; } }
 	}
 
 	public class ModelPropertyChangedEventArgs : EventArgs
@@ -47,16 +64,38 @@ namespace Clifton.Core.ModelTableManagement
 			mappedRecords = new Dictionary<Type, List<IEntity>>();
 		}
 
+		public void Register<T>() where T : MappedRecord, IEntity
+		{
+			Type recType = typeof(T);
+			mappedRecords[recType] = new List<IEntity>();
+		}
+
 		/// <summary>
 		/// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
 		/// </summary>
-		public void LoadRecords<T>(DataView dv) where T : MappedRecord, IEntity
+		public List<IEntity> LoadRecords<T>(DataView dv) where T : MappedRecord, IEntity
 		{
 			Type recType = typeof(T);
-			if (!mappedRecords.ContainsKey(recType)) mappedRecords[recType] = new List<IEntity>();
-			(from rec in db.Context.GetTable<T>() select rec).ForEach(m =>
+			// if (!mappedRecords.ContainsKey(recType)) mappedRecords[recType] = new List<IEntity>();
+			// Create or clear anything that already exists.
+			mappedRecords[recType] = new List<IEntity>();
+			(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+
+			return mappedRecords[recType];
+		}
+
+		/// <summary>
+		/// Adds all the records for the model type into the DataView and our underlying EXISTING model collection for that model type.
+		/// </summary>
+		public void AddRecords<T>(DataView dv) where T : MappedRecord, IEntity
+		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
+			Type recType = typeof(T);
+			mappedRecords[recType].ForEach(m =>
 				{
-					AddRow(dv, (T)m);			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+					DataRow row = NewRow(dv, (T)m);		// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+					dv.Table.Rows.Add(row);
 				});
 		}
 
@@ -91,17 +130,20 @@ namespace Clifton.Core.ModelTableManagement
 			DataTable dt = new DataTable();
 			List<Field> fields = GetFields<T>();
 
-			foreach (Field field in fields)
+			foreach (Field field in fields.Where(f=>f.IsTableField))
 			{
-				DataColumn dc;
+				// Only create columns in the underlying data table for those properties in the model that have Column or DisplayField attributes.
+				// Otherwise, we start tracking things like EntityRef properties, etc, that we don't want to track!
+				ExtDataColumn dc;
 
+				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
 				if (field.Type.Name == "Nullable`1")
 				{
-					dc = new DataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0]);
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible);
 				}
 				else
 				{
-					dc = new DataColumn(field.Name, field.Type);
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible);
 				}
 
 				dc.ReadOnly = field.ReadOnly;
@@ -140,7 +182,7 @@ namespace Clifton.Core.ModelTableManagement
 			DataRow row = model.Row;
 			List<Field> fields = GetFields<T>();
 
-			foreach (Field field in fields)
+			foreach (Field field in fields.Where(f=>f.IsTableField))
 			{
 				Type modelType = typeof(T);
 				object val = model.GetType().GetProperty(field.Name).GetValue(model);
@@ -162,14 +204,16 @@ namespace Clifton.Core.ModelTableManagement
 			// Prevents infinite recursion by updating the model only when the field has changed.
 			// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
 			// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
-			if (oldVal != val)
+			if (((oldVal == null) && (val != DBNull.Value)) ||
+				 ((oldVal != null) && (!oldVal.Equals(val))))
 			{
 				pi.SetValue(record, DbNullConverter(val));
-			}
 
-			// We always want this event to fire, whether the change was done in the DataGridView or programmatically.
-			// TODO: Should the event fire only when the value hasn't changed?
-			PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
+				// We always want this event to fire, whether the change was done in the DataGridView or programmatically.
+				// TODO: Should the event fire only when the value hasn't changed?
+				// Apparently so, otherwise we can get continuous calls to UpdateRecordField by the app.
+				PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
+			}
 		}
 
 		/// <summary>
@@ -177,6 +221,8 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public bool TryGetRow<T>(List<T> items, Func<T, bool> predicate, out T record) where T : MappedRecord
 		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
 			record = null;
 
 			T item = items.SingleOrDefault(predicate);
@@ -194,6 +240,8 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public bool TryGetRow<T>(Func<T, bool> predicate, out T record) where T : MappedRecord
 		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
 			record = null;
 			List<IEntity> items = mappedRecords[typeof(T)];
 
@@ -212,6 +260,8 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public T GetRow<T>(Func<T, bool> predicate) where T : MappedRecord
 		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
 			T record = null;
 			List<IEntity> items = mappedRecords[typeof(T)];
 
@@ -227,6 +277,8 @@ namespace Clifton.Core.ModelTableManagement
 
 		public List<T> GetRows<T>(Func<T, bool> predicate) where T : MappedRecord
 		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
 			List<T> records = mappedRecords[typeof(T)].Cast<T>().Where(predicate).ToList();
 
 			return records;
@@ -254,6 +306,8 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected void AddRecordToCollection(MappedRecord record)
 		{
+			Assert.That(mappedRecords.ContainsKey(record.GetType()), "Model Manager does not know about " + record.GetType().Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
 			mappedRecords[record.GetType()].Add((IEntity)record);
 		}
 
@@ -262,7 +316,7 @@ namespace Clifton.Core.ModelTableManagement
 			List<Field> fields = GetFields<T>();
 			DataRow row = view.Table.NewRow();
 
-			foreach (Field field in fields)
+			foreach (Field field in fields.Where(f=>f.IsTableField))
 			{
 				Type modelType = typeof(T);
 				object val = model.GetType().GetProperty(field.Name).GetValue(model);
@@ -279,13 +333,16 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Type modelType = typeof(T);
 			var props = from prop in modelType.GetProperties()
-						where Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
+						// where Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
 						select new Field()
 						{
 							Name = prop.Name,
 							DisplayName = Attribute.IsDefined(prop, typeof(DisplayNameAttribute)) ? ((DisplayNameAttribute)prop.GetCustomAttribute(typeof(DisplayNameAttribute))).DisplayName : prop.Name,
 							Type = prop.PropertyType,
 							ReadOnly = Attribute.IsDefined(prop, typeof(ReadOnlyAttribute)),
+							Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
+							IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
+							IsDisplayField = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
 						};
 
 			return props.ToList();

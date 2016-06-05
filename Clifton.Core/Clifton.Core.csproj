@@ -71,7 +71,9 @@
     <Compile Include="Clifton.Core.ModelTableManagement\IEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\INamedEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\MappedRecord.cs" />
-    <Compile Include="Clifton.Core.ModelTableManagement\ModelMgr.cs" />
+    <Compile Include="Clifton.Core.ModelTableManagement\ModelMgr.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Clifton.Core.ModelTableManagement\ModelTable.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\NamedEntity.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\IModule.cs" />

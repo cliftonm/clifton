@@ -134,12 +134,15 @@ namespace Clifton.WebRouterService
 					switch (session.GetState(context))
 					{
 						case SessionState.New:
-							proc.ProcessInstance<WebServerMembrane, StringResponse>(r =>
-							{
-								r.Context = context;
-								r.Message = "authenticationRequired";		// used in clifton.spa.js to handle SPA error responses
-								r.StatusCode = 403;
-							});
+							// TODO: Oh man, this is application specific!!!
+							session.SetSessionObject(context, "OneTimeBadAlert", "Please Sign In");
+							context.Redirect("/account/login");
+							//proc.ProcessInstance<WebServerMembrane, StringResponse>(r =>
+							//{
+							//	r.Context = context;
+							//	r.Message = "authenticationRequired";		// used in clifton.spa.js to handle SPA error responses
+							//	r.StatusCode = 403;
+							//});
 							break;
 
 						case SessionState.Authenticated:
@@ -152,12 +155,14 @@ namespace Clifton.WebRouterService
 							break;
 
 						case SessionState.Expired:
-							proc.ProcessInstance<WebServerMembrane, StringResponse>(r =>
-							{
-								r.Context = context;
-								r.Message = "sessionExpired";				// used in clifton.spa.js to handle SPA error responses
-								r.StatusCode = 401;
-							});
+							session.SetSessionObject(context, "OneTimeBadAlert", "Session expired.  Please sign in again.");
+							context.Redirect("/account/login");
+							//proc.ProcessInstance<WebServerMembrane, StringResponse>(r =>
+							//{
+							//	r.Context = context;
+							//	r.Message = "sessionExpired";				// used in clifton.spa.js to handle SPA error responses
+							//	r.StatusCode = 401;
+							//});
 							break;
 					}
 				}
