@@ -22,11 +22,52 @@ namespace Clifton.Core.ExtensionMethods
 		public PropertyInfo Property { get; set; }
 	}
 
+	// From ideas here: http://stackoverflow.com/questions/637117/how-to-get-the-tsql-query-from-linq-datacontext-submitchanges
+	public class SqlLogWriter : TextWriter
+	{
+		public override Encoding Encoding { get { return Encoding.Default; } }
+
+		protected Action<string> logger;
+
+		public SqlLogWriter(Action<string> logger)
+		{
+			this.logger = logger;
+		}
+
+		public override void Write(char[] buffer, int index, int count)
+		{
+			Write(new string(buffer, index, count));
+		}
+
+		public override void Write(char value)
+		{
+			Write(value.ToString());
+		}
+
+		public override void Write(string value)
+		{
+			logger.IfNotNull(l => l(value));
+		}
+	}
+
 	// !!! Note that a new SqlConnection must always be created so that we're not using the state of any existing context. !!!
 	// TODO: Probably should be wrapped in a "using" statement so it gets disposed immediately.
 
+	// A very interesting point here: http://stackoverflow.com/questions/4605638/multi-threading-with-linq-to-sql
+	// You shouldn't share a DataContext across threads. It is inherently unsafe. 
+	// Additionally, DataContexts are meant to be used one per unit of work (i.e., one per conversation). 
+	// Each request should be considered a different conversation and should be answered with a unique DataContext.
+
+	// The reason for all these extension methods, besides getting Linq2Sql to work in a more general purpose way, is 
+	// for the reason stated above, especially since a lot of what happens, whether handling RabbitMQ messages from
+	// a Beaglebone or implementing a web server, occurs on different threads, and certainly on threads that did not
+	// create the original DataContext.
+
 	public static class ContextExtensionMethods
 	{
+		public static Action<Exception> ExceptionHandler = null;
+		public static Action<string> SqlLogger = null;
+
 		/// <summary>
 		/// Clone the entity so we it loses its association with any existing data context.
 		/// </summary>
@@ -142,6 +183,7 @@ namespace Clifton.Core.ExtensionMethods
 		private static EntityProperty GetEntityProperty(DataContext context, string tableName)
 		{
 			EntityProperty property = null;
+
 			try
 			{
 				property = (from prop in context.GetType().GetProperties()
@@ -167,8 +209,10 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static List<T> QueryOfConreteType<T>(this DataContext context, string tableName, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+	
 			// TODO: What is this? newContext.Mapping;
 			List<T> data = new List<T>();
 
@@ -199,8 +243,9 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
 			// TODO: What is this? newContext.Mapping;
 			int count = 0;
 
@@ -234,13 +279,14 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static int Insert<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
 				T cloned = CloneEntity(data);
 				newContext.GetTable<T>().InsertOnSubmit(cloned);
-				newContext.Log = Console.Out;
 				newContext.SubmitChanges();
 				data.Id = cloned.Id;
 			}
@@ -254,15 +300,16 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
 				T cloned = CloneEntityOfConcreteType(data);
 				EntityProperty model = GetEntityProperty(newContext, cloned);
 				var records = model.Property.GetValue(newContext, null);
 				((ITable)records).InsertOnSubmit(cloned);
-				newContext.Log = Console.Out;
 				newContext.SubmitChanges();
 				data.Id = cloned.Id;
 			}
@@ -276,14 +323,15 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
 				T cloned = CloneEntity(data);													// Disconnect from any other context.
 				var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
 				newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
-				newContext.Log = Console.Out;
 				newContext.SubmitChanges();
 			}
 			catch (Exception ex)
@@ -294,8 +342,10 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static void DeleteOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
 				T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
@@ -303,7 +353,6 @@ namespace Clifton.Core.ExtensionMethods
 				var records = model.Property.GetValue(newContext, null);
 				var recordsToDelete = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id);	 // Cast to (int) is required because there's no mapping for int?
 				((ITable)records).DeleteAllOnSubmit(recordsToDelete);						// We know it's only one record.
-				newContext.Log = Console.Out;
 				newContext.SubmitChanges();
 			}
 			catch (Exception ex)
@@ -316,11 +365,12 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
 			// so that the update then updates only the fields changed.
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
-				newContext.Log = Console.Out;
 				T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 				record.CopyFrom(data);
 				newContext.SubmitChanges();
@@ -335,15 +385,16 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
 			// so that the update then updates only the fields changed.
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
 			try
 			{
 				EntityProperty model = GetEntityProperty(newContext, data);
 				var records = model.Property.GetValue(newContext, null);
 				T record = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 				record.CopyFrom(data);
-				newContext.Log = Console.Out;
 				newContext.SubmitChanges();
 			}
 			catch (Exception ex)
@@ -433,7 +484,14 @@ namespace Clifton.Core.ExtensionMethods
 
 		private static void LogException(Exception ex)
 		{
-			System.Windows.Forms.MessageBox.Show(ex.Message + "\r\n" + ex.StackTrace, "ContextExtensionMethod Exception", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+			ExceptionHandler.IfNotNull(e => e(ex));
+		}
+
+		private static void Setup(DataContext context, out SqlConnection connection, out DataContext newContext)
+		{
+			connection = new SqlConnection(context.Connection.ConnectionString);
+			newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			newContext.Log = new SqlLogWriter(SqlLogger);
 		}
 	}
 }
