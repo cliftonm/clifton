@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ServiceInterfaces;
@@ -45,14 +46,15 @@ namespace Clifton.Core.ModelTableManagement
 					db.Context.InsertOfConcreteType(newInstance);
 					break;
 
-				case DataRowAction.Change:
-					{
-						// Any change to a grid view column that is mapped to a table column causes this event to fire,
-						// which results in an immediate update of the database.
-						IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
-						db.Context.UpdateOfConcreteType(item);
-						break;
-					}
+				// We don't do this here because the Table_ColumnChanged event handles persisting the change.
+				//case DataRowAction.Change:
+				//	{
+				//		// Any change to a grid view column that is mapped to a table column causes this event to fire,
+				//		// which results in an immediate update of the database.
+				//		IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
+				//		db.Context.UpdateOfConcreteType(item);
+				//		break;
+				//	}
 
 				// This never happens when connected to a DataGridView.  Not sure why not.
 				//case DataRowAction.Delete:
@@ -101,7 +103,22 @@ namespace Clifton.Core.ModelTableManagement
 			// a detached record (as in, it must exist in the database.)
 			if (e.Row.RowState != DataRowState.Detached)
 			{
-				db.Context.UpdateOfConcreteType(instance);
+				// If it's actually a column in the table, then persist the change.
+				if (((ExtDataColumn)e.Column).IsDbColumn)
+				{
+					PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
+					object oldVal = pi.GetValue(instance);
+
+					// Prevents infinite recursion by updating the model only when the field has changed.
+					// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
+					// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
+					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
+						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+					{
+
+						db.Context.UpdateOfConcreteType(instance);
+					}
+				}
 			}
 		}
 	}
