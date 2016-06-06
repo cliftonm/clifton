@@ -16,11 +16,13 @@ namespace Clifton.Core.ModelTableManagement
 	public class ExtDataColumn : DataColumn
 	{
 		public bool Visible { get; set; }
+		public bool IsDbColumn { get; set; }
 
-		public ExtDataColumn(string colName, Type colType, bool visible)
+		public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn)
 			: base(colName, colType)
 		{
 			Visible = visible;
+			IsDbColumn = isDbColumn;
 		}
 	}
 
@@ -139,11 +141,11 @@ namespace Clifton.Core.ModelTableManagement
 				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
 				if (field.Type.Name == "Nullable`1")
 				{
-					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible);
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn);
 				}
 				else
 				{
-					dc = new ExtDataColumn(field.Name, field.Type, field.Visible);
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn);
 				}
 
 				dc.ReadOnly = field.ReadOnly;
