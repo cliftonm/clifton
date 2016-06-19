@@ -652,6 +652,9 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		/// <summary>
+		/// Returns the source string surrounded by a single whitespace.
+		/// </summary>
 		public static string Spaced(this String src)
 		{
 			return " " + src + " ";
