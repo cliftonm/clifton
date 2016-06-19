@@ -150,6 +150,37 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		public static T SingleOrDefault<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			List<T> data = null;
+			T ret = null;
+
+			try
+			{
+				if (whereClause == null)
+				{
+					data = newContext.GetTable<T>().ToList();
+				}
+				else
+				{
+					data = newContext.GetTable<T>().Where(whereClause).ToList();
+				}
+
+				if (data.Count == 1)
+				{
+					ret = data[0];
+				}
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+			}
+
+			return ret;
+		}
+
 		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
@@ -459,6 +490,7 @@ namespace Clifton.Core.ExtensionMethods
 				{typeof(float), " FLOAT"},
 				{typeof(double), " FLOAT"},
 				{typeof(bool), " BIT"},
+				{typeof(bool?), " BIT"},
 				{typeof(DateTime), " datetime2"},
 				{typeof(DateTime?), " datetime2"},
 				{typeof(byte[]), " BLOB"},
