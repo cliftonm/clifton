@@ -75,6 +75,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Clifton.Core.ModelTableManagement\ModelTable.cs" />
+    <Compile Include="Clifton.Core.ModelTableManagement\ModelView.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\NamedEntity.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\IModule.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\IModuleManager.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="Clifton.Core.ServiceInterfaces\IEmailService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\ILoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IMessageBoxLoggerService.cs" />
+    <Compile Include="Clifton.Core.ServiceInterfaces\IPaperTrailAppLoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceManagement\IService.cs" />
     <Compile Include="Clifton.Core.ServiceManagement\IServiceManager.cs" />
     <Compile Include="Clifton.Core.ServiceManagement\ServiceBase.cs" />
