@@ -43,7 +43,8 @@ namespace Clifton.DbContextService
 		public bool CreateDatabaseAndTablesIfNotExists()
 		{
 			var models = from prop in context.GetType().GetProperties()
-						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`")		// look for Table<> return types.
+						 where prop.GetMethod.ReturnType.Name.BeginsWith("Table`") &&		// look for Table<> return types.
+						 !prop.IsDefined(typeof(ViewAttribute))
 						 select new
 							 {
 								 Property = prop,
