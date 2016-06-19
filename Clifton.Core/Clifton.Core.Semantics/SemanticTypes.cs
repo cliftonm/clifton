@@ -7,6 +7,7 @@ namespace Clifton.Core.Semantics
 	public class ST_Exception : ISemanticType
 	{
 		public Exception Exception { get; set; }
+		public string Tid { get; set; }			// used for PaperTrailApp.
 
 		public ST_Exception()
 		{
@@ -52,6 +53,7 @@ namespace Clifton.Core.Semantics
 	public class ST_Log : ISemanticType
 	{
 		public string Message { get; set; }
+		public string Tid { get; set; }			// used for PaperTrailApp.
 
 		public ST_Log()
 		{
