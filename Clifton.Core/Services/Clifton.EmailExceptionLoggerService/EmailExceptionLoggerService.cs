@@ -66,7 +66,7 @@ namespace Clifton.ConsoleLoggerService
 				}
 			}
 
-			email.Body = sb.ToString();
+			email.Body = sb.ToString().Replace("\r", "<br/>").Replace("\n", "<br/>");
 			ServiceManager.Get<IEmailService>().Send(email);
 		}
 	}
