@@ -43,7 +43,7 @@ namespace Clifton.Core.ModelTableManagement
 			{
 				case DataRowAction.Add:
 					items.Add(newInstance);
-					db.Context.InsertOfConcreteType(newInstance);
+					Insert(newInstance);
 					break;
 
 				// We don't do this here because the Table_ColumnChanged event handles persisting the change.
@@ -79,11 +79,26 @@ namespace Clifton.Core.ModelTableManagement
 			if (item != null)
 			{
 				items.Remove(item);
-				db.Context.DeleteOfConcreteType(item);
+				Delete(item);
 			}
 		}
 
-		protected void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
+		protected virtual void Insert(T newInstance)
+		{
+			db.Context.InsertOfConcreteType(newInstance);
+		}
+
+		protected virtual void Delete(IEntity item)
+		{
+			db.Context.DeleteOfConcreteType(item);
+		}
+
+		protected virtual void Update(IEntity instance)
+		{
+			db.Context.UpdateOfConcreteType(instance);
+		}
+
+		protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
 		{
 			IEntity instance;
 
@@ -115,8 +130,7 @@ namespace Clifton.Core.ModelTableManagement
 					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
 						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
 					{
-
-						db.Context.UpdateOfConcreteType(instance);
+						Update(instance);
 					}
 				}
 			}
