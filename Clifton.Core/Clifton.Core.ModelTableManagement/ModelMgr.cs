@@ -72,15 +72,19 @@ namespace Clifton.Core.ModelTableManagement
 			mappedRecords[recType] = new List<IEntity>();
 		}
 
+		public void Clear<T>() where T : MappedRecord, IEntity
+		{
+			Type recType = typeof(T);
+			mappedRecords[recType] = new List<IEntity>();
+		}
+
 		/// <summary>
 		/// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
 		/// </summary>
 		public List<IEntity> LoadRecords<T>(DataView dv) where T : MappedRecord, IEntity
 		{
+			Clear<T>();
 			Type recType = typeof(T);
-			// if (!mappedRecords.ContainsKey(recType)) mappedRecords[recType] = new List<IEntity>();
-			// Create or clear anything that already exists.
-			mappedRecords[recType] = new List<IEntity>();
 			(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 
 			return mappedRecords[recType];
@@ -284,6 +288,18 @@ namespace Clifton.Core.ModelTableManagement
 			List<T> records = mappedRecords[typeof(T)].Cast<T>().Where(predicate).ToList();
 
 			return records;
+		}
+
+		/// <summary>
+		/// Returns the record associated with the specified DataRow.
+		/// </summary>
+		public T GetRow<T>(DataRow row) where T : MappedRecord
+		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
+			T record = mappedRecords[typeof(T)].Cast<T>().Where(r => r.Row == row).Single();
+
+			return record;
 		}
 
 		protected object DbNullConverter(object val)
