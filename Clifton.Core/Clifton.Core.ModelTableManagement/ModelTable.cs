@@ -83,16 +83,25 @@ namespace Clifton.Core.ModelTableManagement
 			}
 		}
 
+		/// <summary>
+		/// ModelView overrides this method.
+		/// </summary>
 		protected virtual void Insert(T newInstance)
 		{
 			db.Context.InsertOfConcreteType(newInstance);
 		}
 
+		/// <summary>
+		/// ModelView overrides this method.
+		/// </summary>
 		protected virtual void Delete(IEntity item)
 		{
 			db.Context.DeleteOfConcreteType(item);
 		}
 
+		/// <summary>
+		/// ModelView overrides this method.
+		/// </summary>
 		protected virtual void Update(IEntity instance)
 		{
 			db.Context.UpdateOfConcreteType(instance);
@@ -111,24 +120,24 @@ namespace Clifton.Core.ModelTableManagement
 				instance = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
 			}
 
-			modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
-
 			// Comboboxes do not fire a DataRowAction.Change RowChanged event when closing the dialog, 
 			// these fire only when the use changes the selected row, so we persist the change now if not
 			// a detached record (as in, it must exist in the database.)
 			if (e.Row.RowState != DataRowState.Detached)
 			{
-				// If it's actually a column in the table, then persist the change.
-				if (((ExtDataColumn)e.Column).IsDbColumn)
-				{
-					PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
-					object oldVal = pi.GetValue(instance);
+				PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
+				object oldVal = pi.GetValue(instance);
 
-					// Prevents infinite recursion by updating the model only when the field has changed.
-					// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
-					// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
-					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
-						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+				// Prevents infinite recursion by updating the model only when the field has changed.
+				// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
+				// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
+				if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
+					 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+				{
+					modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+					// If it's actually a column in the table, then persist the change.
+					ExtDataColumn edc = (ExtDataColumn)e.Column;
+					if (edc.IsDbColumn)
 					{
 						Update(instance);
 					}
@@ -137,3 +146,4 @@ namespace Clifton.Core.ModelTableManagement
 		}
 	}
 }
+
