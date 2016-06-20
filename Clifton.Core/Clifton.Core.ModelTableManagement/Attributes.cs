@@ -25,11 +25,14 @@ namespace Clifton.Core.ModelTableManagement
 	public class LookupAttribute : Attribute
 	{
 		public string ForeignKeyTable { get; set; }
+		public Type ModelType { get; set; }
+		public string DisplayField { get; set; }
 
 		public LookupAttribute(string fkTable)
 			: base()
 		{
 			ForeignKeyTable = fkTable;
+			DisplayField = "Name";			// Default
 		}
 	}
 }

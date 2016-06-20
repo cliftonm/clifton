@@ -17,12 +17,14 @@ namespace Clifton.Core.ModelTableManagement
 	{
 		public bool Visible { get; set; }
 		public bool IsDbColumn { get; set; }
+		public LookupAttribute Lookup { get; set; }
 
-		public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn)
+		public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, LookupAttribute lookup = null)
 			: base(colName, colType)
 		{
 			Visible = visible;
 			IsDbColumn = isDbColumn;
+			Lookup = lookup;
 		}
 	}
 
@@ -35,6 +37,7 @@ namespace Clifton.Core.ModelTableManagement
 		public bool Visible { get; set; }
 		public bool IsColumn { get; set; }
 		public bool IsDisplayField { get; set; }
+		public LookupAttribute Lookup { get; set; }
 
 		public bool IsTableField { get { return IsColumn || IsDisplayField; } }
 	}
@@ -75,6 +78,11 @@ namespace Clifton.Core.ModelTableManagement
 		public void Clear<T>() where T : MappedRecord, IEntity
 		{
 			Type recType = typeof(T);
+			Clear(recType);
+		}
+
+		public void Clear(Type recType)
+		{
 			mappedRecords[recType] = new List<IEntity>();
 		}
 
@@ -86,6 +94,14 @@ namespace Clifton.Core.ModelTableManagement
 			Clear<T>();
 			Type recType = typeof(T);
 			(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+
+			return mappedRecords[recType];
+		}
+
+		public List<IEntity> LoadRecords(Type recType, DataView dv)
+		{
+			Clear(recType);
+			(from rec in db.Context.GetTable(recType.Name) select rec).ForEach(m => AddRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 
 			return mappedRecords[recType];
 		}
@@ -134,28 +150,19 @@ namespace Clifton.Core.ModelTableManagement
 		public DataView CreateView<T>()
 		{
 			DataTable dt = new DataTable();
+			dt.TableName = typeof(T).Name;
 			List<Field> fields = GetFields<T>();
+			PopulateDataTable(dt, fields);
 
-			foreach (Field field in fields.Where(f=>f.IsTableField))
-			{
-				// Only create columns in the underlying data table for those properties in the model that have Column or DisplayField attributes.
-				// Otherwise, we start tracking things like EntityRef properties, etc, that we don't want to track!
-				ExtDataColumn dc;
+			return new DataView(dt);
+		}
 
-				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
-				if (field.Type.Name == "Nullable`1")
-				{
-					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn);
-				}
-				else
-				{
-					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn);
-				}
-
-				dc.ReadOnly = field.ReadOnly;
-				dc.Caption = field.DisplayName;
-				dt.Columns.Add(dc);
-			}
+		public DataView CreateView(Type t)
+		{
+			DataTable dt = new DataTable();
+			dt.TableName = t.Name;
+			List<Field> fields = GetFields(t);
+			PopulateDataTable(dt, fields);
 
 			return new DataView(dt);
 		}
@@ -166,6 +173,13 @@ namespace Clifton.Core.ModelTableManagement
 		public void AddRow<T>(DataView view, T model) where T : MappedRecord
 		{
 			DataRow row = NewRow(view, model);
+			view.Table.Rows.Add(row);
+			AddRecordToCollection(model);
+		}
+
+		public void AddRow(DataView view, Type recType, MappedRecord model)
+		{
+			DataRow row = NewRow(view, recType, model);
 			view.Table.Rows.Add(row);
 			AddRecordToCollection(model);
 		}
@@ -302,11 +316,6 @@ namespace Clifton.Core.ModelTableManagement
 			return record;
 		}
 
-		protected object DbNullConverter(object val)
-		{
-			return (val == DBNull.Value ? null : val);
-		}
-
 		/// <summary>
 		/// Read only columns have to be set back to read-writeable in order to update them.
 		/// Ironically, this is not the case when adding a row to the grid's view's table.
@@ -320,6 +329,11 @@ namespace Clifton.Core.ModelTableManagement
 				row[fieldName] = val ?? DBNull.Value;
 				row.Table.Columns[fieldName].ReadOnly = lastState;
 			}
+		}
+
+		protected object DbNullConverter(object val)
+		{
+			return (val == DBNull.Value ? null : val);
 		}
 
 		protected void AddRecordToCollection(MappedRecord record)
@@ -346,12 +360,34 @@ namespace Clifton.Core.ModelTableManagement
 			return row;
 		}
 
+		protected DataRow NewRow(DataView view, Type modelType, MappedRecord model)
+		{
+			List<Field> fields = GetFields(modelType);
+			DataRow row = view.Table.NewRow();
+
+			foreach (Field field in fields.Where(f => f.IsTableField))
+			{
+				object val = modelType.GetProperty(field.Name).GetValue(model);
+				row[field.Name] = val ?? DBNull.Value;
+			}
+
+			model.Row = row;
+
+			return row;
+		}
+
 		// TODO: Get cached field lists for models.
 		protected List<Field> GetFields<T>()
 		{
 			Type modelType = typeof(T);
+
+			return GetFields(modelType);
+		}
+
+		protected List<Field> GetFields(Type modelType)
+		{
 			var props = from prop in modelType.GetProperties()
-						// where Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
+						where Attribute.IsDefined(prop, typeof(ColumnAttribute)) || Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
 						select new Field()
 						{
 							Name = prop.Name,
@@ -361,9 +397,34 @@ namespace Clifton.Core.ModelTableManagement
 							Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
 							IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
 							IsDisplayField = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
+							Lookup = Attribute.IsDefined(prop, typeof(LookupAttribute)) ? ((LookupAttribute)prop.GetCustomAttribute(typeof(LookupAttribute))) : null,
 						};
 
 			return props.ToList();
+		}
+
+		protected void PopulateDataTable(DataTable dt, List<Field> fields)
+		{
+			foreach (Field field in fields.Where(f => f.IsTableField))
+			{
+				// Only create columns in the underlying data table for those properties in the model that have Column or DisplayField attributes.
+				// Otherwise, we start tracking things like EntityRef properties, etc, that we don't want to track!
+				ExtDataColumn dc;
+
+				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
+				if (field.Type.Name == "Nullable`1")
+				{
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Lookup);
+				}
+				else
+				{
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Lookup);
+				}
+
+				dc.ReadOnly = field.ReadOnly;
+				dc.Caption = field.DisplayName;
+				dt.Columns.Add(dc);
+			}
 		}
 	}
 }

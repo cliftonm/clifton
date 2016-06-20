@@ -206,6 +206,14 @@ namespace Clifton.Core.ExtensionMethods
 			return count;
 		}
 
+		public static List<MappedRecord> GetTable(this DataContext context, string tableName)
+		{
+			EntityProperty model = GetEntityProperty(context, tableName);
+			ITable records = (ITable)model.Property.GetValue(context, null);
+
+			return records.Cast<MappedRecord>().ToList();
+		}
+
 		private static EntityProperty GetEntityProperty(DataContext context, IEntity entity)
 		{
 			return GetEntityProperty(context, entity.GetType().Name);
