@@ -47,22 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Clifton.Core.Assertions\Assert.cs" />
-    <Compile Include="Clifton.Core.Db\DbFieldNameAttribute.cs" />
-    <Compile Include="Clifton.Core.Db\DbService.cs" />
-    <Compile Include="Clifton.Core.Db\DefaultValue.cs" />
-    <Compile Include="Clifton.Core.Db\Extensions.cs" />
-    <Compile Include="Clifton.Core.Db\ForeignKey.cs" />
-    <Compile Include="Clifton.Core.Db\IDbService.cs" />
-    <Compile Include="Clifton.Core.Db\IViewInfo.cs" />
-    <Compile Include="Clifton.Core.Db\PrimaryKey.cs" />
-    <Compile Include="Clifton.Core.Db\TableFieldInfo.cs" />
-    <Compile Include="Clifton.Core.Db\TableForeignKey.cs" />
-    <Compile Include="Clifton.Core.Db\TableGraph.cs" />
-    <Compile Include="Clifton.Core.Db\TableInfo.cs" />
-    <Compile Include="Clifton.Core.Db\ViewFieldInfo.cs" />
-    <Compile Include="Clifton.Core.Db\ViewInfo.cs" />
-    <Compile Include="Clifton.Core.Db\ViewSchema.cs" />
-    <Compile Include="Clifton.Core.Db\ViewTableInfo.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ContextExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\DistinctBy.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
@@ -89,7 +73,6 @@
     <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleCriticalExceptionService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleLoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\ICriticalExceptionService.cs" />
-    <Compile Include="Clifton.Core.ServiceInterfaces\IDatabaseServices.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IDbContextService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IEmailExceptionLoggerService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IEmailService.cs" />
