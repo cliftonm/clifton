@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,8 +37,12 @@ using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ModuleManagement
 {
-    public class ModuleManager : ServiceBase, IModuleManager
-    {
+	public class ModuleManager : ServiceBase, IModuleManager
+	{
+		protected List<IModule> registrants;
+
+		public ReadOnlyCollection<IModule> Modules { get { return registrants.AsReadOnly(); } }
+
 		public ModuleManager()
 		{
 		}
@@ -81,10 +86,10 @@ namespace Clifton.Core.ModuleManagement
 			List<Assembly> modules = new List<Assembly>();
 
 			moduleFilenames.ForEach(a =>
-				{
-					Assembly assembly = LoadAssembly(a, optionalFolder, resourceAssemblyResolver);
-					modules.Add(assembly);
-				});
+			{
+				Assembly assembly = LoadAssembly(a, optionalFolder, resourceAssemblyResolver);
+				modules.Add(assembly);
+			});
 
 			return modules;
 		}
@@ -138,12 +143,12 @@ namespace Clifton.Core.ModuleManagement
 		/// </summary>
 		protected virtual List<IModule> InstantiateRegistrants(List<Assembly> modules)
 		{
-			List<IModule> registrants = new List<IModule>();
+			registrants = new List<IModule>();
 			modules.ForEach(m =>
-				{
-					IModule registrant = InstantiateRegistrant(m);
-					registrants.Add(registrant);
-				});
+			{
+				IModule registrant = InstantiateRegistrant(m);
+				registrants.Add(registrant);
+			});
 
 			return registrants;
 		}
@@ -189,7 +194,7 @@ namespace Clifton.Core.ModuleManagement
 			if (assyLocation == "")
 			{
 				Assert.Not(optionalFolder == null, "Assemblies embedded as resources require that the optionalFolder parameter specify the path to resolve assemblies.");
-				appLocation = optionalFolder;		// Must be specified!
+				appLocation = optionalFolder;       // Must be specified!
 			}
 			else
 			{
@@ -200,5 +205,5 @@ namespace Clifton.Core.ModuleManagement
 
 			return FullPath.Create(fullPath);
 		}
-    }
+	}
 }

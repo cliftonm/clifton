@@ -22,6 +22,7 @@
 */
 
 using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -35,5 +36,6 @@ namespace Clifton.Core.ModuleManagement
 		void RegisterModules(XmlFileName filename, string optionalFolder = null, Func<string, Assembly> resourceAssemblyResolver = null);
 		void RegisterModules(List<AssemblyFileName> moduleFilenames, string optionalFolder = null, Func<string, Assembly> resourceAssemblyResolver = null);
 		List<AssemblyFileName> GetModuleList(XmlFileName filename);
+		ReadOnlyCollection<IModule> Modules { get; }
 	}
 }
