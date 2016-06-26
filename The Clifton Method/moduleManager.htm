@@ -1,0 +1,168 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Module Manager - Dynamically Loa</title>
+</head>
+
+<body>
+
+<p>Module Manager - Dynamically Loading Assemblies at Runtime</p>
+<h2>Introduction</h2>
+<p>Building applications with runtime loaded assemblies is a useful capability, 
+as it provides the ability to:</p>
+<ol>
+	<li>Customize an application from &quot;logical components.&quot;</li>
+	<li>Replace components with new or different behavior, for example, mock 
+	objects.</li>
+	<li>Extend an application's behavior by adding new components.</li>
+</ol>
+<p>By &quot;logical components&quot;, I mean an assembly (DLL) that is encapsulates all 
+the functionality of &quot;something&quot; into a group.&nbsp; An easy way to first 
+understand this concept is by thinking about physical devices, for example, a 
+camera.&nbsp; All the functionality that a camera might provide, such as taking 
+a picture, streaming video, configuring its resolution, and other settings, can 
+be organized into a logical component.&nbsp; Because different cameras will most 
+likely have different API's and options, one can create different DLL's for each 
+physical device and customize the application for the actual camera (or cameras) 
+that are part of a particular installation.</p>
+<p>Creating services as logical components is another useful thing to do.&nbsp; 
+For example, a web server can be a component, encapsulating handling HTTP 
+requests.&nbsp; The router might be a different component.&nbsp; If you're 
+implementing a server that provides public services, you probably don't need a 
+router that performs authentication.&nbsp; If you're implementing a server that 
+serves non-public pages or REST calls, you would want a router component that 
+performs authentication.&nbsp; Another good example is interfacing to different 
+databases, such as SQL Server, Oracle, or a NoSQL database.</p>
+<p>When is a set of classes suitable for wrapping in a module as a component, 
+and when are they not?&nbsp; Ideally, you should already be asking yourself this 
+question when writing a non-modular application because even the internals of 
+such an application should be organized in such a way that the code is 
+structured &quot;logically.&quot;</p>
+<h3>What is Suitable For Modularization?</h3>
+<p>Ask these questions:</p>
+<h4>Does It Behave Like a Component?</h4>
+<ol>
+	<li>Is the set of classes intended to be re-usable?</li>
+	<li>Would it be useful to mock the functionality provided by these classes?</li>
+	<li>Am I coding against a specific physical (hardware) object or against a 
+	specific behavior?</li>
+	<li>Can I foresee the physical hardware changing or the behavior changing 
+	depending on application/customer-specific needs?</li>
+	<li>Are the classes implementing high level behaviors?</li>
+	<li>Are the classes implementing business rules that might vary depending on 
+	application-specific needs?</li>
+</ol>
+<p>In the last question, what do we mean by &quot;high level behaviors?&quot;&nbsp; </p>
+<h4>Is It High Level?</h4>
+<p>High level behavior typically:</p>
+<ol>
+	<li>Interfaces with other high level components in the system.</li>
+	<li>Communicates to other applications (such as a database).</li>
+	<li>Handles asynchronous events, such as HTTP, TCP/IP, serial, USB, or other 
+	transports.</li>
+	<li>Interfaces with physical hardware.</li>
+	<li>Is implemented as a prototype (is instantiated) but acts as a singleton 
+	for the specific functionality that it provides.</li>
+	<li>Implements a common interface for all logical components of the same 
+	&quot;kind&quot; (hence #5, instantiated.)&nbsp; </li>
+	<li>#6 means that the behavior is abstracted through an interface.</li>
+</ol>
+<h4>Is it Low Level?</h4>
+<p>Low level behaviors typically fall into the &quot;utility&quot; category, classes that 
+implement:</p>
+<ol>
+	<li>Extension methods</li>
+	<li>Conversion methods</li>
+	<li>Can be, and often is, implemented as static methods</li>
+	<li>Does not typically implement interfaces to abstract the behavior</li>
+</ol>
+<p>You essentially have all &quot;yes&quot; answers for &quot;Does it behave like a component?&quot; 
+and &quot;Is it high level?&quot;, and all &quot;no&quot; answers for &quot;Is it low level?&quot;</p>
+<h3>Modular Component vs. Inheritable</h3>
+<p>The typical approach to building &quot;components&quot; is to use inheritance and a 
+factory pattern.&nbsp; </p>
+<h4>A Typical Inheritance Architecture</h4>
+<p><img border="0" src="factory%20pattern.png" width="488" height="313"></p>
+<p>Here, the code, in a monolithic manner, implements the each of the concrete 
+server implementations and asks the factory method to create the desired 
+concrete object.</p>
+<h4>A Typical Modular Component Architecture</h4>
+<p><img border="0" src="module%20pattern.png" width="544" height="266"></p>
+<p>In this scenario, the application gets whatever is specified in a separate 
+configuration file as to the implementing concrete type.&nbsp; The concrete 
+types are implemented as separate assemblies.</p>
+<p>What do you notice about this?</p>
+<ol>
+	<li>The module loader is similar to a factory pattern, but you don't ask it 
+	to get you anything, instead the application, through a configuration file, 
+	determines what is loaded.&nbsp; The &quot;get me something&quot; factory pattern is 
+	replaced a &quot;you get this&quot;, more like a strategy pattern.</li>
+	<li>The concrete classes that are implemented in the module typically don't 
+	inherit from a base class but rather implement an interface.</li>
+	<li>Inheritance is replaced with modularity.</li>
+</ol>
+<p>That last point is worth repeating: <i>Inheritance is replaced with 
+modularity. </i>Instead of creating a potentially complex inheritance tree of 
+specializations, each specialization lives autonomously in its own module, and 
+the inheritance is usually very shallow, in fact usually just implementing the 
+interface requirements.</p>
+<h3>The Annoying Thing About Modular Architectures</h3>
+<p>In order to utilize a modular architecture, the interface classes must be 
+shared, either by referencing the same files, typically in some common folder, 
+or wrapping the shared files in an assembly shared both by your application and 
+the module.&nbsp; The salient point is that the files, or assembly of the files, 
+must be shared.&nbsp; Why?&nbsp; Because:</p>
+<ol>
+	<li>The application needs to know how to talk to the module, which is 
+	through the interface</li>
+	<li>The module needs to know what it implements, again through the 
+	interface.</li>
+</ol>
+<p>A monolithic application doesn't have this issue because everything is in the 
+same application solution:</p>
+<p><img border="0" src="monolithic%20app.png" width="439" height="140"></p>
+<p>Even if you write your code so that you have different projects (assemblies) 
+for your components, you can still share the same interface source code file, 
+and all is well:</p>
+<p>
+<img border="0" src="compile-time%20modular%20application.png" width="439" height="280"></p>
+<p>Only when you start writing components as runtime loaded modules do you need 
+to think about whether you want to share an assembly of the interface, or just 
+the interface .cs file.&nbsp; Again, we ask &quot;why?&quot;&nbsp; Because you want the 
+interface to be independent of the application specific code as well.&nbsp; For 
+example, when I write a web application, I don't want to be referencing an 
+interface file in one website project for a component that I use in another 
+website project, in a completely separate folder.&nbsp; The interface definition 
+(whether .cs files or as an assembly, which of course consists of .cs files) 
+comes along for the ride:</p>
+<p><img border="0" src="runtime%20modular%20app.png" width="439" height="372"></p>
+<p>Here again we see an inversion of more monolithic application development.&nbsp; 
+Rather than:</p>
+<ul>
+	<li>everything living in one project (highly monolithic)</li>
+</ul>
+<p>or:</p>
+<ul>
+	<li>many projects with each project referencing other projects that it needs 
+	to know about (compile-time modularity)</li>
+</ul>
+<p>we instead have:</p>
+<ul>
+	<li>an application that shares an interface specification and separate 
+	modules (assemblies) which are not referenced by the application nor which 
+	reference each other, except through the shared interface.</li>
+</ul>
+<p>Certainly, the project files for the different modules may live together in 
+the same solution (and even in multiple solutions, as these modules are often 
+shared), but the salient point is, <i>neither the application, nor the modules, 
+have a direct reference to another module.</i></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>
