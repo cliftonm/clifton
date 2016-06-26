@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Clifton.Core.Assertions\Assert.cs" />
+    <Compile Include="Clifton.Core.Exceptions\ModuleManagerException.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ContextExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\DistinctBy.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
@@ -63,7 +64,9 @@
     <Compile Include="Clifton.Core.ModelTableManagement\NamedEntity.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\IModule.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\IModuleManager.cs" />
+    <Compile Include="Clifton.Core.ModuleManagement\IServiceModuleManager.cs" />
     <Compile Include="Clifton.Core.ModuleManagement\ModuleManager.cs" />
+    <Compile Include="Clifton.Core.ModuleManagement\ServiceModuleManager.cs" />
     <Compile Include="Clifton.Core.Semantics\SemanticTypes.cs" />
     <Compile Include="Clifton.Core.Semantics\ImmutableSemanticType.cs" />
     <Compile Include="Clifton.Core.Semantics\Interfaces.cs" />

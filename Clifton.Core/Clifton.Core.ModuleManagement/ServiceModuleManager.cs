@@ -21,18 +21,32 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
-using System.Reflection;
 
-using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ModuleManagement
 {
-	public interface IModuleManager
+	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
 	{
-		void RegisterModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath = null, Func<string, Assembly> resourceAssemblyResolver = null);
-		ReadOnlyCollection<IModule> Modules { get; }
+		public IServiceManager ServiceManager { get; set; }
+
+		public virtual void Initialize(IServiceManager svcMgr)
+		{
+			ServiceManager = svcMgr;
+		}
+
+		public virtual void FinishedInitialization()
+		{
+		}
+
+		/// <summary>
+		/// Initialize each registrant by passing in the service manager.  This allows the module
+		/// to register the services it provides.
+		/// </summary>
+		protected override void InitializeRegistrants(List<IModule> registrants)
+		{
+			registrants.ForEach(r => r.InitializeServices(ServiceManager));
+		}
 	}
 }

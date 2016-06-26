@@ -27,17 +27,15 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
 
 using Clifton.Core.Assertions;
+using Clifton.Core.Exceptions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ModuleManagement
 {
-	public class ModuleManager : ServiceBase, IModuleManager
+	public class ModuleManager : IModuleManager
 	{
 		protected List<IModule> registrants;
 
@@ -48,46 +46,26 @@ namespace Clifton.Core.ModuleManagement
 		}
 
 		/// <summary>
-		/// Register all modules specified in the XML filename so that the application
-		/// can gain access to the services provided in those modules.
+		/// Register modules specified in a list of assembly filenames.
 		/// </summary>
-		public virtual void RegisterModules(XmlFileName filename, string optionalFolder = null, Func<string, Assembly> resourceAssemblyResolver = null)
+		public virtual void RegisterModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath = null, Func<string, Assembly> assemblyResolver = null)
 		{
-			List<AssemblyFileName> moduleFilenames = GetModuleList(filename);
-			List<Assembly> modules = LoadModules(moduleFilenames, optionalFolder, resourceAssemblyResolver);
+			List<Assembly> modules = LoadModules(moduleFilenames, optionalPath, assemblyResolver);
 			List<IModule> registrants = InstantiateRegistrants(modules);
 			InitializeRegistrants(registrants);
-		}
-
-		public virtual void RegisterModules(List<AssemblyFileName> moduleFilenames, string optionalFolder = null, Func<string, Assembly> resourceAssemblyResolver = null)
-		{
-			List<Assembly> modules = LoadModules(moduleFilenames, optionalFolder, resourceAssemblyResolver);
-			List<IModule> registrants = InstantiateRegistrants(modules);
-			InitializeRegistrants(registrants);
-		}
-
-		/// <summary>
-		/// Return the list of assembly names specified in the XML file so that
-		/// we know what assemblies are considered modules as part of the application.
-		/// </summary>
-		public virtual List<AssemblyFileName> GetModuleList(XmlFileName filename)
-		{
-			Assert.That(File.Exists(filename.Value), "Module definition file " + filename.Value + " does not exist.");
-			XDocument xdoc = XDocument.Load(filename.Value);
-			return GetModuleList(xdoc);
 		}
 
 		/// <summary>
 		/// Load the assemblies and return the list of loaded assemblies.  In order to register
 		/// services that the module implements, we have to load the assembly.
 		/// </summary>
-		protected virtual List<Assembly> LoadModules(List<AssemblyFileName> moduleFilenames, string optionalFolder, Func<string, Assembly> resourceAssemblyResolver)
+		protected virtual List<Assembly> LoadModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath, Func<string, Assembly> assemblyResolver)
 		{
 			List<Assembly> modules = new List<Assembly>();
 
 			moduleFilenames.ForEach(a =>
 			{
-				Assembly assembly = LoadAssembly(a, optionalFolder, resourceAssemblyResolver);
+				Assembly assembly = LoadAssembly(a, optionalPath, assemblyResolver);
 				modules.Add(assembly);
 			});
 
@@ -98,15 +76,15 @@ namespace Clifton.Core.ModuleManagement
 		/// Load and return an assembly given the assembly filename so we can proceed with
 		/// instantiating the module and so the module can register its services.
 		/// </summary>
-		protected virtual Assembly LoadAssembly(AssemblyFileName assyName, string optionalFolder, Func<string, Assembly> resourceAssemblyResolver)
+		protected virtual Assembly LoadAssembly(AssemblyFileName assyName, OptionalPath optionalPath, Func<string, Assembly> assemblyResolver)
 		{
-			FullPath fullPath = GetFullPath(assyName, optionalFolder);
+			FullPath fullPath = GetFullPath(assyName, optionalPath);
 			Assembly assembly = null;
 
 			if (!File.Exists(fullPath.Value))
 			{
-				Assert.Not(resourceAssemblyResolver == null, "resourceAssemblyResolver must be defined when attempting to load modules from the application's resources.");
-				assembly = resourceAssemblyResolver(assyName.Value);
+				Assert.Not(assemblyResolver == null, "assemblyResolver must be defined when attempting to load modules from the application's resources.");
+				assembly = assemblyResolver(assyName.Value);
 			}
 			else
 			{
@@ -116,24 +94,11 @@ namespace Clifton.Core.ModuleManagement
 				}
 				catch (Exception ex)
 				{
-					throw new ApplicationException("Unable to load module " + assyName.Value + ": " + ex.Message);
+					throw new ModuleManagerException("Unable to load module " + assyName.Value + ": " + ex.Message);
 				}
 			}
 
 			return assembly;
-		}
-
-		/// <summary>
-		/// Returns the list of modules specified in the XML document so we know what
-		/// modules to instantiate.
-		/// </summary>
-		protected virtual List<AssemblyFileName> GetModuleList(XDocument xdoc)
-		{
-			List<AssemblyFileName> assemblies = new List<AssemblyFileName>();
-			(from module in xdoc.Element("Modules").Elements("Module")
-			 select module.Attribute("AssemblyName").Value).ForEach(s => assemblies.Add(AssemblyFileName.Create(s)));
-
-			return assemblies;
 		}
 
 		/// <summary>
@@ -174,33 +139,37 @@ namespace Clifton.Core.ModuleManagement
 		}
 
 		/// <summary>
-		/// Initialize each registrant by passing in the service manager.  This allows the module
-		/// to register the services it provides.
+		/// Initialize each registrant.  This method should be overridden by your application needs.
 		/// </summary>
 		protected virtual void InitializeRegistrants(List<IModule> registrants)
 		{
-			registrants.ForEach(r => r.InitializeServices(ServiceManager));
 		}
 
 		/// <summary>
 		/// Return the full path of the executing application (here we assume that ModuleManager.dll is in that path) and concatenate the assembly name of the module.
 		/// .NET requires the the full path in order to load the associated assembly.
 		/// </summary>
-		protected virtual FullPath GetFullPath(AssemblyFileName assemblyName, string optionalFolder)
+		protected virtual FullPath GetFullPath(AssemblyFileName assemblyName, OptionalPath optionalPath)
 		{
 			string appLocation;
 			string assyLocation = Assembly.GetExecutingAssembly().Location;
 
+			// An assembly that is loaded as a resource will have its assembly location as "".
 			if (assyLocation == "")
 			{
-				Assert.Not(optionalFolder == null, "Assemblies embedded as resources require that the optionalFolder parameter specify the path to resolve assemblies.");
-				appLocation = optionalFolder;       // Must be specified!
+				Assert.Not(optionalPath == null, "Assemblies embedded as resources require that the optionalPath parameter specify the path to resolve assemblies.");
+				appLocation = optionalPath.Value;       // Must be specified!  Here the optional path is the full path?  This gives two different meanings to how optional path is used!
 			}
 			else
 			{
 				appLocation = Path.GetDirectoryName(assyLocation);
-				appLocation = appLocation + "\\" + (optionalFolder ?? "");
+
+				if (optionalPath != null)
+				{
+					appLocation = Path.Combine(appLocation, optionalPath.Value);
+				}
 			}
+
 			string fullPath = Path.Combine(appLocation, assemblyName.Value);
 
 			return FullPath.Create(fullPath);
