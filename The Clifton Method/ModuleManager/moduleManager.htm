@@ -124,20 +124,13 @@ must be shared.&nbsp; Why?&nbsp; Because:</p>
 <p>A monolithic application doesn't have this issue because everything is in the 
 same application solution:</p>
 <p><img border="0" src="monolithic%20app.png" width="439" height="140"></p>
-<p>Even if you write your code so that you have different projects (assemblies) 
-for your components, you can still share the same interface source code file, 
-and all is well:</p>
+<p>Once you start writing your code so that you have different projects (assemblies) 
+for your components, you must share the interface source code or abstract class 
+code in a shared assembly:</p>
 <p>
 <img border="0" src="compile-time%20modular%20application.png" width="439" height="280"></p>
-<p>Only when you start writing components as runtime loaded modules do you need 
-to think about whether you want to share an assembly of the interface, or just 
-the interface .cs file.&nbsp; Again, we ask &quot;why?&quot;&nbsp; Because you want the 
-interface to be independent of the application specific code as well.&nbsp; For 
-example, when I write a web application, I don't want to be referencing an 
-interface file in one website project for a component that I use in another 
-website project, in a completely separate folder.&nbsp; The interface definition 
-(whether .cs files or as an assembly, which of course consists of .cs files) 
-comes along for the ride:</p>
+<p>This is also true when you start writing components as runtime loaded 
+modules:</p>
 <p><img border="0" src="runtime%20modular%20app.png" width="439" height="372"></p>
 <p>Here again we see an inversion of more monolithic application development.&nbsp; 
 Rather than:</p>
@@ -390,6 +383,15 @@ protected virtual void InitializeRegistrants(List&lt;IModule&gt; registrants)
 <p>If your modules need initialization, you would derive from ModuleManager and 
 implement the specific initialization you require.</p>
 <h2>Example Program</h2>
+<p>Our demo solution consists of these four projects:</p>
+<p>
+<img border="0" src="demoSolution.png" width="289" height="105"></p>
+<ol>
+	<li>CommonInterface - This holds the IModule definition</li>
+	<li>ModuleConsoleSpeak - Emits a message to the console</li>
+	<li>ModuleManager - A console demo of the module manager</li>
+	<li>ModuleVoiceSpeak - Speaks the message using .NET's voice synthesizer</li>
+</ol>
 <p>The example program implements two &quot;speakers&quot;, one that emits a console 
 message, the other that speaks the message with .NET's speech synthesizer.&nbsp; 
 The application is quite simple:</p>
@@ -403,7 +405,14 @@ The application is quite simple:</p>
   IModule module = mgr.Modules[0];
   module.Say(&quot;Hello World.&quot;);
 }</pre>
-<p>By changing the modules.xml file, the application responds by emitting the 
+<p>Note how the application is loading the modules from the &quot;dll&quot; sub-folder:</p>
+<p><img border="0" src="dll.png" width="263" height="217"></p>
+<p>The &quot;dll&quot; folder contains the assemblies for the two modules:</p>
+<p><img border="0" src="dll2.png" width="198" height="58"></p>
+<p>Also note that a post-build step copies the module into the &quot;dll&quot; folder:</p>
+<pre>copy ModuleConsoleSpeak.dll ..\..\..\ModuleManager\bin\Debug\dll</pre>
+<pre>copy ModuleVoiceSpeak.dll ..\..\..\ModuleManager\bin\Debug\dll</pre>
+<p>Now, by changing the modules.xml file, the application responds by emitting the 
 text to the console window or by speaking it.&nbsp; To speak the text, use this:</p>
 <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
 &lt;Modules&gt;
@@ -414,6 +423,10 @@ text to the console window or by speaking it.&nbsp; To speak the text, use this:
 &lt;Modules&gt;
   &lt;Module AssemblyName='ModuleConsoleSpeak.dll'/&gt;
 &lt;/Modules&gt;</pre>
+<h3>The Application Does Not Reference the Modules</h3>
+<p>Note that in the demo application (called &quot;ModuleManager&quot;, a bad name!), 
+there is no reference to the modules we're loading:</p>
+<p><img border="0" src="refs1.png" width="273" height="219"></p>
 <h3>IModule</h3>
 <p>This implementation is for demonstration purposes only!&nbsp; See below for a 
 discussion on the IModule interface.</p>
@@ -424,8 +437,10 @@ discussion on the IModule interface.</p>
     void Say(string text);
   }
 }</pre>
-<p>Here we see the problem with runtime modular applications -- the common 
-interface must exist in a separate assembly!</p>
+<p>Here we see the problem I talked about earlier with runtime modular applications -- the common 
+interface must exist in a separate assembly!&nbsp; If you're not careful, this 
+can and will cause and explosion of assemblies that simply define interfaces and 
+other shared types.&nbsp; We'll talk about this further in other articles.</p>
 <h3>ModuleConsoleSpeak</h3>
 <pre>using System;
 
