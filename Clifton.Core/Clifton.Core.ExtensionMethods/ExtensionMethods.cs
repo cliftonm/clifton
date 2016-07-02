@@ -972,6 +972,10 @@ namespace Clifton.Core.ExtensionMethods
 			return c;
 		}
 
+		/// <summary>
+		/// Returns the argument you supply, with the last character removed. If the
+		/// argument you supply has one or zero characters, an empty string is returned.
+		/// </summary>
 		public static string TrimLastChar(this String src)
 		{
 			string ret = String.Empty;
@@ -990,9 +994,11 @@ namespace Clifton.Core.ExtensionMethods
 			return String.IsNullOrEmpty(src) || (src.Trim() == String.Empty);
 		}
 
-		/// <summary>
-		/// Returns the first occurance of any token given the list of tokens.
-		/// </summary>
+	        /// <summary>
+	        /// Loops through an array of strings and returns the one which occurs
+		/// first in another string. Returns an empty string if none of the 
+		/// strings from the array are found.
+        	/// </summary>
 		public static string Contains(this String src, string[] tokens)
 		{
 			string ret = String.Empty;
@@ -1134,17 +1140,25 @@ namespace Clifton.Core.ExtensionMethods
 					@"(\p{Ll})(\P{Ll})", "$1 $2");
 		}
 
+		/// <summary>
+	        /// Converts the first letter of the given string to lowercase. The rest 
+	        /// of the string remains unchanged.
+	        /// </summary>
+	        /// <param name="src"></param>
+	        /// <returns>string</returns>
 		public static string CamelCase(this string src)
 		{
-			return src[0].ToString().ToLower() + src.Substring(1).ToLower();
+			return src[0].ToString().ToLower() + src.Substring(1);
 
 		}
 
 	        /// <summary>
 	        /// Converts the first letter of the given string to uppercase. The rest 
-	        /// of the string remains unchanged. [Currently used as a utility for the method 
-	        /// PascalCaseWords().]
+	        /// of the string remains unchanged.
 	        /// </summary>
+		/// <remarks>
+		/// Currently used as a utility for the method PascalCaseWords().
+		/// </remarks>
 	        /// <param name="src"></param>
 	        /// <returns>string</returns>
 		public static string PascalCase(this string src)
