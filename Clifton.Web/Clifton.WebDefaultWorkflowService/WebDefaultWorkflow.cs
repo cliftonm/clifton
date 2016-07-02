@@ -90,8 +90,8 @@ namespace Clifton.WebDefaultWorkflowService
 		{
 			string template = data.HtmlResponse.Html;
 			IWebSessionService sessionSvc = ServiceManager.Get<IWebSessionService>();
-			List<string> objectNames = new List<string>() { "session", "context" };
-			List<object> objects = new List<object>() { sessionSvc, data.Context };
+			List<string> objectNames = new List<string>() { "session", "context", "cfg" };
+			List<object> objects = new List<object>() { sessionSvc, data.Context, ServiceManager.Get<IAppConfigService>() };
 			objectNames.AddRange(appTemplateObjects.Keys);
 			objects.AddRange(appTemplateObjects.Values);
 			try
