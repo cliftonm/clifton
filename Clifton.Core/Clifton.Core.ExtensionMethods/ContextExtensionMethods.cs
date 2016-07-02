@@ -91,6 +91,7 @@ namespace Clifton.Core.ExtensionMethods
 		public static Action<Exception> ExceptionHandler = null;
 		public static Action<string> SqlLogger = null;
 
+        /*
 		/// <summary>
 		/// Clone the entity so we it loses its association with any existing data context.
 		/// </summary>
@@ -119,6 +120,7 @@ namespace Clifton.Core.ExtensionMethods
 				return (T)ser.ReadObject(ms);
 			}
 		}
+        */
 
 		public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
@@ -347,10 +349,10 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				T cloned = CloneEntity(data);
-				newContext.GetTable<T>().InsertOnSubmit(cloned);
+				// T cloned = CloneEntity(data);
+				newContext.GetTable<T>().InsertOnSubmit(data);
 				newContext.SubmitChanges();
-				data.Id = cloned.Id;
+				// data.Id = cloned.Id;
 			}
 			catch (Exception ex)
 			{
@@ -368,12 +370,12 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				T cloned = CloneEntityOfConcreteType(data);
-				EntityProperty model = GetEntityProperty(newContext, cloned);
+				// T cloned = CloneEntityOfConcreteType(data);
+				EntityProperty model = GetEntityProperty(newContext, data);
 				var records = model.Property.GetValue(newContext, null);
-				((ITable)records).InsertOnSubmit(cloned);
+				((ITable)records).InsertOnSubmit(data);
 				newContext.SubmitChanges();
-				data.Id = cloned.Id;
+				// data.Id = cloned.Id;
 			}
 			catch (Exception ex)
 			{
@@ -391,7 +393,7 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				T cloned = CloneEntity(data);													// Disconnect from any other context.
+				// T cloned = CloneEntity(data);													// Disconnect from any other context.
 				var records = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id);		// Get IEnumerable for delete.
 				newContext.GetTable<T>().DeleteAllOnSubmit(records);							// We know it's only one record.
 				newContext.SubmitChanges();
@@ -410,7 +412,7 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
+				// T cloned = CloneEntityOfConcreteType(data);										// Disconnect from any other context.
 				EntityProperty model = GetEntityProperty(newContext, data);
 				var records = model.Property.GetValue(newContext, null);
 				var recordsToDelete = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id);	 // Cast to (int) is required because there's no mapping for int?
