@@ -1188,6 +1188,16 @@ namespace Clifton.Core.ExtensionMethods
 			return a;
 		}
 
+	        /// <summary>
+	        /// Checks that an integer is not less than a certain value (the min)
+	        /// and changes it if it is. If the integer (the first argument) is less 
+	        /// than the minimum allowable (the second argument), it is changed to 
+	        /// equal the minimum allowable, then returned. If the first argument is 
+	        /// greater than or equal to the second argument, it is returned unchanged.
+	        /// </summary>
+	        /// <param name="a"></param>
+	        /// <param name="min"></param>
+	        /// <returns>int</returns>
 		public static int Min(this int a, int min)
 		{
 			if (a < min)
