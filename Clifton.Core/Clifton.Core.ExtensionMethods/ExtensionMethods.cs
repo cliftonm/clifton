@@ -973,8 +973,8 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns the argument you supply, with the last character removed. If the
-		/// argument you supply has one or zero characters, an empty string is returned.
+		/// Returns the passed-in string, with the last character removed. If the
+		/// passed-in string has one or zero characters, an empty string is returned.
 		/// </summary>
 		public static string TrimLastChar(this String src)
 		{
@@ -989,15 +989,20 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		/// <summary>
+		/// The passed-in string is first tested without alteration, then it is trimmed and 
+		/// tested. Returns true if the string is null or empty, otherwise returns false. 
+		/// </summary>
 		public static bool IsBlank(this string src)
 		{
 			return String.IsNullOrEmpty(src) || (src.Trim() == String.Empty);
 		}
 
 	        /// <summary>
-	        /// Loops through an array of strings and returns the one which occurs
-		/// first in another string. Returns an empty string if none of the 
-		/// strings from the array are found.
+	        /// Loops through an array of strings and returns the one which is contained
+	        /// in another string (the first argument) and is also closest to the start 
+	        /// of the other string. Returns an empty string if none of the strings from 
+	        /// the array are found in the other string.
         	/// </summary>
 		public static string Contains(this String src, string[] tokens)
 		{
@@ -1083,7 +1088,7 @@ namespace Clifton.Core.ExtensionMethods
 					AES.Key = key.GetBytes(AES.KeySize / 8);
 					AES.IV = key.GetBytes(AES.BlockSize / 8);
 
-					AES.Mode = CipherMode.CBC;
+					AES.Mode = CipherMode.CBC; // Cipher Block Chaining.
 
 					using (var cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write))
 					{
@@ -1116,7 +1121,7 @@ namespace Clifton.Core.ExtensionMethods
 					AES.Key = key.GetBytes(AES.KeySize / 8);
 					AES.IV = key.GetBytes(AES.BlockSize / 8);
 
-					AES.Mode = CipherMode.CBC;
+					AES.Mode = CipherMode.CBC; // Cipher Block Chaining.
 
 					using (var cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write))
 					{
@@ -1149,7 +1154,6 @@ namespace Clifton.Core.ExtensionMethods
 		public static string CamelCase(this string src)
 		{
 			return src[0].ToString().ToLower() + src.Substring(1);
-
 		}
 
 	        /// <summary>
@@ -1198,8 +1202,8 @@ namespace Clifton.Core.ExtensionMethods
 
 	        /// <summary>
 	        /// Returns true or false as to whether the first argument is greater
-	        /// than or equal to the second argument, and less than or equal to
-	        /// the third argument.
+	        /// than or equal to the second argument, and less than or equal to the
+	        /// third argument.
 	        /// </summary>
 	        /// <remarks>
 	        /// The name of this method is a bit misleading. It doesn't test only for
@@ -1215,14 +1219,14 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 	        /// <summary>
-	        /// Checks that an integer is not greater than a certain value and changes 
+	        /// Ensures that one integer is not greater than a certain value and changes 
 	        /// it if it is. If the integer (the first argument) is greater than the
 	        /// maximum allowable (the second argument), it is changed to equal the maximum
 	        /// allowable, then returned. If the first argument is less than or equal to 
 	        /// the second argument, it is returned unchanged.
 	        /// </summary>
-	        /// <param name="a"></param>
-	        /// <param name="max"></param>
+	        /// <param name="a">The integer to check.</param>
+	        /// <param name="max">The maximum value allowable of "a".</param>
 	        /// <returns>int</returns>
 		public static int Max(this int a, int max)
 		{
@@ -1235,14 +1239,14 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 	        /// <summary>
-	        /// Checks that an integer is not less than a certain value and changes 
-	        /// it if it is. If the integer (the first argument) is less than the 
+	        /// Ensures that an one integer is at least a certain value and changes 
+	        /// it if it is not. If the integer (the first argument) is less than the 
 	        /// minimum allowable (the second argument), it is changed to equal the minimum 
 	        /// allowable, then returned. If the first argument is greater than or equal to 
 	        /// the second argument, it is returned unchanged.
 	        /// </summary>
-	        /// <param name="a"></param>
-	        /// <param name="min"></param>
+	        /// <param name="a">The integer to check.</param>
+	        /// <param name="min">The minimum value allowable of "a".</param>
 	        /// <returns>int</returns>
 		public static int Min(this int a, int min)
 		{
