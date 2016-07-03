@@ -516,7 +516,7 @@ namespace Clifton.Core.ExtensionMethods
 #endif
 
 		/// <summary>
-		/// Return the smaller of the two values.
+		/// Returns the smaller of the two values.
 		/// </summary>
 		public static int Smaller(this int val, int otherVal)
 		{
@@ -531,6 +531,12 @@ namespace Clifton.Core.ExtensionMethods
 			return val > otherVal ? val : otherVal;
 		}
 
+		/// <summary>
+		/// Converts a DateTime to Posix time.
+		/// </summary>
+		/// <remarks>
+		/// Posix time (aka Unix time) is the number of seconds elapsed since midnight, 1970-Jan-01.
+		/// </remarks>
 		public static double ToPosix(this DateTime date)
 		{
 			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
@@ -538,6 +544,12 @@ namespace Clifton.Core.ExtensionMethods
 			return (date - start).TotalSeconds;
 		}
 
+		/// <summary>
+		/// Converts a Posix time to a DateTime.
+		/// </summary>
+		/// <remarks>
+		/// Posix time (aka Unix time) is the number of seconds elapsed since midnight, 1970-Jan-01.
+		/// </remarks>
 		public static DateTime FromPosix(this double posix)
 		{
 			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
