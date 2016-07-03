@@ -557,6 +557,9 @@ namespace Clifton.Core.ExtensionMethods
 			return start.AddSeconds(posix).ToLocalTime();
 		}
 
+		/// <summary>
+		/// Takes a Posix time as a string and returns it as a string in the format "MM-dd-yy".
+		/// </summary>
 		public static string DateFromPosix(this string s, string format = "MM-dd-yy")
 		{
 			DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -565,6 +568,9 @@ namespace Clifton.Core.ExtensionMethods
 			return dt.ToString(format);
 		}
 
+		/// <summary>
+		/// Takes a Posix time as a long and returns it as a string in the format "MM-dd-yy".
+		/// </summary>		
 		public static string DateFromPosix(this long l, string format = "MM-dd-yy")
 		{
 			DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -573,11 +579,18 @@ namespace Clifton.Core.ExtensionMethods
 			return dt.ToString(format);
 		}
 
+		/// <summary>
+		/// Converts an integer to a string.
+		/// </summary>
 		public static string to_s(this int i)
 		{
 			return i.ToString();
 		}
 
+		/// <summary>
+		/// Converts a string to a long (Int64). If the passed-in string is null or
+		/// empty, zero is returned.
+		/// </summary>
 		public static long to_l(this string src)
 		{
 			long ret = 0;
@@ -590,26 +603,41 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		/// <summary>
+		/// Converts a string to an int (Int32).
+		/// </summary>
 		public static int to_i(this string src)
 		{
 			return Convert.ToInt32(src);
 		}
 
+		/// <summary>
+		/// Converts a string to a boolean.
+		/// </summary>
 		public static bool to_b(this string src)
 		{
 			return Convert.ToBoolean(src);
 		}
 
+		/// <summary>
+		/// Converts a string to a float.
+		/// </summary>
 		public static float to_f(this string src)
 		{
 			return (float)Convert.ToDouble(src);
 		}
 
+		/// <summary>
+		/// Converts a string to a double.
+		/// </summary>
 		public static double to_d(this string src)
 		{
 			return Convert.ToDouble(src);
 		}
 
+		/// <summary>
+		/// Converts a string to a decimal.
+		/// </summary>
 		public static decimal to_dec(this string src)
 		{
 			return Convert.ToDecimal(src);
@@ -622,6 +650,10 @@ namespace Clifton.Core.ExtensionMethods
 			return enumVal;
 		}
 
+		/// <summary>
+		/// Converts an object to a string. If the passed-in object is null, an
+		/// empty string is returned.
+		/// </summary>
 		public static string SafeToString(this Object src)
 		{
 			string ret = String.Empty;
@@ -633,9 +665,20 @@ namespace Clifton.Core.ExtensionMethods
 
 			return ret;
 		}
-
+		
+		/// <summary>
+		/// Returns true if the passed-in string can be converted successfully to an Int32; 
+		/// otherwise, false.
+		/// </summary>
+		/// <remarks>
+		/// The TryParse method is like the Parse method, except the TryParse method does not 
+		/// throw an exception if the conversion fails.
+		/// </remarks>
 		public static bool IsInt32(this String src)
 		{
+			// The result variable will contain the 32-bit signed integer value equivalent 
+			// of the number contained in src, if the conversion succeeded, or zero if the 
+			// conversion failed.
 			int result;
 			bool ret = Int32.TryParse(src, out result);
 
@@ -643,7 +686,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Replaces quote with single quote.
+		/// Replaces each double-quote (") with a single quote (').
 		/// </summary>
 		public static string ParseQuote(this String src)
 		{
@@ -651,7 +694,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Replaces single quote with two single quotes.
+		/// Replaces each single quote (') with two single quotes ('').
 		/// </summary>
 		public static string ParseSingleQuote(this String src)
 		{
@@ -659,7 +702,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns a new string surrounded by single quotes.
+		/// Returns the passed-in string surrounded by single quotes.
 		/// </summary>
 		public static string SingleQuote(this String src)
 		{
@@ -667,7 +710,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns a new string surrounded by quotes.
+		/// Returns the passed-in string surrounded by quotation marks (double-quotes).
 		/// </summary>
 		public static string Quote(this String src)
 		{
