@@ -48,5 +48,11 @@ namespace Clifton.Core.Assertions
 				throw new ApplicationException(msg);
 			}
 		}
+
+		public static void SilentTry(Action a)
+		{
+			try { a(); }
+			catch { }
+		}
 	}
 }
