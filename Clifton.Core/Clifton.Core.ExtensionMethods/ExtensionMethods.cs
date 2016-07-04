@@ -764,7 +764,8 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns everything between the start and end chars, exclusive.
+		/// Returns everything between the start-character and the first occurence
+		/// of the end-character, after the start-character, exclusive.
 		/// </summary>
 		/// <param name="src">The source string.</param>
 		/// <param name="start">The first char to find.</param>
@@ -790,6 +791,15 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		/// <summary>
+		/// Returns everything between the start-string and the first occurence
+		/// of the end-string, after the start-string, exclusive.
+		/// </summary>
+		/// <param name="src">The source string.</param>
+		/// <param name="start">The first string to find.</param>
+		/// <param name="end">The end string to find.</param>
+		/// <returns>The string between the start and end strings, or an empty string if 
+		/// the start string or end string is not found.</returns>
 		public static string Between(this string src, string start, string end)
 		{
 			string ret = String.Empty;
@@ -809,6 +819,15 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
+		/// <summary>
+		/// Returns everything between the start-character and the last occurence
+		/// of the end-character, after the start-character, exclusive.
+		/// </summary>
+		/// <param name="src">The source string.</param>
+		/// <param name="start">The first char to find.</param>
+		/// <param name="end">The end char to find.</param>
+		/// <returns>The string between the start char and the last occurence of the
+		/// end char, or an empty string if the start char or end char is not found.</returns>
 		public static string BetweenEnds(this string src, char start, char end)
 		{
 			string ret = String.Empty;
@@ -829,7 +848,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns the number of occurances of "find".
+		/// Returns the number of occurances of a character (find) within a string (src).
 		/// </summary>
 		/// <param name="src">The source string.</param>
 		/// <param name="find">The search char.</param>
@@ -853,11 +872,29 @@ namespace Clifton.Core.ExtensionMethods
 		/// Return a new string that is "around" (left of and right of) the specified string.
 		/// Only the first occurance is processed.
 		/// </summary>
+		/// <remarks>
+		/// Alt summary: Removes the first occurance of a string (s) inside another string (src)
+		/// and returns the altered src. [If s is not found, src is returned unchanged?]
+		/// </remarks>
 		public static string Surrounding(this String src, string s)
 		{
 			return src.LeftOf(s) + src.RightOf(s);
 		}
 
+		<summary>
+		/// Returns true if a string (src) starts with the specified string (s); otherwise
+		/// returns false.
+		</summary>
+		public static bool BeginsWith(this String src, string s)
+		{
+			return src.StartsWith(s);
+		}
+		
+		/// <summary>
+		/// Returns the portion of a string (src) that is to the right of the first occurance 
+		/// of the specified character (c), (i.e. excluding c). Returns an empty string if the 
+		/// specified character is not found.
+		/// </summary>
 		public static string RightOf(this String src, char c)
 		{
 			string ret = String.Empty;
@@ -871,11 +908,11 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
-		public static bool BeginsWith(this String src, string s)
-		{
-			return src.StartsWith(s);
-		}
-
+		/// <summary>
+		/// Returns the portion of a string (src) that is to the right of the first occurance 
+		/// of the specified string (s), (i.e. excluding s). Returns an empty string if the 
+		/// specified string is not found.
+		/// </summary>
 		public static string RightOf(this String src, string s)
 		{
 			string ret = String.Empty;
@@ -893,7 +930,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// Returns everything to the right of the rightmost char c.
 		/// </summary>
 		/// <param name="src">The source string.</param>
-		/// <param name="c">The seach char.</param>
+		/// <param name="c">The search char.</param>
 		/// <returns>Returns everything to the right of the rightmost search char, or an empty string.</returns>
 		public static string RightOfRightmostOf(this string src, char c)
 		{
@@ -909,7 +946,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Left of the first occurance of c
+		/// Left of the first occurance of c.
 		/// </summary>
 		/// <param name="src">The source string.</param>
 		/// <param name="c">Return everything to the left of this character.</param>
@@ -941,7 +978,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns null if the string is empty.
+		/// Returns null if the string is null or empty; otherwise returns the string.
 		/// </summary>
 		public static string NullIfEmpty(this String src)
 		{
@@ -949,7 +986,8 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Safe left of n chars.  If string length is less than n, returns string.
+		/// Safe left of n chars. If string length is less than n, returns string;
+		/// otherwise returns the first n chars of string.
 		/// </summary>
 		public static string LeftOf(this String src, int n)
 		{
@@ -1047,9 +1085,9 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// The passed-in string is first tested without alteration, then it is trimmed and 
-		/// tested. Returns true if the string is null or empty, otherwise returns false. 
-		/// </summary>
+		/// Returns true if a string is null or empty, otherwise returns false. 
+		/// The passed-in string is tested without alteration, then it is trimmed and 
+		/// tested. </summary>
 		public static bool IsBlank(this string src)
 		{
 			return String.IsNullOrEmpty(src) || (src.Trim() == String.Empty);
