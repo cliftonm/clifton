@@ -112,11 +112,19 @@ namespace Clifton.Core.ModelTableManagement
 		/// <summary>
 		/// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
 		/// </summary>
-		public List<IEntity> LoadRecords<T>(DataView dv) where T : MappedRecord, IEntity
+		public List<IEntity> LoadRecords<T>(DataView dv, Func<T, bool> whereClause = null) where T : MappedRecord, IEntity
 		{
 			Clear<T>();
 			Type recType = typeof(T);
-			(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+
+			if (whereClause == null)
+			{
+				(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			}
+			else
+			{
+				(from rec in db.Context.GetTable<T>() select rec).Where(whereClause).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			}
 
 			return mappedRecords[recType];
 		}
@@ -155,6 +163,16 @@ namespace Clifton.Core.ModelTableManagement
 		}
 
 		/// <summary>
+		/// Returns a collection of T.
+		/// </summary>
+		public List<T> GetRecords<T>() where T : MappedRecord, IEntity, new()
+		{
+			Type recType = typeof(T);
+
+			return mappedRecords[recType].Cast<T>().ToList();
+		}
+
+		/// <summary>
 		/// Returns a collection cast to the specified model type, which can by used by the application to get a concrete collection of the model type, as opposed
 		/// the the GetEntityRecordCollection, which returns a collection of IEntity.
 		/// </summary>
@@ -175,7 +193,7 @@ namespace Clifton.Core.ModelTableManagement
 			DataTable dt = new DataTable();
 			dt.TableName = typeof(T).Name;
 			List<Field> fields = GetFields<T>();
-			PopulateDataTable(dt, fields);
+			CreateColumns(dt, fields);
 
 			return new DataView(dt);
 		}
@@ -185,7 +203,7 @@ namespace Clifton.Core.ModelTableManagement
 			DataTable dt = new DataTable();
 			dt.TableName = t.Name;
 			List<Field> fields = GetFields(t);
-			PopulateDataTable(dt, fields);
+			CreateColumns(dt, fields);
 
 			return new DataView(dt);
 		}
@@ -257,6 +275,14 @@ namespace Clifton.Core.ModelTableManagement
 				// Apparently so, otherwise we can get continuous calls to UpdateRecordField by the app.
 				PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
 			}
+		}
+
+		/// <summary>
+		/// Explicity fire the property changed event.
+		/// </summary>
+		public void FirePropertyChangedEvent(IEntity record, string columnName, object val)
+		{
+			PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
 		}
 
 		/// <summary>
@@ -426,7 +452,7 @@ namespace Clifton.Core.ModelTableManagement
 			return props.ToList();
 		}
 
-		protected void PopulateDataTable(DataTable dt, List<Field> fields)
+		protected void CreateColumns(DataTable dt, List<Field> fields)
 		{
 			foreach (Field field in fields.Where(f => f.IsTableField))
 			{
