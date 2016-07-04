@@ -686,7 +686,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Replaces each double-quote (") with a single quote (').
+		/// Replaces each quotation mark (") with a single quote (').
 		/// </summary>
 		public static string ParseQuote(this String src)
 		{
@@ -710,7 +710,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns the passed-in string surrounded by quotation marks (double-quotes).
+		/// Returns the passed-in string surrounded by quotation marks (").
 		/// </summary>
 		public static string Quote(this String src)
 		{
@@ -718,7 +718,8 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Exchanges ' for " and " for '
+		/// Exchanges ' for " and " for ' then escapes the quotation marks (each /0xFF
+		/// becomes \").
 		/// Javascript JSON support, which must be formatted like '{"foo":"bar"}'
 		/// </summary>
 		public static string ExchangeQuoteSingleQuote(this String src)
@@ -739,7 +740,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns a new string surrounded by brackets.
+		/// Returns the source string surrounded by parentheses.
 		/// </summary>
 		public static string Parens(this String src)
 		{
@@ -747,7 +748,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns a new string surrounded by brackets.
+		/// Returns the source string surrounded by brackets.
 		/// </summary>
 		public static string Brackets(this String src)
 		{
@@ -755,7 +756,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		/// <summary>
-		/// Returns a new string surrounded by brackets.
+		/// Returns the source string surrounded by braces.
 		/// </summary>
 		public static string CurlyBraces(this String src)
 		{
@@ -768,7 +769,8 @@ namespace Clifton.Core.ExtensionMethods
 		/// <param name="src">The source string.</param>
 		/// <param name="start">The first char to find.</param>
 		/// <param name="end">The end char to find.</param>
-		/// <returns>The string between the start and stop chars, or an empty string if not found.</returns>
+		/// <returns>The string between the start and end chars, or an empty string if 
+		/// the start char or end char is not found.</returns>
 		public static string Between(this string src, char start, char end)
 		{
 			string ret = String.Empty;
