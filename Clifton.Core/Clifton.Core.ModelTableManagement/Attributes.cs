@@ -60,4 +60,16 @@ namespace Clifton.Core.ModelTableManagement
 			ValueField = "Id";				// Default - we expect the implementing field to be an int? in the backing model.
 		}
 	}
+
+    public class ForeignKeyAttribute : Attribute
+    {
+        public string ForeignKeyTable { get; set; }
+        public string ForeignKeyColumn { get; set; }
+
+        public ForeignKeyAttribute(string fkTable, string fkColumn)
+        {
+            ForeignKeyTable = fkTable;
+            ForeignKeyColumn = fkColumn;
+        }
+    }
 }
