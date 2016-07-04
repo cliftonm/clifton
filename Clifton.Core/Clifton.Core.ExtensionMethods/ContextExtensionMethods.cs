@@ -142,6 +142,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return data;
@@ -170,6 +171,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return ret;
@@ -201,6 +203,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return ret;
@@ -226,6 +229,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return count;
@@ -300,6 +304,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return data;
@@ -332,6 +337,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return count;
@@ -357,6 +363,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return (int)data.Id;
@@ -380,6 +387,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 
 			return (int)data.Id;
@@ -401,6 +409,29 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Must provide a where clause when deleting.
+		/// </summary>
+		public static void Delete<T>(this DataContext context, Func<T, bool> whereClause) where T : class, IEntity
+		{
+			SqlConnection connection;
+			DataContext newContext;
+			Setup(context, out connection, out newContext);
+
+			try
+			{
+				List<T> records = Query<T>(context, whereClause);
+				newContext.GetTable<T>().DeleteAllOnSubmit<T>(records);
+				newContext.SubmitChanges();
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+				throw;
 			}
 		}
 
@@ -422,6 +453,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 		}
 
@@ -442,6 +474,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 		}
 
@@ -464,6 +497,7 @@ namespace Clifton.Core.ExtensionMethods
 			catch (Exception ex)
 			{
 				LogException(ex);
+				throw;
 			}
 		}
 
