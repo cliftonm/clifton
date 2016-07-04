@@ -32,11 +32,17 @@ using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
+	public class RowDeletedEventArgs : EventArgs
+	{
+		public IEntity Entity { get; set; }
+	}
+
 	/// <summary>
 	/// Wires up table change events so that the underlying model collection and individual model instances can be kept in sync.
 	/// </summary>
 	public class ModelTable<T> where T : MappedRecord, IEntity, new()
 	{
+		public event EventHandler<RowDeletedEventArgs> RowDeleted;
 		protected DataTable dt;
 		protected T newInstance;
 		protected List<IEntity> items;
@@ -50,6 +56,11 @@ namespace Clifton.Core.ModelTableManagement
 			dt = backingTable;
 			items = modelCollection;
 			WireUpEvents(dt);
+		}
+
+		public void ResetItems(List<IEntity> modelCollection)
+		{
+			items = modelCollection;
 		}
 
 		protected void WireUpEvents(DataTable dt)
@@ -103,6 +114,7 @@ namespace Clifton.Core.ModelTableManagement
 			{
 				items.Remove(item);
 				Delete(item);
+				RowDeleted.Fire(this, new RowDeletedEventArgs() { Entity = item });
 			}
 		}
 
@@ -164,6 +176,23 @@ namespace Clifton.Core.ModelTableManagement
 					{
 						Update(instance);
 					}
+				}
+			}
+			else
+			{
+				// If detached (not a real record in the DB yet) we want to update the model, but wait to persist (insert) the record
+				// when the row editing is complete (Table_RowChange action is DataRowAction.Add).
+				// Does changing a combobox for a detached row work?
+				PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
+				object oldVal = pi.GetValue(instance);
+
+				// Prevents infinite recursion by updating the model only when the field has changed.
+				// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
+				// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
+				if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
+					 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+				{
+					modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
 				}
 			}
 		}
