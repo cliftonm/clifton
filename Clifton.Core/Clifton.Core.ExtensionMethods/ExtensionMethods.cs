@@ -881,11 +881,11 @@ namespace Clifton.Core.ExtensionMethods
 			return src.LeftOf(s) + src.RightOf(s);
 		}
 
-		<summary>
-		/// Returns true if a string (src) starts with the specified string (s); otherwise
-		/// returns false.
-		</summary>
-		public static bool BeginsWith(this String src, string s)
+        /// <summary>
+        /// Returns true if a string (src) starts with the specified string (s); otherwise
+        /// returns false.
+        /// </summary>
+        public static bool BeginsWith(this String src, string s)
 		{
 			return src.StartsWith(s);
 		}
