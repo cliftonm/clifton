@@ -96,6 +96,12 @@ namespace Clifton.WebInterfaces
 		void Start(string ip, int[] ports);
 	}
 
+    public interface IWebRestService : IService
+    {
+        R Get<R>(string url);
+        R Post<R>(string url, object obj);
+    }
+
 	public interface IWebWorkflowService : IService
 	{
 		void RegisterPreRouterWorkflow(WorkflowItem<PreRouteWorkflowData> item);
