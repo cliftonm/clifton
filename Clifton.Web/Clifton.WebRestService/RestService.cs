@@ -49,7 +49,7 @@ namespace Clifton.WebRestService
         public string LastJson;
         public string LastRetJson;
 
-        public R Get<R>(string url)
+        public R Get<R>(string url) where R : IRestResponse
         {
             string ret = String.Empty;
             WebResponse resp = null;
@@ -83,7 +83,7 @@ namespace Clifton.WebRestService
             return target;
         }
 
-        public R Post<R>(string url, object obj)
+        public R Post<R>(string url, object obj) where R : IRestResponse
         {
             R target = Activator.CreateInstance<R>();
             Stream st = null;
@@ -113,6 +113,10 @@ namespace Clifton.WebRestService
             }
             catch (Exception ex)
             {
+				if (ex.Source == "Newtonsoft.Json")
+				{
+                    target.RawJsonRet = retjson;
+				}
                 // TODO: Log Exception
             }
             finally

@@ -318,7 +318,7 @@ namespace Clifton.Core.ExtensionMethods
 			{
 				action(drv);
 			}
-		}
+		} 
 
 		/// <summary>
 		/// Returns a new dictionary having merged the two source dictionaries.
@@ -333,7 +333,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// <summary>
 		/// Encapsulates testing for whether the event has been wired up.
 		/// </summary>
-		public static void Fire<TEventArgs>(this EventHandler<TEventArgs> theEvent, object sender, TEventArgs e) where TEventArgs : EventArgs
+		public static void Fire<TEventArgs>(this EventHandler<TEventArgs> theEvent, object sender, TEventArgs e = null) where TEventArgs : EventArgs
 		{
 			if (theEvent != null)
 			{

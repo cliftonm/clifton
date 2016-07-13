@@ -98,8 +98,13 @@ namespace Clifton.WebInterfaces
 
     public interface IWebRestService : IService
     {
-        R Get<R>(string url);
-        R Post<R>(string url, object obj);
+        R Get<R>(string url) where R : IRestResponse;
+        R Post<R>(string url, object obj) where R : IRestResponse;
+    }
+
+    public interface IRestResponse
+    {
+        string RawJsonRet { get; set; }
     }
 
 	public interface IWebWorkflowService : IService
