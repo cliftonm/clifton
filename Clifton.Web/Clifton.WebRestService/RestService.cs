@@ -49,35 +49,47 @@ namespace Clifton.WebRestService
         public string LastJson;
         public string LastRetJson;
 
-        public R Get<R>(string url) where R : IRestResponse
+		/// <summary>
+		/// A GET action, no serialization into an object.
+		/// </summary>
+		public string Get(string url)
+		{
+			string ret = String.Empty;
+			WebResponse resp = null;
+
+			try
+			{
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+				request.Timeout = TIMEOUT;
+				request.Method = "GET";
+
+				resp = request.GetResponse();
+				ret = new StreamReader(resp.GetResponseStream()).ReadToEnd();
+				LastJson = ret;
+			}
+			catch (Exception ex)
+			{
+				// TODO: Log Exception
+			}
+			finally
+			{
+				if (resp != null)
+				{
+					resp.Close();
+				}
+			}
+
+			return ret;
+		}
+
+		/// <summary>
+		/// Issue a get with and serialize the JSON response into an instance of R that we create here.
+		/// </summary>
+		public R Get<R>(string url) where R : IRestResponse
         {
-            string ret = String.Empty;
-            WebResponse resp = null;
-            R target = Activator.CreateInstance<R>();
-
-            try
-            {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Timeout = TIMEOUT;
-                request.Method = "GET";
-
-                resp = request.GetResponse();
-                ret = new StreamReader(resp.GetResponseStream()).ReadToEnd();
-                LastJson = ret;
-            }
-            catch (Exception ex)
-            {
-                // TODO: Log Exception
-            }
-            finally
-            {
-                if (resp != null)
-                {
-                    resp.Close();
-                }
-            }
-
-            JObject jobj = JObject.Parse(ret);
+			string ret = Get(url);
+			R target = Activator.CreateInstance<R>();
+			JObject jobj = JObject.Parse(ret);
             JsonConvert.PopulateObject(jobj.ToString(), target);
 
             return target;
