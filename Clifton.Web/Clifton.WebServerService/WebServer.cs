@@ -153,14 +153,18 @@ namespace Clifton.WebServerService
 		{
 			string ret;
 
-			if (port == 80)
-			{
-				ret = "http://" + ip + "/";
-			}
-			else
-			{
-				ret = "https://" + ip + ":" + port.ToString() + "/";
-			}
+            if (port == 80)
+            {
+                ret = "http://" + ip + "/";
+            }
+            else if ((ip == "localhost") || (ip == "127.0.0.1"))
+            {
+                ret = "http://" + ip + ":" + port.ToString() + "/";
+            }
+            else
+            {
+                ret = "https://" + ip + ":" + port.ToString() + "/";
+            }
 
 			return ret;
 		}
