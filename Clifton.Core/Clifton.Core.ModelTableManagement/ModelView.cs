@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
 
@@ -37,8 +38,8 @@ namespace Clifton.Core.ModelTableManagement
 	/// </summary>
 	public class ModelView<T> : ModelTable<T> where T : MappedRecord, IEntity, new()
 	{
-		public ModelView(ModelMgr modelMgr, IDbContextService db, DataTable backingTable, List<IEntity> modelCollection) :
-			base(modelMgr, db, backingTable, modelCollection)
+		public ModelView(ModelMgr modelMgr, DataContext context, DataTable backingTable, List<IEntity> modelCollection) :
+			base(modelMgr, context, backingTable, modelCollection)
 		{
 		}
 

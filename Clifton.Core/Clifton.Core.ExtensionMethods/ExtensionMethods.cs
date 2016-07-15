@@ -539,6 +539,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// </remarks>
 		public static double ToPosix(this DateTime date)
 		{
+			// TODO: Computes an int, not a double.
 			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
 
 			return (date - start).TotalSeconds;
@@ -552,6 +553,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// </remarks>
 		public static DateTime FromPosix(this double posix)
 		{
+			// TODO: Works with ints, not doubles.
 			DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
 
 			return start.AddSeconds(posix).ToLocalTime();

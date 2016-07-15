@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
 
@@ -47,12 +48,12 @@ namespace Clifton.Core.ModelTableManagement
 		protected T newInstance;
 		protected List<IEntity> items;
 		protected ModelMgr modelMgr;
-		protected IDbContextService db;
+		protected DataContext context;
 
-		public ModelTable(ModelMgr modelMgr, IDbContextService db, DataTable backingTable, List<IEntity> modelCollection)
+		public ModelTable(ModelMgr modelMgr, DataContext context, DataTable backingTable, List<IEntity> modelCollection)
 		{
 			this.modelMgr = modelMgr;
-			this.db = db;
+			this.context = context;
 			dt = backingTable;
 			items = modelCollection;
 			WireUpEvents(dt);
@@ -86,7 +87,7 @@ namespace Clifton.Core.ModelTableManagement
 				//		// Any change to a grid view column that is mapped to a table column causes this event to fire,
 				//		// which results in an immediate update of the database.
 				//		IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
-				//		db.Context.UpdateOfConcreteType(item);
+				//		context.UpdateOfConcreteType(item);
 				//		break;
 				//	}
 
@@ -123,7 +124,7 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		protected virtual void Insert(T newInstance)
 		{
-			db.Context.InsertOfConcreteType(newInstance);
+			context.InsertOfConcreteType(newInstance);
 		}
 
 		/// <summary>
@@ -131,7 +132,7 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		protected virtual void Delete(IEntity item)
 		{
-			db.Context.DeleteOfConcreteType(item);
+			context.DeleteOfConcreteType(item);
 		}
 
 		/// <summary>
@@ -139,7 +140,7 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		protected virtual void Update(IEntity instance)
 		{
-			db.Context.UpdateOfConcreteType(instance);
+			context.UpdateOfConcreteType(instance);
 		}
 
 		protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)

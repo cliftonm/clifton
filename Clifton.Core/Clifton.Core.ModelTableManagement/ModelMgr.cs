@@ -81,14 +81,12 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public event EventHandler<ModelPropertyChangedEventArgs> PropertyChanged;
 
-		public IDbContextService DbContextService { get { return db; } }
-
 		protected Dictionary<Type, List<IEntity>> mappedRecords;
-		protected IDbContextService db;
+		protected DataContext context;
 
-		public ModelMgr(IDbContextService db)
+		public ModelMgr(DataContext context)
 		{
-			this.db = db;
+			this.context = context;
 			mappedRecords = new Dictionary<Type, List<IEntity>>();
 		}
 
@@ -119,11 +117,11 @@ namespace Clifton.Core.ModelTableManagement
 
 			if (whereClause == null)
 			{
-				(from rec in db.Context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+				(from rec in context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 			}
 			else
 			{
-				(from rec in db.Context.GetTable<T>() select rec).Where(whereClause).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+				(from rec in context.GetTable<T>() select rec).Where(whereClause).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 			}
 
 			return mappedRecords[recType];
@@ -132,7 +130,7 @@ namespace Clifton.Core.ModelTableManagement
 		public List<IEntity> LoadRecords(Type recType, DataView dv)
 		{
 			Clear(recType);
-			(from rec in db.Context.GetTable(recType.Name) select rec).ForEach(m => AddRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			(from rec in context.GetTable(recType.Name) select rec).ForEach(m => AddRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 
 			return mappedRecords[recType];
 		}

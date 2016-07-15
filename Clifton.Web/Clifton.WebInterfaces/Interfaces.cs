@@ -98,7 +98,8 @@ namespace Clifton.WebInterfaces
 
     public interface IWebRestService : IService
     {
-        R Get<R>(string url) where R : IRestResponse;
+		string Get(string url);
+		R Get<R>(string url) where R : IRestResponse;
         R Post<R>(string url, object obj) where R : IRestResponse;
     }
 
