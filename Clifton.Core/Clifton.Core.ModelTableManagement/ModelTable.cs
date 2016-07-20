@@ -38,10 +38,16 @@ namespace Clifton.Core.ModelTableManagement
 		public IEntity Entity { get; set; }
 	}
 
+	public interface IModelTable
+	{
+		void BeginProgrammaticUpdate();
+		void EndProgrammaticUpdate();
+	}
+
 	/// <summary>
 	/// Wires up table change events so that the underlying model collection and individual model instances can be kept in sync.
 	/// </summary>
-	public class ModelTable<T> where T : MappedRecord, IEntity, new()
+	public class ModelTable<T> : IModelTable, IDisposable  where T : MappedRecord, IEntity, new()
 	{
 		public event EventHandler<RowDeletedEventArgs> RowDeleted;
 		protected DataTable dt;
@@ -49,6 +55,7 @@ namespace Clifton.Core.ModelTableManagement
 		protected List<IEntity> items;
 		protected ModelMgr modelMgr;
 		protected DataContext context;
+		protected bool programmaticUpdate;
 
 		public ModelTable(ModelMgr modelMgr, DataContext context, DataTable backingTable, List<IEntity> modelCollection)
 		{
@@ -57,11 +64,38 @@ namespace Clifton.Core.ModelTableManagement
 			dt = backingTable;
 			items = modelCollection;
 			WireUpEvents(dt);
+			RegisterWithModelManager();
+		}
+
+		public void Dispose()
+		{
+			dt.ColumnChanged -= Table_ColumnChanged;
+			dt.RowDeleted -= Table_RowDeleted;
+			dt.TableNewRow -= Table_TableNewRow;
+			dt.RowChanged -= Table_RowChanged;
+			UnregisterWithModelManager();
 		}
 
 		public void ResetItems(List<IEntity> modelCollection)
 		{
 			items = modelCollection;
+		}
+
+		/// <summary>
+		/// Ignore table change events, which effectively means that the model manager is not notified of changes.
+		/// </summary>
+		public void BeginProgrammaticUpdate()
+		{
+			programmaticUpdate = true;
+		}
+
+		/// <summary>
+		/// Re-enable notifying the model manager of changes made by the user interacting through the UI, and
+		/// other changes being made to the DataTable.
+		/// </summary>
+		public void EndProgrammaticUpdate()
+		{
+			programmaticUpdate = false;
 		}
 
 		protected void WireUpEvents(DataTable dt)
@@ -72,39 +106,61 @@ namespace Clifton.Core.ModelTableManagement
 			dt.RowChanged += Table_RowChanged;
 		}
 
+		protected void RegisterWithModelManager()
+		{
+			modelMgr.Register<T>(this);
+		}
+
+		protected void UnregisterWithModelManager()
+		{
+			modelMgr.Unregister<T>(this);
+		}
+
 		protected void Table_RowChanged(object sender, DataRowChangeEventArgs e)
 		{
-			switch (e.Action)
+			if (!programmaticUpdate)
 			{
-				case DataRowAction.Add:
-					items.Add(newInstance);
-					Insert(newInstance);
-					break;
+				switch (e.Action)
+				{
+					case DataRowAction.Add:
+						items.Add(newInstance);
+						Insert(newInstance);
 
-				// We don't do this here because the Table_ColumnChanged event handles persisting the change.
-				//case DataRowAction.Change:
-				//	{
-				//		// Any change to a grid view column that is mapped to a table column causes this event to fire,
-				//		// which results in an immediate update of the database.
-				//		IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
-				//		context.UpdateOfConcreteType(item);
-				//		break;
-				//	}
+						// After an insert, we need to set the the ID in the DataView, otherwise combobox controls in the grid whose
+						// field is this ID won't find the combobox record.
+						programmaticUpdate = true;
+						e.Row["Id"] = newInstance.Id;
+						programmaticUpdate = false;
+						break;
 
-				// This never happens when connected to a DataGridView.  Not sure why not.
-				//case DataRowAction.Delete:
-				//	{
-				//		T item = items.SingleOrDefault(record => record.Row == e.Row);
-				//		Globals.context.Delete(item);
-				//		break;
-				//	}
+					// We don't do this here because the Table_ColumnChanged event handles persisting the change.
+					//case DataRowAction.Change:
+					//	{
+					//		// Any change to a grid view column that is mapped to a table column causes this event to fire,
+					//		// which results in an immediate update of the database.
+					//		IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
+					//		context.UpdateOfConcreteType(item);
+					//		break;
+					//	}
+
+					// This never happens when connected to a DataGridView.  Not sure why not.
+					//case DataRowAction.Delete:
+					//	{
+					//		T item = items.SingleOrDefault(record => record.Row == e.Row);
+					//		Globals.context.Delete(item);
+					//		break;
+					//	}
+				}
 			}
 		}
 
 		protected void Table_TableNewRow(object sender, DataTableNewRowEventArgs e)
 		{
-			newInstance = new T();
-			newInstance.Row = e.Row;
+			if (!programmaticUpdate)
+			{
+				newInstance = new T();
+				newInstance.Row = e.Row;
+			}
 		}
 
 		protected void Table_RowDeleted(object sender, DataRowChangeEventArgs e)
@@ -145,55 +201,62 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
 		{
-			IEntity instance;
-
-			if (e.Row.RowState == DataRowState.Detached)
+			if (!programmaticUpdate)
 			{
-				instance = newInstance;
-			}
-			else
-			{
-				instance = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
-			}
+				IEntity instance;
 
-			// Comboboxes do not fire a DataRowAction.Change RowChanged event when closing the dialog, 
-			// these fire only when the use changes the selected row, so we persist the change now if not
-			// a detached record (as in, it must exist in the database.)
-			if (e.Row.RowState != DataRowState.Detached)
-			{
-				PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
-				object oldVal = pi.GetValue(instance);
-
-				// Prevents infinite recursion by updating the model only when the field has changed.
-				// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
-				// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
-				if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
-					 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+				if (e.Row.RowState == DataRowState.Detached)
 				{
-					modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
-					// If it's actually a column in the table, then persist the change.
-					ExtDataColumn edc = (ExtDataColumn)e.Column;
-					if (edc.IsDbColumn)
+					instance = newInstance;
+				}
+				else
+				{
+					instance = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
+				}
+
+				// TODO: CAN PROBABLY BE REMOVED NOW THAT WE HAVE THE MODEL MANAGER SETTING THE PROGRAMMATIC FLAG.
+
+				// Comboboxes do not fire a DataRowAction.Change RowChanged event when closing the dialog, 
+				// these fire only when the use changes the selected row, so we persist the change now if not
+				// a detached record (as in, it must exist in the database.)
+				if (e.Row.RowState != DataRowState.Detached)
+				{
+					PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
+					object oldVal = pi.GetValue(instance);
+
+					// Prevents infinite recursion by updating the model only when the field has changed.
+					// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
+					// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
+					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
+						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
 					{
-						Update(instance);
+						modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+						// If it's actually a column in the table, then persist the change.
+						ExtDataColumn edc = (ExtDataColumn)e.Column;
+						if (edc.IsDbColumn)
+						{
+							Update(instance);
+						}
 					}
 				}
-			}
-			else
-			{
-				// If detached (not a real record in the DB yet) we want to update the model, but wait to persist (insert) the record
-				// when the row editing is complete (Table_RowChange action is DataRowAction.Add).
-				// Does changing a combobox for a detached row work?
-				PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
-				object oldVal = pi.GetValue(instance);
-
-				// Prevents infinite recursion by updating the model only when the field has changed.
-				// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
-				// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
-				if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
-					 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+				else
 				{
-					modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+					// TODO: CAN PROBABLY BE REMOVED NOW THAT WE HAVE THE MODEL MANAGER SETTING THE PROGRAMMATIC FLAG.
+
+					// If detached (not a real record in the DB yet) we want to update the model, but wait to persist (insert) the record
+					// when the row editing is complete (Table_RowChange action is DataRowAction.Add).
+					// Does changing a combobox for a detached row work?
+					PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
+					object oldVal = pi.GetValue(instance);
+
+					// Prevents infinite recursion by updating the model only when the field has changed.
+					// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
+					// which fires the ModelTable.Table_ColumnChanged event.  This then calls back here, creating an infinite loop.
+					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
+						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
+					{
+						modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+					}
 				}
 			}
 		}

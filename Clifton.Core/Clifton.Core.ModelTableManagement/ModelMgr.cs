@@ -82,18 +82,20 @@ namespace Clifton.Core.ModelTableManagement
 		public event EventHandler<ModelPropertyChangedEventArgs> PropertyChanged;
 
 		protected Dictionary<Type, List<IEntity>> mappedRecords;
+		protected Dictionary<Type, List<IModelTable>> modelTables;
 		protected DataContext context;
 
 		public ModelMgr(DataContext context)
 		{
 			this.context = context;
 			mappedRecords = new Dictionary<Type, List<IEntity>>();
+			modelTables = new Dictionary<Type, List<IModelTable>>();
 		}
 
 		public void Register<T>() where T : MappedRecord, IEntity
 		{
 			Type recType = typeof(T);
-			mappedRecords[recType] = new List<IEntity>();
+			Register(recType);
 		}
 
 		public void Clear<T>() where T : MappedRecord, IEntity
@@ -117,11 +119,11 @@ namespace Clifton.Core.ModelTableManagement
 
 			if (whereClause == null)
 			{
-				(from rec in context.GetTable<T>() select rec).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+				(from rec in context.GetTable<T>() select rec).ForEach(m => AppendRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 			}
 			else
 			{
-				(from rec in context.GetTable<T>() select rec).Where(whereClause).ForEach(m => AddRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+				(from rec in context.GetTable<T>() select rec).Where(whereClause).ForEach(m => AppendRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 			}
 
 			return mappedRecords[recType];
@@ -130,7 +132,7 @@ namespace Clifton.Core.ModelTableManagement
 		public List<IEntity> LoadRecords(Type recType, DataView dv)
 		{
 			Clear(recType);
-			(from rec in context.GetTable(recType.Name) select rec).ForEach(m => AddRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			(from rec in context.GetTable(recType.Name) select rec).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
 
 			return mappedRecords[recType];
 		}
@@ -145,9 +147,37 @@ namespace Clifton.Core.ModelTableManagement
 			Type recType = typeof(T);
 			mappedRecords[recType].ForEach(m =>
 				{
-					DataRow row = NewRow(dv, (T)m);		// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+					DataRow row = NewRow(dv, typeof(T), (MappedRecord)m);
 					dv.Table.Rows.Add(row);
 				});
+		}
+
+		public void DeleteRecord<T>(DataView dv, T model) where T : MappedRecord, IEntity
+		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
+			Type recType = typeof(T);
+			mappedRecords[recType].Remove(mappedRecords[recType].Single(mr => mr == model));
+			dv.Table.Rows.Remove(model.Row);
+		}
+
+		public void DeleteAllRecords<T>(DataView dv) where T : MappedRecord, IEntity
+		{
+			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+			List<DataRow> rows = new List<DataRow>();
+			
+			// Put into a separate list so we're not modifying the collection as we delete rows.
+			foreach (DataRow row in dv.Table.Rows)
+			{
+				rows.Add(row);
+			}
+
+			foreach (DataRow row in rows)
+			{
+				dv.Table.Rows.Remove(row);
+			}
+
+			Clear<T>();
 		}
 
 		/// <summary>
@@ -186,18 +216,14 @@ namespace Clifton.Core.ModelTableManagement
 		/// Those properties decorated with the DisplayField attribute are added, in order, to the underlying DataTable column collection.
 		/// Optionally, properties with the DisplayName attribute set the caption for the column.
 		/// </summary>
-		public DataView CreateView<T>()
+		public DataView CreateView<T>() where T : MappedRecord, IEntity
 		{
-			DataTable dt = new DataTable();
-			dt.TableName = typeof(T).Name;
-			List<Field> fields = GetFields<T>();
-			CreateColumns(dt, fields);
-
-			return new DataView(dt);
+			return CreateView(typeof(T));
 		}
 
 		public DataView CreateView(Type t)
 		{
+			Register(t);
 			DataTable dt = new DataTable();
 			dt.TableName = t.Name;
 			List<Field> fields = GetFields(t);
@@ -209,18 +235,10 @@ namespace Clifton.Core.ModelTableManagement
 		/// <summary>
 		/// Appends a DataRow from the fields in the model and adds the row to the underlying model collection.
 		/// </summary>
-		public void AddRow<T>(DataView view, T model) where T : MappedRecord
+		public void AppendRow<T>(DataView view, T model) where T : MappedRecord
 		{
-			DataRow row = NewRow(view, model);
-			view.Table.Rows.Add(row);
-			AddRecordToCollection(model);
-		}
-
-		public void AddRow(DataView view, Type recType, MappedRecord model)
-		{
-			DataRow row = NewRow(view, recType, model);
-			view.Table.Rows.Add(row);
-			AddRecordToCollection(model);
+			Type recType = model.GetType();
+			AppendRow(view, recType, model);
 		}
 
 		/// <summary>
@@ -228,8 +246,10 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public void InsertRow<T>(DataView view, T model) where T : MappedRecord
 		{
-			DataRow row = NewRow(view, model);
+			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
+			DataRow row = NewRow(view, model.GetType(), model);
 			view.Table.Rows.InsertAt(row, 0);
+			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.EndProgrammaticUpdate());
 			AddRecordToCollection(model);
 		}
 
@@ -238,6 +258,7 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public void UpdateRow<T>(T model) where T : MappedRecord
 		{
+			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
 			DataRow row = model.Row;
 			List<Field> fields = GetFields<T>();
 
@@ -247,6 +268,8 @@ namespace Clifton.Core.ModelTableManagement
 				object val = model.GetType().GetProperty(field.Name).GetValue(model);
 				UpdateTableRowField(row, field.Name, val);
 			}
+
+			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.EndProgrammaticUpdate());
 		}
 
 		// TODO: Get rid of this for programmatic calls, instead the model's property setter should fire the property change event.
@@ -259,6 +282,9 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			PropertyInfo pi = record.GetType().GetProperty(columnName);
 			object oldVal = pi.GetValue(record);
+
+			// TODO: Is this nececssary anymore???
+			// TODO: CAN PROBABLY BE REMOVED NOW THAT WE HAVE THE MODEL MANAGER SETTING THE PROGRAMMATIC FLAG.
 
 			// Prevents infinite recursion by updating the model only when the field has changed.
 			// Otherwise, programmatically setting a field calls UpdateRowField, which changes the table's field,
@@ -275,6 +301,7 @@ namespace Clifton.Core.ModelTableManagement
 			}
 		}
 
+		// TODO: Do we need this in AssignPerformerToRoomEvents and DlgAssignPerformerToRoomType, if those classes instead used UpdateRecordField?
 		/// <summary>
 		/// Explicity fire the property changed event.
 		/// </summary>
@@ -283,6 +310,7 @@ namespace Clifton.Core.ModelTableManagement
 			PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
 		}
 
+		// TODO: Rename to TryGetRecord
 		/// <summary>
 		/// Sets the out record to the record found in the specified collection.
 		/// </summary>
@@ -302,6 +330,7 @@ namespace Clifton.Core.ModelTableManagement
 			return record != null;
 		}
 
+		// TODO: Rename to TryGetRecord
 		/// <summary>
 		/// Sets the out record to the record found in the collection of the model type.
 		/// </summary>
@@ -322,6 +351,7 @@ namespace Clifton.Core.ModelTableManagement
 			return record != null;
 		}
 
+		// TODO: Rename to GetRecord
 		/// <summary>
 		/// Returns the record, or null if not found, in the collection of the model type.
 		/// </summary>
@@ -342,6 +372,7 @@ namespace Clifton.Core.ModelTableManagement
 			return record;
 		}
 
+		// TODO: Rename to GetRecords
 		public List<T> GetRows<T>(Func<T, bool> predicate) where T : MappedRecord
 		{
 			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
@@ -378,33 +409,40 @@ namespace Clifton.Core.ModelTableManagement
 			}
 		}
 
+		public void Register<T>(IModelTable mt) where T : IEntity
+		{
+			modelTables[typeof(T)].Add(mt);
+		}
+
+		public void Unregister<T>(IModelTable mt) where T : IEntity
+		{
+			modelTables[typeof(T)].Remove(mt);
+		}
+
 		protected object DbNullConverter(object val)
 		{
 			return (val == DBNull.Value ? null : val);
 		}
 
+		protected void AppendRow(DataView view, Type recType, MappedRecord model)
+		{
+			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
+			DataRow row = NewRow(view, recType, model);
+			view.Table.Rows.Add(row);
+			AddRecordToCollection(model);
+			modelTables.Single(kvp => kvp.Key == recType).Value.ForEach(mt => mt.EndProgrammaticUpdate());
+		}
+
 		protected void AddRecordToCollection(MappedRecord record)
 		{
 			Assert.That(mappedRecords.ContainsKey(record.GetType()), "Model Manager does not know about " + record.GetType().Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
-
 			mappedRecords[record.GetType()].Add((IEntity)record);
 		}
 
-		protected DataRow NewRow<T>(DataView view, T model) where T : MappedRecord
+		protected void Register(Type recType)
 		{
-			List<Field> fields = GetFields<T>();
-			DataRow row = view.Table.NewRow();
-
-			foreach (Field field in fields.Where(f=>f.IsTableField))
-			{
-				Type modelType = typeof(T);
-				object val = model.GetType().GetProperty(field.Name).GetValue(model);
-				row[field.Name] = val ?? DBNull.Value;
-			}
-
-			model.Row = row;
-
-			return row;
+			mappedRecords[recType] = new List<IEntity>();
+			modelTables[recType] = new List<IModelTable>();
 		}
 
 		protected DataRow NewRow(DataView view, Type modelType, MappedRecord model)
