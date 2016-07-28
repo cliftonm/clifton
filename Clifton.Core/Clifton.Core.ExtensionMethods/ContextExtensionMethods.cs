@@ -384,7 +384,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			if (data is ICreateUpdate)
 			{
-				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.CreatedOn where Id = " + ((int)data.Id).ToString()).Single();
+				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.UpdatedOn where Id = " + ((int)data.Id).ToString()).Single();
 				((ICreateUpdate)data).UpdatedOn = dt;
 			}
 		}
