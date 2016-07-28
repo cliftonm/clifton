@@ -53,6 +53,7 @@
     <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\WinFormExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\Attributes.cs" />
+    <Compile Include="Clifton.Core.ModelTableManagement\ICreateUpdate.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\IEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\INamedEntity.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\MappedRecord.cs" />

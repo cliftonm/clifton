@@ -358,6 +358,7 @@ namespace Clifton.Core.ExtensionMethods
 				// T cloned = CloneEntity(data);
 				newContext.GetTable<T>().InsertOnSubmit(data);
 				newContext.SubmitChanges();
+				SetCreatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(typeof(T)).TableName);
 				// data.Id = cloned.Id;
 			}
 			catch (Exception ex)
@@ -367,6 +368,25 @@ namespace Clifton.Core.ExtensionMethods
 			}
 
 			return (int)data.Id;
+		}
+
+		private static void SetCreatedOnFieldValue<T>(DataContext context, T data, string tableName) where T : class, IEntity
+		{
+			if (data is ICreateUpdate)
+			{
+				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set CreatedOn = SYSDATETIME(), UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.CreatedOn where Id = " + ((int)data.Id).ToString()).Single();
+				((ICreateUpdate)data).CreatedOn = dt;
+				((ICreateUpdate)data).UpdatedOn = dt;
+			}
+		}
+
+		private static void SetUpdatedOnFieldValue<T>(DataContext context, T data, string tableName) where T : class, IEntity
+		{
+			if (data is ICreateUpdate)
+			{
+				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.CreatedOn where Id = " + ((int)data.Id).ToString()).Single();
+				((ICreateUpdate)data).UpdatedOn = dt;
+			}
 		}
 
 		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
@@ -382,6 +402,7 @@ namespace Clifton.Core.ExtensionMethods
 				var records = model.Property.GetValue(newContext, null);
 				((ITable)records).InsertOnSubmit(data);
 				newContext.SubmitChanges();
+				SetCreatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(records.GetType().GenericTypeArguments[0]).TableName);
 				// data.Id = cloned.Id;
 			}
 			catch (Exception ex)
@@ -470,6 +491,7 @@ namespace Clifton.Core.ExtensionMethods
 				T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 				record.CopyFrom(data);
 				newContext.SubmitChanges();
+				SetUpdatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(typeof(T)).TableName);
 			}
 			catch (Exception ex)
 			{
@@ -493,6 +515,7 @@ namespace Clifton.Core.ExtensionMethods
 				T record = ((ITable)records).Cast<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 				record.CopyFrom(data);
 				newContext.SubmitChanges();
+				SetUpdatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(records.GetType().GenericTypeArguments[0]).TableName);
 			}
 			catch (Exception ex)
 			{
