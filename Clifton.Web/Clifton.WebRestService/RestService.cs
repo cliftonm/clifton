@@ -29,6 +29,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceManagement;
 using Clifton.WebInterfaces;
@@ -111,9 +112,9 @@ namespace Clifton.WebRestService
                 request.Timeout = TIMEOUT;
                 request.Method = "POST";
                 request.ContentType = "application/json";
-                request.ContentLength = json.Length;
-                st = request.GetRequestStream();
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
+                request.ContentLength = bytes.Length;
+                st = request.GetRequestStream();
                 st.Write(bytes, 0, bytes.Length);
 
                 WebResponse resp = request.GetResponse();
@@ -135,7 +136,7 @@ namespace Clifton.WebRestService
             {
                 if (st != null)
                 {
-                    st.Close();
+                    Assert.SilentTry(() => st.Close());
                 }
             }
 

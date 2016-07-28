@@ -62,8 +62,9 @@ namespace Clifton.WebResponseService
 			resp.Context.Response.StatusCode = 500;
 			resp.Context.Response.ContentType = "text/text";
 			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = resp.Exception.Message.Length;
-			resp.Context.Response.OutputStream.Write(resp.Exception.Message.to_Utf8(), 0, resp.Exception.Message.Length);
+            byte[] byteData = resp.Exception.Message.to_Utf8();
+            resp.Context.Response.ContentLength64 = byteData.Length;
+			resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
 			resp.Context.Response.Close();
 		}
 
@@ -72,8 +73,9 @@ namespace Clifton.WebResponseService
 			resp.Context.Response.StatusCode = resp.StatusCode;
 			resp.Context.Response.ContentType = "text/text";
 			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = resp.Message.Length;
-			resp.Context.Response.OutputStream.Write(resp.Message.to_Utf8(), 0, resp.Message.Length);
+            byte[] byteData = resp.Message.to_Utf8();
+            resp.Context.Response.ContentLength64 = byteData.Length;
+            resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
 			resp.Context.Response.Close();
 		}
 
@@ -82,8 +84,9 @@ namespace Clifton.WebResponseService
 			resp.Context.Response.StatusCode = resp.StatusCode;
 			resp.Context.Response.ContentType = "text/json";
 			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = resp.Json.Length;
-			resp.Context.Response.OutputStream.Write(resp.Json.to_Utf8(), 0, resp.Json.Length);
+            byte[] byteData = resp.Json.to_Utf8();
+            resp.Context.Response.ContentLength64 = byteData.Length;
+			resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
 			resp.Context.Response.Close();
 		}
 
