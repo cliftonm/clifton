@@ -55,7 +55,7 @@ namespace Clifton.EmailService
 				message.IsBodyHtml = true;
 				message.Body = email.Body;
 				message.IsBodyHtml = true;
-				message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(email.Body, null, MediaTypeNames.Text.Html));
+				// message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(email.Body, null, MediaTypeNames.Text.Html));
 
 				email.To.ForEach(e => message.To.Add(e));
 				email.Cc.IfNotNull(ccs => ccs.ForEach(cc => message.CC.Add(cc)));

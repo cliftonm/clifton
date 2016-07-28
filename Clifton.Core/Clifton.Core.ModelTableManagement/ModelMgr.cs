@@ -283,7 +283,7 @@ namespace Clifton.Core.ModelTableManagement
 			PropertyInfo pi = record.GetType().GetProperty(columnName);
 			object oldVal = pi.GetValue(record);
 
-			// TODO: Is this nececssary anymore???
+			// TODO: Is this test for oldValue != newValue nececssary anymore???
 			// TODO: CAN PROBABLY BE REMOVED NOW THAT WE HAVE THE MODEL MANAGER SETTING THE PROGRAMMATIC FLAG.
 
 			// Prevents infinite recursion by updating the model only when the field has changed.
