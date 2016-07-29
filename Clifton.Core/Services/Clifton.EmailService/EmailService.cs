@@ -3,6 +3,7 @@ using System.Net.Mime;
 using System.Net;
 using System.Net.Mail;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
@@ -65,8 +66,9 @@ namespace Clifton.EmailService
 			}
 			catch (Exception ex)
 			{
-				// ServiceManager.Get<ILoggerService>().Log(ex);
-				ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex2 => ex2.Exception = ex);
+                // If an exception occurs when emailing, log through whatever logging mechanism in place, rather than handling by trying to email another exception!
+                Assert.SilentTry(() =>
+                    ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex2 => ex2.Exception = ex, true));
 			}
 		}
 	}
