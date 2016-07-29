@@ -35,6 +35,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModelTableManagement;
 
@@ -374,7 +375,8 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			if (data is ICreateUpdate)
 			{
-				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set CreatedOn = SYSDATETIME(), UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.CreatedOn where Id = " + ((int)data.Id).ToString()).Single();
+				string idFieldName = GetPkFieldName(data);		// Because some DB's may not use "Id" as the PK field name.  TODO: Support multiple PK fields?
+				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set CreatedOn = SYSDATETIME(), UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.CreatedOn where " + idFieldName + " = " + ((int)data.Id).ToString()).Single();
 				((ICreateUpdate)data).CreatedOn = dt;
 				((ICreateUpdate)data).UpdatedOn = dt;
 			}
@@ -384,9 +386,28 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			if (data is ICreateUpdate)
 			{
-				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.UpdatedOn where Id = " + ((int)data.Id).ToString()).Single();
+				string idFieldName = GetPkFieldName(data);		// Because some DB's may not use "Id" as the PK field name.  TODO: Support multiple PK fields?
+				DateTime dt = context.ExecuteQuery<DateTime>("update " + tableName + " set UpdatedOn = SYSDATETIME()  OUTPUT INSERTED.UpdatedOn where " + idFieldName + " = " + ((int)data.Id).ToString()).Single();
 				((ICreateUpdate)data).UpdatedOn = dt;
 			}
+		}
+
+		private static string GetPkFieldName<T>(T data)
+		{
+			Type t = data.GetType();
+
+			var props = (from prop in t.GetProperties()
+						where Attribute.IsDefined(prop, typeof(ColumnAttribute))
+						select new 
+						{
+							PkFieldName = Attribute.IsDefined(prop, typeof(ColumnAttribute)) ? ((ColumnAttribute)prop.GetCustomAttribute(typeof(ColumnAttribute))).Name ?? prop.Name : prop.Name,
+							IsPrimaryKey = Attribute.IsDefined(prop, typeof(ColumnAttribute)) ? ((ColumnAttribute)prop.GetCustomAttribute(typeof(ColumnAttribute))).IsPrimaryKey : false,
+						}).Where(p=>p.IsPrimaryKey);
+
+			// TODO: Support multiple PK fields?
+			Assert.That(props.Count() == 1, "Expected one and only one primary key field to be defined.");
+
+			return props.ToList()[0].PkFieldName;
 		}
 
 		public static int InsertOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
