@@ -30,6 +30,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
@@ -59,12 +60,14 @@ namespace Clifton.WebServerService
 		protected HttpListener listener;
 		protected ILoggerService logger;
 		protected ISemanticProcessor semProc;
+		protected bool httpOnly;
 
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();
 			logger = ServiceManager.Get<ILoggerService>();
 			semProc = ServiceManager.Get<ISemanticProcessor>();
+            Assert.SilentTry(() => httpOnly = ServiceManager.Get<IAppConfigService>().GetValue("httpOnly").to_b());
 		}
 
 		/// <summary>
@@ -105,7 +108,7 @@ namespace Clifton.WebServerService
 				logger.Log(LogMessage.Create(context.Verb().Value + ": " + context.Path().Value));
 
 				// Redirect to HTTPS if not local and not secure.
-				if (!context.Request.IsLocal && !context.Request.IsSecureConnection)
+				if (!context.Request.IsLocal && !context.Request.IsSecureConnection && !httpOnly)
 				{
 					logger.Log(LogMessage.Create("Redirecting to HTTPS"));
 					string redirectUrl = context.Request.Url.ToString().Replace("http:", "https:");
