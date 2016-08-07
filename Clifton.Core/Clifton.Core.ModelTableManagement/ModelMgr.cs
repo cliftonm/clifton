@@ -83,6 +83,7 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected Dictionary<Type, List<IEntity>> mappedRecords;
 		protected Dictionary<Type, List<IModelTable>> modelTables;
+		protected Dictionary<Type, DataView> modelViewMap;
 		protected DataContext context;
 
 		public ModelMgr(DataContext context)
@@ -90,6 +91,7 @@ namespace Clifton.Core.ModelTableManagement
 			this.context = context;
 			mappedRecords = new Dictionary<Type, List<IEntity>>();
 			modelTables = new Dictionary<Type, List<IModelTable>>();
+			modelViewMap = new Dictionary<Type, DataView>();
 		}
 
 		public void Register<T>() where T : MappedRecord, IEntity
@@ -211,6 +213,16 @@ namespace Clifton.Core.ModelTableManagement
 			return mappedRecords[recType].Cast<T>().ToList();
 		}
 
+		public bool TryGetView<T>(out DataView dv)
+		{
+			return modelViewMap.TryGetValue(typeof(T), out dv);
+		}
+
+		public bool TryGetView(Type t, out DataView dv)
+		{
+			return modelViewMap.TryGetValue(t, out dv);
+		}
+
 		/// <summary>
 		/// Returns a view by inspecting, via reflection, the model's properties.
 		/// Those properties decorated with the DisplayField attribute are added, in order, to the underlying DataTable column collection.
@@ -228,8 +240,10 @@ namespace Clifton.Core.ModelTableManagement
 			dt.TableName = t.Name;
 			List<Field> fields = GetFields(t);
 			CreateColumns(dt, fields);
+			DataView dv = new DataView(dt);
+			modelViewMap[t] = dv;
 
-			return new DataView(dt);
+			return dv;
 		}
 
 		/// <summary>
