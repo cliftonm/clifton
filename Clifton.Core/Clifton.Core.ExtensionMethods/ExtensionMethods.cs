@@ -611,6 +611,19 @@ namespace Clifton.Core.ExtensionMethods
 			return Convert.ToInt32(src);
 		}
 
+		public static bool IsInt(this string src)
+		{
+			bool ret = false;
+
+			if (!String.IsNullOrEmpty(src))
+			{
+				int n;
+				ret = int.TryParse(src, out n);
+			}
+
+			return ret;
+		}
+
 		/// <summary>
 		/// Converts a string to a boolean.
 		/// </summary>
