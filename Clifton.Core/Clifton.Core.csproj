@@ -50,6 +50,7 @@
     <Compile Include="Clifton.Core.Exceptions\ModuleManagerException.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ContextExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\DistinctBy.cs" />
+    <Compile Include="Clifton.Core.ExtensionMethods\DropLast.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\ExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ExtensionMethods\WinFormExtensionMethods.cs" />
     <Compile Include="Clifton.Core.ModelTableManagement\Attributes.cs" />

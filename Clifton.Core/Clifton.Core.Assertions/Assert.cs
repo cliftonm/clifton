@@ -49,6 +49,25 @@ namespace Clifton.Core.Assertions
 			}
 		}
 
+		public static void Try(Action a, Action<Exception> onErr = null)
+		{
+			try 
+			{ 
+				a(); 
+			}
+			catch(Exception ex)
+			{
+				if (onErr != null)
+				{
+					onErr(ex);
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+
 		public static void SilentTry(Action a)
 		{
 			try { a(); }
