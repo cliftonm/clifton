@@ -1,0 +1,180 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Service Manager - Instantiation</title>
+</head>
+
+<body>
+
+<p>Service Manager - Instantiation by Interface Specification</p>
+<p>A Clifton Method Core Component</p>
+<h2>Introduction</h2>
+<p>This article builds on what I call &quot;The Clifton Method&quot; of software 
+development.&nbsp; The first article in this series is The Module Manager, and 
+while this code in this article stands on its own, it is ultimately intended to 
+work in conjunction with the Module Manager.</p>
+<p>The concept of instantiating concrete instances via an interface 
+specification should be a well known pattern of the
+<a href="https://en.wikipedia.org/wiki/Dependency_inversion_principle">
+dependency inversion principle</a>.&nbsp; As that Wikipedia link summarizes:</p>
+<p><i>In object-oriented programming, the dependency inversion principle refers 
+to a specific form of decoupling software modules. When following this 
+principle, the conventional dependency relationships established from 
+high-level, policy-setting modules to low-level, dependency modules are 
+reversed, thus rendering high-level modules independent of the low-level module 
+implementation details. The principle states:</i></p>
+<ul>
+	<li><i>High-level modules should not depend on low-level modules. Both 
+	should depend on abstractions.</i></li>
+	<li><i>Abstractions should not depend on details. Details should depend on 
+	abstractions.</i></li>
+</ul>
+<h3>What Problem Does DIP Solve?</h3>
+<p>Similar to the Module Manager, the Service Manager provides the ability to 
+decouple dependencies between objects.&nbsp; An &quot;dependency entangled&quot; 
+application instantiates classes directly.&nbsp; One can come up with many 
+examples of dependency entanglement:</p>
+<p align="center">
+<img border="0" src="depentangled.png" width="372" height="270"></p>
+<p>In these situations, the dependency between the high level component and the 
+low level component is hard-wired in the implementation.&nbsp; Should the 
+requirements change, the code requires considerable rework to either replace or 
+abstract out the low level dependencies.&nbsp; The problem gets more complicated 
+when the low level components themselves interface to higher level components, 
+for example, when user interface events, handled by a controller, require 
+database I/O that can affect the user interface:</p>
+<p align="center">
+<img border="0" src="depentangled2.png" width="372" height="240"></p>
+<p>The Dependency Inversion Principle decouples the dependencies such that <i>
+both</i> high level and low level components can be changed without breaking the
+<i>code</i>.&nbsp; This results in an implementation that looks a bit more like 
+this:</p>
+<p align="center"><img border="0" src="dip1.png" width="624" height="747"></p>
+<p align="left"><img border="0" src="key-small.jpg" width="94" height="33"></p>
+<p align="left">In this diagram, both high and low level components have been 
+abstracted such that the application (not shown) can be implemented using 
+interfaces, rather than concrete classes, achieving a high level of decoupling 
+between &quot;what the application wants to do&quot; vs. &quot;how the component does it.&quot;</p>
+<h3>Is The Extra Work Worth It?</h3>
+<p>The above diagram illustrates that more work (sometimes considerably more 
+work) is required on the part of the programmer to create the interfaces, 
+specify the interface behaviors, and in many cases, write wrappers that 
+implement the interface behaviors.&nbsp; For example, a more accurate picture of 
+the UI abstraction might look like this:</p>
+<p align="center"><img border="0" src="dip2.png" width="829" height="227"></p>
+<p>The balance the <i>architect</i> (not the developer, unless they are the same 
+person) must achieve between entanglement and abstraction is often determined by 
+questions like:</p>
+<ul>
+	<li>What components am I confident that I know I'm going to stick with?</li>
+	<li>What components will need to vary in concrete implementation, and not 
+	just as determined by the current requirements but by unforeseen future 
+	changes?</li>
+</ul>
+<p><img border="0" src="sad%20smiley.png" width="32" height="32"> Unfortunately, 
+the answers to both questions often requires a crystal ball!</p>
+<p><img border="0" src="smiley.png" width="32" height="32"> That said, when a 
+happy medium is determined, the resulting application is more robust and 
+amenable to change, typically resulting in a longer lifetime, and future changes 
+are less costly to implement.</p>
+<h2>The Service Manager</h2>
+<p>The Service Manager is a lightweight implementation of the Dependency 
+Inversion Principle.&nbsp; In a nutshell, components, whether high or low level, 
+are instantiated by associating the concrete implementation with an interface.&nbsp; 
+Here's a minimal example:</p>
+<pre>using System;
+
+using Clifton.Core.ServiceManagement;
+
+namespace ServiceManagerDemo
+{
+  public interface IAnimal : IService
+  {
+    void Speak();
+  }
+
+  public interface ICat : IAnimal { }
+  public interface IDog : IAnimal { }
+
+  public class Cat : ServiceBase, ICat
+  {
+    public void Speak()
+    {
+      Console.WriteLine(&quot;Meow&quot;);
+    }
+  }
+
+  public class Dog : ServiceBase, IDog
+  {
+    public void Speak()
+    {
+      Console.WriteLine(&quot;Woof&quot;);
+    }
+  }
+
+  class Program
+  {
+    static void Main(string[] args)
+    {
+      ServiceManager svcMgr = new ServiceManager();
+      svcMgr.RegisterSingleton&lt;ICat, Cat&gt;();
+      svcMgr.RegisterSingleton&lt;IDog, Dog&gt;();
+      IAnimal animal1 = svcMgr.Get&lt;ICat&gt;();
+      IAnimal animal2 = svcMgr.Get&lt;IDog&gt;();
+      animal1.Speak();
+      animal2.Speak();
+    }
+  }
+}</pre>
+<p>In this example, observe how:</p>
+<ul>
+	<li><code>IAnimal</code> is the effectively the pure abstract 
+specification for anything that derives from it.&nbsp; </li>
+	<li>The &quot;concrete&quot; interfaces, <code>ICat</code> and <code>IDog</code>, are derived from 
+	<code>IAnimal</code> but do not 
+contain any specific implementation.</li>
+	<li>The concrete implementation of <code>Cat</code> and <code>Dog</code> derives from 
+	<code>ICat</code> and <code>IDog</code>, 
+respectively, and implements the <code>IAnimal</code> behavior.</li>
+	<li>In this example, we tell the Service Manager that the &quot;services&quot; <code>Cat</code> and 
+	<code>Dog</code> are singletons--they are instantiated only once and subsequent Get calls 
+	return the one and only instance.</li>
+</ul>
+<p align="center"><img border="0" src="catadog1.png" width="372" height="286"></p>
+<p align="left">The interface <code>IService</code> and the abstract class <code>ServiceBase</code> are 
+provided by the Service Manager will be discussed later.</p>
+<p align="left"><img border="0" src="note.png" width="24" height="32"> What's 
+interesting about this architecture is that the interfaces themselves are 
+abstracted:</p>
+<ol>
+	<li>
+	<p align="left">a common interface <code>IAnimal</code> describes the behavior of the 
+	abstracted concept</p></li>
+	<li>
+	<p align="left">empty child interfaces deriving from <code>IAnimal</code> provide the 
+	means for mapping the &quot;concrete&quot; interface with a &quot;concrete&quot; implementor, 
+	thus determining which &quot;animal&quot; is to be instantiated.</p></li>
+</ol>
+<p align="left">&nbsp;</p>
+<h3>Non-Singleton Instantiation</h3>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp; </p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

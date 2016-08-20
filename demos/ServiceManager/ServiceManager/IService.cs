@@ -21,45 +21,12 @@
 * SOFTWARE.
 */
 
-using System;
-
-using System.Collections.Generic;
-
-using Clifton.Core.ServiceManagement;
-
-namespace Clifton.Core.ModuleManagement
+namespace Clifton.Core.ServiceManagement
 {
-	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
+	public interface IService
 	{
-		public IServiceManager ServiceManager { get; set; }
-
-		public virtual void Initialize(IServiceManager svcMgr)
-		{
-			ServiceManager = svcMgr;
-		}
-
-		public virtual void FinishedInitialization()
-		{
-		}
-
-		/// <summary>
-		/// Initialize each registrant by passing in the service manager.  This allows the module
-		/// to register the services it provides.
-		/// </summary>
-		protected override void InitializeRegistrants(List<IModule> registrants)
-		{
-			registrants.ForEach(r =>
-				{
-					try
-					{
-						r.InitializeServices(ServiceManager);
-					}
-					catch (System.Exception ex)
-					{
-						throw new ApplicationException("Error initializing " + r.GetType().AssemblyQualifiedName + "\r\n:" + ex.Message);
-					}
-				});
-
-		}
+		IServiceManager ServiceManager { get; }
+		void Initialize(IServiceManager srvMgr);
+		void FinishedInitialization();
 	}
 }

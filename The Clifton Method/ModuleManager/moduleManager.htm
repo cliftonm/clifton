@@ -91,7 +91,7 @@ server implementations and asks the factory method to create the desired
 concrete object.</p>
 <h4>A Typical Modular Component Architecture</h4>
 <p><img border="0" src="module%20pattern.png" width="544" height="266"></p>
-<p>In this scenario, the application gets whatever is specified in a separate 
+<p>In this scenario, the application gets an instance of whatever is specified in a separate 
 configuration file as to the implementing concrete type.&nbsp; The concrete 
 types are implemented as separate assemblies.</p>
 <p>What do you notice about this?</p>
@@ -502,6 +502,24 @@ becomes difficult to debug the application.&nbsp; </p>
 that implement services.&nbsp; The registration process is simple to understand, 
 simple to walk through with a debugger, and the entire implementation is very 
 few lines of code, which makes it easier to maintain.</p>
+
+<h3>Other Features</h3>
+<h4>Deferred Loading</h4>
+<p>At the time of this writing, the Module Manager loads all modules immediately 
+-- there is no concept of deferred loading.&nbsp; This might be useful to 
+implement in the future -- an &quot;on demand&quot; loading of modules, but there are 
+certain complexities, in that the Service Manager (which is the next article) 
+would need to know what module to load for a particular implementation.&nbsp; 
+I've not really encountered a requirement for this kind of behavior, so there's 
+really no reason to implement it, yet.</p>
+<h4>Unloading Modules</h4>
+<p>Similarly, the idea of being able to unload a module at runtime is attractive 
+in that you could potentially replace a module without bringing down the 
+application.&nbsp; However, as I've written about regarding
+<a href="http://www.codeproject.com/Articles/1091726/The-Nuances-of-Loading-and-Unloading-Assemblies-wi">
+Application Domains</a>, the performance and potential problems with event 
+wire-ups makes this feature somewhat undesirable.</p>
+<p>&nbsp;</p>
 
 </body>
 

@@ -22,44 +22,56 @@
 */
 
 using System;
+using System.Diagnostics;
 
-using System.Collections.Generic;
-
-using Clifton.Core.ServiceManagement;
-
-namespace Clifton.Core.ModuleManagement
+namespace Clifton.Core.Assertions
 {
-	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
+	public class Assert
 	{
-		public IServiceManager ServiceManager { get; set; }
-
-		public virtual void Initialize(IServiceManager svcMgr)
+		/// <summary>
+		/// Assert that the condition is false.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void Not(bool b, string msg)
 		{
-			ServiceManager = svcMgr;
-		}
-
-		public virtual void FinishedInitialization()
-		{
+			That(!b, msg);
 		}
 
 		/// <summary>
-		/// Initialize each registrant by passing in the service manager.  This allows the module
-		/// to register the services it provides.
+		/// Assert that the condition is true.
 		/// </summary>
-		protected override void InitializeRegistrants(List<IModule> registrants)
+		[Conditional("DEBUG")]
+		public static void That(bool b, string msg)
 		{
-			registrants.ForEach(r =>
-				{
-					try
-					{
-						r.InitializeServices(ServiceManager);
-					}
-					catch (System.Exception ex)
-					{
-						throw new ApplicationException("Error initializing " + r.GetType().AssemblyQualifiedName + "\r\n:" + ex.Message);
-					}
-				});
+			if (!b)
+			{
+				throw new ApplicationException(msg);
+			}
+		}
 
+		public static void Try(Action a, Action<Exception> onErr = null)
+		{
+			try 
+			{ 
+				a(); 
+			}
+			catch(Exception ex)
+			{
+				if (onErr != null)
+				{
+					onErr(ex);
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+
+		public static void SilentTry(Action a)
+		{
+			try { a(); }
+			catch { }
 		}
 	}
 }
