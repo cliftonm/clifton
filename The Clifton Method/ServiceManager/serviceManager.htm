@@ -78,12 +78,17 @@ the answers to both questions often requires a crystal ball!</p>
 <p><img border="0" src="smiley.png" width="32" height="32"> That said, when a 
 happy medium is determined, the resulting application is more robust and 
 amenable to change, typically resulting in a longer lifetime, and future changes 
-are less costly to implement.</p>
+are less costly to implement.&nbsp; One of the immediate uses of this approach 
+is that services can be easily mocked, which facilitates unit testing and 
+application development when either the service hasn't yet been implemented or, 
+for example, is associated with hardware that you may not have available.</p>
 <h2>The Service Manager</h2>
 <p>The Service Manager is a lightweight implementation of the Dependency 
 Inversion Principle.&nbsp; In a nutshell, components, whether high or low level, 
 are instantiated by associating the concrete implementation with an interface.&nbsp; 
-Here's a minimal example:</p>
+</p>
+<h3>Singleton Instantiation</h3>
+<p>Here's a minimal example:</p>
 <pre>using System;
 
 using Clifton.Core.ServiceManagement;
@@ -128,6 +133,7 @@ namespace ServiceManagerDemo
     }
   }
 }</pre>
+<p><img border="0" src="output1.png" width="284" height="133"></p>
 <p>In this example, observe how:</p>
 <ul>
 	<li><code>IAnimal</code> is the effectively the pure abstract 
@@ -145,25 +151,438 @@ respectively, and implements the <code>IAnimal</code> behavior.</li>
 <p align="center"><img border="0" src="catadog1.png" width="372" height="286"></p>
 <p align="left">The interface <code>IService</code> and the abstract class <code>ServiceBase</code> are 
 provided by the Service Manager will be discussed later.</p>
-<p align="left"><img border="0" src="note.png" width="24" height="32"> What's 
+<p align="left"><img border="0" src="important.png" width="38" height="32"> What's 
 interesting about this architecture is that the interfaces themselves are 
 abstracted:</p>
 <ol>
 	<li>
-	<p align="left">a common interface <code>IAnimal</code> describes the behavior of the 
-	abstracted concept</p></li>
+	<p align="left">A common interface <code>IAnimal</code> describes the behavior of the 
+	abstracted concept.</p></li>
 	<li>
-	<p align="left">empty child interfaces deriving from <code>IAnimal</code> provide the 
+	<p align="left">Empty child interfaces deriving from <code>IAnimal</code> provide the 
 	means for mapping the &quot;concrete&quot; interface with a &quot;concrete&quot; implementor, 
 	thus determining which &quot;animal&quot; is to be instantiated.</p></li>
+	<li>
+	<p align="left">Typically, &quot;concrete&quot; interfaces do not have further 
+	behavior specification, though there may be reasons why this is useful / 
+	necessary.</p></li>
 </ol>
-<p align="left">&nbsp;</p>
+<p align="left"><img border="0" src="Note.png" width="24" height="32"> When 
+registering a singleton, it is actually instantiated immediately by the service 
+manager.&nbsp; </p>
 <h3>Non-Singleton Instantiation</h3>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
+<p>Services are often singletons, but one can instantiate more than one instance 
+of a service as well.&nbsp; In this example, we'll look at created multiple 
+instances of <code>Cat</code>:</p>
+<pre>using System;
+
+using Clifton.Core.ServiceManagement;
+
+namespace ServiceManagerInstanceDemo
+{
+  public interface IAnimal : IService
+  {
+    string Name { get; set; }
+    void Speak();
+  }
+
+  public interface ICat : IAnimal { }
+
+  public abstract class Animal : ServiceBase
+  {
+    public string Name { get; set; }
+    public abstract void Speak();
+  }
+
+  public class Cat : Animal, ICat
+  {
+    public override void Speak()
+    {
+      Console.WriteLine(Name + &quot; says 'Meow'&quot;);
+    }
+  }
+
+  public static class InstanceDemo
+  {
+    public static void Demo()
+    {
+      ServiceManager svcMgr = new ServiceManager();
+      svcMgr.RegisterInstanceOnly&lt;ICat, Cat&gt;();
+      IAnimal cat1 = svcMgr.Get&lt;ICat&gt;();
+      cat1.Name = &quot;Fido&quot;;
+      IAnimal cat2 = svcMgr.Get&lt;ICat&gt;();
+      cat2.Name = &quot;Morris&quot;;
+      cat1.Speak();
+      cat2.Speak();
+    }
+  }
+}</pre>
+<p align="center"><img border="0" src="dip3.png" width="372" height="346"></p>
+<p><img border="0" src="output2.png" width="312" height="147"></p>
+<p>Notice how:</p>
+<ol>
+	<li>The service is registered with <code>RegisterInstanceOnly</code> instead of 
+	<code>RegisterSingleton</code>.&nbsp; </li>
+	<li>An abstract class implements the Name property but specifies that <code>Speak</code> 
+	is still abstract, as the Name property is common to all animals now.</li>
+</ol>
+<p>We can also specify a function in the <code>Get</code> method to assign values to 
+properties as part of the <code>Get</code> call, for example:</p>
+<pre>IAnimal cat2 = svcMgr.Get&lt;ICat&gt;(cat =&gt; cat.Name = &quot;Morris&quot;);</pre>
+<h3>Exclusive Services</h3>
+<p>Frequently a service is exclusive of all other implementers.&nbsp; The application may, for example, require only one database 
+service.&nbsp; Different installations may require connecting to a different 
+database, but the scenario where the application connects to <i>two different</i> 
+database services at the same time doesn't occur.&nbsp; This creates a simpler scenario for 
+the interface implementation -- in the examples that I've been using, the 
+&quot;Animal&quot; service, if viewed as an exclusive service, is implemented either by 
+<code>Cat</code> or <code>Dog</code>, and we never need to implement both simultaneously:</p>
+<pre>using System;
+
+using Clifton.Core.ServiceManagement;
+
+namespace ServiceManagerExclusiveDemo
+{
+  public interface IAnimal : IService
+  {
+    void Speak();
+  }
+
+  public class Cat : ServiceBase, IAnimal
+  {
+    public void Speak()
+    {
+      Console.WriteLine(&quot;Meow&quot;);
+    }
+  }
+
+  public static class ExclusiveDemo
+  {
+    public static void Demo()
+    {
+      ServiceManager svcMgr = new ServiceManager();
+      svcMgr.RegisterSingleton&lt;IAnimal, Cat&gt;();
+      IAnimal animal = svcMgr.Get&lt;IAnimal&gt;();
+      animal.Speak();
+    }
+  }
+}</pre>
+<p>As the above code illustrates, the implementation is simpler.&nbsp; </p>
+<h3>Getting a Service Determined at Runtime </h3>
+<p>The Service Manager is not a dependency injection framework (DIF) -- you will note that the singleton and instance examples above, the code still 
+needs to reference the concrete interface that maps to the concrete implementation:</p>
+<pre>      IAnimal animal1 = svcMgr.Get&lt;ICat&gt;();
+      IAnimal animal2 = svcMgr.Get&lt;IDog&gt;();</pre>
+<p>Here, the code is still 
+specifying the concrete interface.&nbsp; Typically you will want to 
+instantiate the class from the concrete interface, but there are may be 
+situations in which the concrete interface is not known at compile time, instead 
+it is determined at runtime.&nbsp; This can be handled by a DIF which injects 
+the concrete instance into a property at runtime, but in my 
+opinion, that adds a lot of unnecessary kruft.</p>
+<p>This problem can be solved by specifying the type, not as a generic 
+parameter, but rather as an actual <code>Type</code> parameter that you acquire from somewhere 
+else (configuration file, etc).&nbsp; Here's a rather simplified example in which we first assume some 
+process is mapping concrete interfaces with concrete implementers.</p>
+<pre>public static void RegisterServices()
+{
+  svcMgr = new ServiceManager();
+  svcMgr.RegisterSingleton&lt;ICat, Cat&gt;();
+  svcMgr.RegisterSingleton&lt;IDog, Dog&gt;();
+}</pre>
+<p>Let's say we want to call an operation that is going to use the <code>IAnimal</code> 
+service, but it doesn't know what concrete interface to use.&nbsp; We have two 
+options.&nbsp; We can make the call like this (here <code>IDog</code> and <code>ICat</code> are 
+implemented in my demo namespace):</p>
+<pre>ByTypeDemo.ByTypeParameter(typeof(ServiceManagerByTypeDemo.ICat));
+ByTypeDemo.ByTypeParameter(typeof(ServiceManagerByTypeDemo.IDog));</pre>
+<p>and implement the method like this (please note that the use of <code>static</code> is 
+only for the convenience of the demo):</p>
+<pre>public static void ByTypeParameter(Type someAnimal)
+{
+  IAnimal animal = svcMgr.Get&lt;IAnimal&gt;(someAnimal);
+  animal.Speak();
+}
+</pre>
+<p>This however has the disadvantage of losing type consistency -- we know 
+longer guarantee that <code>someAnimal</code> implements <code>IAnimal</code>, which means that if it 
+doesn't, we'll get a runtime error.</p>
+<p>A better call and implementation would look like this:</p>
+<pre>public static void ByGenericParameter&lt;T&gt;() where T : IAnimal
+{
+  IAnimal animal = svcMgr.Get&lt;T&gt;();
+  animal.Speak();
+}
+</pre>
+<p>The second approach is much better because it enforces at compile time the 
+type of the generic parameter.&nbsp; The implementer needs to only know the 
+generic interface <code>IAnimal</code>, not the concrete interfaces <code>ICat</code> and <code>IDog</code>, 
+but none-the-less, it is guaranteed that the generic parameter is of type 
+<code>IAnimal</code>.</p>
+<h2>Implementation Details</h2>
+<p><img border="0" src="note.png" width="24" height="32"> The Service Manager is itself implemented as a service:</p>
+<pre>public class ServiceManager : ServiceBase, IServiceManager</pre>
+<p>This means that, in conjunction with the Module Manager, the Service Manager 
+can be loaded as a service, and that the service provided by the Service Manager 
+is itself abstracted and replaceable (as long as you implement <code>IServiceManager</code>!)</p>
+<h3>Thread Safety</h3>
+<p>The Service Manager is intended to be thread safe, so the three pieces of 
+information that it manages use <code>ConcurrentDictionary</code>:</p>
+<pre>protected ConcurrentDictionary&lt;Type, Type&gt; interfaceServiceMap;
+protected ConcurrentDictionary&lt;Type, IService&gt; singletons;
+protected ConcurrentDictionary&lt;Type, ConstructionOption&gt; constructionOption;</pre>
+<p>The only time a lock is required is when creating or returning a previously 
+created singleton -- we need the lock here to prevent two threads from 
+simultaneously either attempting to create a singleton, or one thread creating 
+the singleton while another thread is attempted to acquire the singleton:</p>
+<pre>/// &lt;summary&gt;
+/// Return a registered singleton or create it and register it if it isn't registered.
+/// &lt;/summary&gt;
+protected IService CreateOrGetSingleton&lt;T&gt;(Action&lt;T&gt; initializer)
+where T : IService
+{
+  Type t = typeof(T);
+  IService instance;
+
+  lock (locker)
+  {
+    if (!singletons.TryGetValue(t, out instance))
+    {
+      instance = CreateAndRegisterSingleton&lt;T&gt;(initializer);
+    }
+  }
+
+  return instance;
+}</pre>
+<h3>Instance Registration</h3>
+<p>Instance registration involves adding an entry to the interface service map 
+and preserving the fact that the type is intended to be an instance:</p>
+<pre>public virtual void RegisterInstanceOnly&lt;I, S&gt;()
+where I : IService
+where S : IService
+{
+  Type interfaceType = typeof(I);
+  Type serviceType = typeof(S);
+  Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), &quot;The service &quot; + GetName&lt;S&gt;() + &quot; has already been registered.&quot;);
+  interfaceServiceMap[interfaceType] = serviceType;
+  constructionOption[interfaceType] = ConstructionOption.AlwaysInstance;
+}</pre>
+<h3>Singleton Registration</h3>
+<p>Singleton registration involves adding an entry to the interface service map 
+and instantiating the singleton:</p>
+<pre>public virtual void RegisterSingleton&lt;I, S&gt;(Action&lt;I&gt; initializer = null)
+where I : IService
+where S : IService
+{
+  Type interfaceType = typeof(I);
+  Type serviceType = typeof(S);
+  Assert.Not(interfaceServiceMap.ContainsKey(interfaceType), &quot;The service &quot; + GetName&lt;S&gt;() + &quot; has already been registered.&quot;);
+  interfaceServiceMap[interfaceType] = serviceType;
+  constructionOption[interfaceType] = ConstructionOption.AlwaysSingleton;
+  RegisterSingletonBaseInterfaces(interfaceType, serviceType);
+
+  // Singletons are always instantiated immediately so that they can be initialized
+  // for global behaviors. A good example is the global exception handler services.
+  CreateAndRegisterSingleton&lt;I&gt;(initializer);
+}</pre>
+<h3>Creation and Registration</h3>
+<p>For both singletons and instance services, the instance, when created, is 
+created, registered, and an initialization method is called (discussed below):</p>
+<pre>protected virtual IService CreateAndRegisterSingleton&lt;T&gt;(Action&lt;T&gt; initializer = null)
+  where T : IService
+{
+  IService instance = CreateInstance&lt;T&gt;(initializer);
+  Register&lt;T&gt;(instance);
+  instance.Initialize(this);
+
+  return instance;
+}
+
+protected IService CreateInstance&lt;T&gt;(Action&lt;T&gt; initializer)
+where T : IService
+{
+  Type t = typeof(T);
+  IService instance = (IService)Activator.CreateInstance(interfaceServiceMap[t]);
+  initializer.IfNotNull((i) =&gt; i((T)instance));
+
+  return instance;
+}</pre>
+<p>If we were using C# 6.0, we 
+could replace the <code>IfNotNull</code> extension method with:</p>
+<pre>initializer?.((T)instance));</pre>
+<p>but I haven't upgraded the code base to C# 6.0 yet!</p>
+<h3>Getting the Service Instance</h3>
+<p>When we request a service, the Service Manager checks whether we want, based 
+on the registration, a singleton or an instance:</p>
+<pre>public virtual T Get&lt;T&gt;(Action&lt;T&gt; initializer = null)
+  where T : IService
+{
+  IService instance = null;
+  VerifyRegistered&lt;T&gt;();
+  Type interfaceType = typeof(T);
+
+  switch (constructionOption[interfaceType])
+  {
+    case ConstructionOption.AlwaysInstance:
+    instance = CreateInstance&lt;T&gt;(initializer);
+    instance.Initialize(this);
+    break;
+
+    case ConstructionOption.AlwaysSingleton:
+    instance = CreateOrGetSingleton&lt;T&gt;(initializer);
+    break;
+
+    default:
+      throw new ApplicationException(&quot;Cannot determine whether the service &quot; + GetName&lt;T&gt;() + &quot; should be created as a unique instance or as a singleton.&quot;);
+  }
+
+  return (T)instance;
+}</pre>
+<h3>Getting an Instance or a Singleton, Depending on Application Requirements</h3>
+<p>If we didn't register the service ahead of time as a singleton or instance 
+service, we have to explicitly state what type of instance we want by calling 
+either of these methods:</p>
+<pre>/// &lt;summary&gt;
+/// If allowed, returns a new instance of the service implement interface T.
+/// &lt;/summary&gt;
+public virtual T GetInstance&lt;T&gt;(Action&lt;T&gt; initializer = null)
+  where T : IService
+{
+  VerifyRegistered&lt;T&gt;();
+  VerifyInstanceOption&lt;T&gt;();
+  IService instance = CreateInstance&lt;T&gt;(initializer);
+  instance.Initialize(this);
+
+  return (T)instance;
+}
+
+/// &lt;summary&gt;
+/// If allowed, creates and registers or returns an existing service that implements interface T.
+/// &lt;/summary&gt;
+public virtual T GetSingleton&lt;T&gt;(Action&lt;T&gt; initializer = null)
+  where T : IService
+{
+  VerifyRegistered&lt;T&gt;();
+  VerifySingletonOption&lt;T&gt;();
+  IService instance = CreateOrGetSingleton&lt;T&gt;(initializer);
+
+  return (T)instance;
+}</pre>
+<p>This mechanism allows us to acquire either a singleton or an instance, as the 
+application requires.&nbsp; The Service Manager allows us to have a singleton as 
+well as multiple instances, but this is an unusual case, and typically we 
+specify the intended usage at registration so that the Service Manager can 
+assert that the application is using the service as intended.</p>
+<h3>Exclusive Services</h3>
+<p>Even if a service implements a concrete interface derived from the abstract 
+interface, the &quot;magic&quot; of being able to use the abstract interface is 
+handled by walking the interface hierarchy and registering all interfaces in the 
+hierarchy.</p>
+<pre>/// &lt;summary&gt;
+/// Singletons are allowed to also register their base type so that applications can reference singleton services by the common type
+/// rather than their instance specific interface type.
+/// &lt;/summary&gt;
+protected virtual void RegisterSingletonBaseInterfaces(Type interfaceType, Type serviceType)
+{
+  Type[] itypes = interfaceType.GetInterfaces();
+
+  foreach (Type itype in itypes)
+  {
+    interfaceServiceMap[itype] = serviceType;
+    constructionOption[itype] = ConstructionOption.AlwaysSingleton;
+  }
+}</pre>
+<p>This is a bit dangerous because no assertion is made that there is one and 
+only one generic interface associated with the exclusive service.&nbsp; To do 
+this, we might resort to using an attribute on the generic interface to indicate 
+that any derived concrete interfaces are exclusive, but I haven't implemented 
+that.</p>
+<h3>IService</h3>
+<p>All services must be derived from <code>IService</code>, which provides compile-time 
+validation that the service is being registered and instances of the service are 
+acquired correctly.&nbsp; </p>
+<pre>namespace Clifton.Core.ServiceManagement
+{
+  public interface IService
+  {
+    IServiceManager ServiceManager { get; }
+    void Initialize(IServiceManager srvMgr);
+    void FinishedInitialization();
+  }
+}</pre>
+<p>A service must either implement the <code>ServiceManager</code> property and the two 
+methods above, or derive from <code>ServiceBase</code> which provides a default 
+implementation:</p>
+<pre>namespace Clifton.Core.ServiceManagement
+{
+  /// &lt;summary&gt;
+  /// A useful base class for a default implementation of IService methods.
+  /// &lt;/summary&gt;
+  public abstract class ServiceBase : IService
+  {
+    public IServiceManager ServiceManager { get; set; }
+
+    public virtual void Initialize(IServiceManager svcMgr)
+    {
+      ServiceManager = svcMgr;
+    }
+
+    public virtual void FinishedInitialization()
+    {
+    }
+  }
+}</pre>
+<p>Why is this necessary or useful, especially since the Service Manager itself 
+never calls these methods?</p>
+<ol>
+	<li>In my approach, a service is typically used in conjunction with the Module 
+	Manager discussed in the previous article.&nbsp; Services are implemented as 
+	modules, and a module can implement (though not usually) more than one 
+	service.&nbsp; Therefore, it needs the ability to register services, which 
+	requires an instance of the Service Manager.</li>
+	<li>Services cannot be used until all the services have been registered.&nbsp; 
+	This is somewhat different from a dependency injection framework (DIF), 
+	where all the services are injected before the application &quot;runs.&quot;&nbsp; 
+	Because my intention is to avoid the additional complexity and often the 
+	debugging difficulty of a DIF, I prefer a more &quot;to the metal&quot; approach.&nbsp; 
+	This means that registration is a two step process:<ol>
+		<li>Initialize the Service Manager instance in each module, allowing the 
+		modules to register their services.</li>
+		<li>Calling <code>FinishedInitialization</code>, which tells the module that all 
+		services have been registered, and it can now do any final 
+		initialization with services on which it depends.</li>
+	</ol>
+	</li>
+</ol>
+<p>We will see in the next article how the Module Manager and Service Manager 
+work together.</p>
+<h2>Conclusion</h2>
+<p>Using a service manager is one of those essential tools in the 
+programmer's toolbox for implementing the dependency inversion principle.&nbsp; 
+Applications implemented using a service manager are well on their way toward 
+adhering to the 
+<a href="https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)">SOLID</a> 
+principles of object oriented programming:</p>
+<ul>
+	<li><i>Single responsibility principle: a class should have only a single 
+	responsibility (i.e. only one potential change in the software's 
+	specification should be able to affect the specification of the class)</i></li>
+	<li><i>Open/closed principle: “software entities … should be open for 
+	extension, but closed for modification.”</i></li>
+	<li><i>Liskov substitution principle: “objects in a program should be 
+	replaceable with instances of their subtypes without altering the 
+	correctness of that program.”</i></li>
+	<li><i>Interface segregation principle:&nbsp; “many client-specific 
+	interfaces are better than one general-purpose interface.”</i></li>
+	<li><i>Dependency inversion principle: one should “Depend upon Abstractions. 
+	Do not depend upon concretions.”</i></li>
+</ul>
+<p>The Service Manager presented here begins to create a firm footing in the 
+last three principles (L, I, and D.)&nbsp; Using the code presented here and its 
+use of generic parameters, or a similar implementation of your own can provide 
+compile-time type checking while decoupling concrete implementations, resulting 
+in a flexible application exhibiting good independence of both high level and 
+low level objects.</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>

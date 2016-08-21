@@ -108,7 +108,7 @@ namespace Clifton.Core.ServiceManagement
 			return interfaceServiceMap.ContainsKey(typeof(T));
 		}
 
-		public virtual bool IfExists<T>(Action<T> action) where T : IService
+        public virtual bool IfExists<T>(Action<T> action) where T : IService
 		{
 			bool ret = Exists<T>();
 
@@ -146,10 +146,34 @@ namespace Clifton.Core.ServiceManagement
 			return (T)instance;
 		}
 
-		/// <summary>
-		/// If allowed, returns a new instance of the service implement interface T.
-		/// </summary>
-		public virtual T GetInstance<T>(Action<T> initializer = null)
+        public virtual T Get<T>(Type interfaceType, Action<T> initializer = null)
+            where T : IService
+        {
+            IService instance = null;
+            VerifyRegistered<T>();
+
+            switch (constructionOption[interfaceType])
+            {
+                case ConstructionOption.AlwaysInstance:
+                    instance = CreateInstance<T>(interfaceType, initializer);
+                    instance.Initialize(this);
+                    break;
+
+                case ConstructionOption.AlwaysSingleton:
+                    instance = CreateOrGetSingleton<T>(interfaceType, initializer);
+                    break;
+
+                default:
+                    throw new ApplicationException("Cannot determine whether the service " + GetName<T>() + " should be created as a unique instance or as a singleton.");
+            }
+
+            return (T)instance;
+        }
+
+        /// <summary>
+        /// If allowed, returns a new instance of the service implement interface T.
+        /// </summary>
+        public virtual T GetInstance<T>(Action<T> initializer = null)
 			where T : IService
 		{
 			VerifyRegistered<T>();
@@ -193,10 +217,26 @@ namespace Clifton.Core.ServiceManagement
 			return instance;
 		}
 
-		/// <summary>
-		/// Create and register an instance.
-		/// </summary>
-		protected virtual IService CreateAndRegisterSingleton<T>(Action<T> initializer = null)
+        protected IService CreateOrGetSingleton<T>(Type t, Action<T> initializer)
+            where T : IService
+        {
+            IService instance;
+
+            lock (locker)
+            {
+                if (!singletons.TryGetValue(t, out instance))
+                {
+                    instance = CreateAndRegisterSingleton<T>(initializer);
+                }
+            }
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Create and register a singleton.
+        /// </summary>
+        protected virtual IService CreateAndRegisterSingleton<T>(Action<T> initializer = null)
 			where T : IService
 		{
 			IService instance = CreateInstance<T>(initializer);
@@ -206,21 +246,18 @@ namespace Clifton.Core.ServiceManagement
 			return instance;
 		}
 
-		/// <summary>
-		/// Singletons are allowed to also register their base type so that applications can reference singleton services by the common type
-		/// rather than their instance specific interface type.
-		/// </summary>
-		protected virtual void RegisterSingletonBaseInterfaces(Type interfaceType, Type serviceType)
+        /// <summary>
+        /// Singletons are allowed to also register their base type so that applications can reference singleton services by the common type
+        /// rather than their instance specific interface type.
+        /// </summary>
+        protected virtual void RegisterSingletonBaseInterfaces(Type interfaceType, Type serviceType)
 		{
 			Type[] itypes = interfaceType.GetInterfaces();
 
 			foreach (Type itype in itypes)
 			{
-				if (itype.Name != "IService")
-				{
-					interfaceServiceMap[itype] = serviceType;
-					constructionOption[itype] = ConstructionOption.AlwaysSingleton;
-				}
+				interfaceServiceMap[itype] = serviceType;
+				constructionOption[itype] = ConstructionOption.AlwaysSingleton;
 			}
 		}
 
@@ -233,10 +270,10 @@ namespace Clifton.Core.ServiceManagement
 			Assert.That(Exists<T>(), "The service " + GetName<T>() + " has not been registered.");
 		}
 
-		/// <summary>
-		/// Create and return the concrete instance that implements service interface T.
-		/// </summary>
-		protected IService CreateInstance<T>(Action<T> initializer)
+        /// <summary>
+        /// Create and return the concrete instance that implements service interface T.
+        /// </summary>
+        protected IService CreateInstance<T>(Action<T> initializer)
 			where T : IService
 		{
 			Type t = typeof(T);
@@ -246,10 +283,19 @@ namespace Clifton.Core.ServiceManagement
             return instance;
 		}
 
-		/// <summary>
-		/// Register the service instance that implements the service interface T into the singleton dictionary.
-		/// </summary>
-		protected void Register<T>(IService instance)
+        protected IService CreateInstance<T>(Type t, Action<T> initializer)
+            where T : IService
+        {
+            IService instance = (IService)Activator.CreateInstance(interfaceServiceMap[t]);
+            initializer.IfNotNull((i) => i((T)instance));
+
+            return instance;
+        }
+
+        /// <summary>
+        /// Register the service instance that implements the service interface T into the singleton dictionary.
+        /// </summary>
+        protected void Register<T>(IService instance)
 			where T : IService
 		{
 			Type t = typeof(T);
@@ -276,5 +322,5 @@ namespace Clifton.Core.ServiceManagement
 		{
 			return typeof(T).Name;
 		}
-	}
+    }
 }

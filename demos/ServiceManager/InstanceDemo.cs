@@ -12,7 +12,7 @@ namespace ServiceManagerInstanceDemo
 
     public interface ICat : IAnimal { }
 
-    public abstract class Animal : ServiceBase, IAnimal
+    public abstract class Animal : ServiceBase
     {
         public string Name { get; set; }
         public abstract void Speak();

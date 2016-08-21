@@ -21,8 +21,6 @@
 * SOFTWARE.
 */
 
-using System;
-
 namespace Clifton.Core.ServiceManagement
 {
 	/// <summary>

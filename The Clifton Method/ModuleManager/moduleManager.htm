@@ -428,8 +428,8 @@ text to the console window or by speaking it.&nbsp; To speak the text, use this:
 there is no reference to the modules we're loading:</p>
 <p><img border="0" src="refs1.png" width="273" height="219"></p>
 <h3>IModule</h3>
-<p>This implementation is for demonstration purposes only!&nbsp; See below for a 
-discussion on the IModule interface.</p>
+<p><img border="0" src="../ServiceManager/important.png" width="38" height="32"> 
+This implementation is for demonstration purposes only!</p>
 <pre>namespace Clifton.Core.ModuleManagement
 {
   public interface IModule
@@ -441,6 +441,15 @@ discussion on the IModule interface.</p>
 interface must exist in a separate assembly!&nbsp; If you're not careful, this 
 can and will cause and explosion of assemblies that simply define interfaces and 
 other shared types.&nbsp; We'll talk about this further in other articles.</p>
+<p>The <i>actual</i> implementation of IModule is tied in with the Service Manager (the 
+next article):</p>
+<pre>namespace Clifton.Core.ModuleManagement
+{
+  public interface IModule
+  {
+    void InitializeServices(IServiceManager serviceManager);
+  }
+}</pre>
 <h3>ModuleConsoleSpeak</h3>
 <pre>using System;
 

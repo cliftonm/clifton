@@ -21,49 +21,12 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Configuration;
-
-using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ModuleManagement;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Cores.Services.AppConfigService
+namespace Clifton.Core.ServiceInterfaces
 {
-	public class AppConfigModule : IModule
+	public interface IAppConfigDecryption : IService
 	{
-		public void InitializeServices(IServiceManager serviceManager)
-		{
-			serviceManager.RegisterSingleton<IAppConfigService, ConfigService>();
-		}
-	}
-
-	public class ConfigService : ServiceBase, IAppConfigService
-	{
-		public virtual string GetConnectionString(string key)
-		{
-			string text = ConfigurationManager.ConnectionStrings[key].ConnectionString;
-
-			return DecryptOption(text);
-		}
-
-		public virtual string GetValue(string key)
-		{
-			string text = ConfigurationManager.AppSettings[key];
-
-			return DecryptOption(text);
-		}
-
-		protected string DecryptOption(string text)
-		{
-			if (text.BeginsWith("[e]"))
-			{
-				// Application must provide an IAppConfigDecryption service.
-				text = ServiceManager.Get<IAppConfigDecryption>().Decrypt(text.Substring(3));
-			}
-
-			return text;
-		}
+		string Decrypt(string text);
 	}
 }

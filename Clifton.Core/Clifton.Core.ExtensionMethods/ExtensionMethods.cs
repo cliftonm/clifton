@@ -1177,13 +1177,13 @@ namespace Clifton.Core.ExtensionMethods
 		}
 
 		// From here: http://www.codeproject.com/Articles/769741/Csharp-AES-bits-Encryption-Library-with-Salt
-		public static byte[] AES_Encrypt(this byte[] bytesToBeEncrypted, byte[] passwordBytes)
+		public static string Encrypt(this string toEncrypt, string password, string salt)
 		{
 			byte[] encryptedBytes = null;
 
-			// Set your salt here, change it to meet your flavor:
-			// The salt bytes must be at least 8 bytes.
-			byte[] saltBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+			byte[] saltBytes = Encoding.ASCII.GetBytes(salt);
+			byte[] passwordBytes = Encoding.ASCII.GetBytes(password);
+			byte[] encryptBytes = Encoding.ASCII.GetBytes(toEncrypt);
 
 			using (MemoryStream ms = new MemoryStream())
 			{
@@ -1200,23 +1200,22 @@ namespace Clifton.Core.ExtensionMethods
 
 					using (var cs = new CryptoStream(ms, AES.CreateEncryptor(), CryptoStreamMode.Write))
 					{
-						cs.Write(bytesToBeEncrypted, 0, bytesToBeEncrypted.Length);
+						cs.Write(encryptBytes, 0, encryptBytes.Length);
 						cs.Close();
 					}
 					encryptedBytes = ms.ToArray();
 				}
 			}
 
-			return encryptedBytes;
+			return encryptedBytes.ToBase64();
 		}
 
-		public static byte[] AES_Decrypt(this byte[] bytesToBeDecrypted, byte[] passwordBytes)
+		public static string Decrypt(this string base64, string password, string salt)
 		{
-			byte[] decryptedBytes = null;
-
-			// Set your salt here, change it to meet your flavor:
-			// The salt bytes must be at least 8 bytes.
-			byte[] saltBytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+			string decryptedBytes = null;
+			byte[] saltBytes = Encoding.ASCII.GetBytes(salt);
+			byte[] passwordBytes = Encoding.ASCII.GetBytes(password);
+			byte[] decryptBytes = base64.FromBase64();
 
 			using (MemoryStream ms = new MemoryStream())
 			{
@@ -1233,10 +1232,11 @@ namespace Clifton.Core.ExtensionMethods
 
 					using (var cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write))
 					{
-						cs.Write(bytesToBeDecrypted, 0, bytesToBeDecrypted.Length);
+						cs.Write(decryptBytes, 0, decryptBytes.Length);
 						cs.Close();
 					}
-					decryptedBytes = ms.ToArray();
+
+					decryptedBytes = Encoding.Default.GetString(ms.ToArray());
 				}
 			}
 
