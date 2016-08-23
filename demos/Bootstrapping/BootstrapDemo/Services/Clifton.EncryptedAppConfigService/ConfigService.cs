@@ -21,44 +21,41 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
+using System.Configuration;
 
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.ModuleManagement
+namespace Clifton.Cores.Services.AppConfigService
 {
-	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
-	{
-		public IServiceManager ServiceManager { get; set; }
+    public class AppConfigModule : IModule
+    {
+        public void InitializeServices(IServiceManager serviceManager)
+        {
+            serviceManager.RegisterSingleton<IAppConfigService, ConfigService>();
+        }
+    }
 
-		public virtual void Initialize(IServiceManager svcMgr)
-		{
-			ServiceManager = svcMgr;
-		}
+    public class ConfigService : ServiceBase, IEncryptedAppConfigService
+    {
+        public virtual string GetConnectionString(string key)
+        {
+            string enc = ConfigurationManager.ConnectionStrings[key].ConnectionString;
 
-		public virtual void FinishedInitialization()
-		{
-		}
+            return Decrypt(enc);
+        }
 
-		/// <summary>
-		/// Initialize each registrant by passing in the service manager.  This allows the module
-		/// to register the services it provides.
-		/// </summary>
-		protected override void InitializeRegistrants(List<IModule> registrants)
-		{
-			registrants.ForEach(r =>
-				{
-					try
-					{
-						r.InitializeServices(ServiceManager);
-					}
-					catch (System.Exception ex)
-					{
-						throw new ApplicationException("Error initializing " + r.GetType().AssemblyQualifiedName + "\r\n:" + ex.Message);
-					}
-				});
+        public virtual string GetValue(string key)
+        {
+            string enc = ConfigurationManager.AppSettings[key];
 
-		}
-	}
+            return Decrypt(enc);
+        }
+
+        protected string Decrypt(string enc)
+        {
+            return ServiceManager.Get<IAppConfigDecryption>().Decrypt(enc);
+        }
+    }
 }

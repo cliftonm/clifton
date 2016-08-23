@@ -87,7 +87,7 @@ using Clifton.Core.Semantics;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceManagement;
 
-namespace BBBServer
+namespace BootstrapDemo
 {
   static partial class Program
   {
@@ -191,10 +191,263 @@ an initialization order process, but technically, because the services are
 initialized in the order of the module list, you can place dependencies higher 
 up in the list.</p>
 <p>Not bad for six lines of high level code!</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
+<h3>Using the Bootstrapper</h3>
+<p>Using the bootstrapper is very simple:</p>
+<pre>using System;
+
+namespace BootstrapDemo
+{
+  static partial class Program
+  {
+    static void Main(string[] args)
+    {
+      InitializeBootstrap();
+      Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+    }
+  }
+}</pre>
+<h2>A Couple Examples</h2>
+<p>Let's write a few services as modules to illustrate how this all works.&nbsp;&nbsp; </p>
+<h3>Clifton.AppConfigService</h3>
+<p>This is a very simple service that I always use that wraps .NET's <code>ConfigurationManager</code> for 
+obtaining connection strings and app settings:</p>
+<pre>using System.Configuration;
+
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.ServiceInterfaces;
+using Clifton.Core.ServiceManagement;
+
+namespace Clifton.Cores.Services.AppConfigService
+{
+  public class AppConfigModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IAppConfigService, ConfigService&gt;();
+    }
+  }
+
+  public class ConfigService : ServiceBase, IAppConfigService
+  {
+    public virtual string GetConnectionString(string key)
+    {
+      return ConfigurationManager.ConnectionStrings[key].ConnectionString;
+    }
+
+    public virtual string GetValue(string key)
+    {
+      return ConfigurationManager.AppSettings[key];
+    }
+  }
+}</pre>
+<p>There are always two parts:</p>
+<ol>
+	<li>A class that implements IModule and registers the service.</li>
+	<li>One or more classes that implement the service.</li>
+</ol>
+<p>We'll use an example app.config file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;configuration&gt;
+  &lt;startup&gt; 
+    &lt;supportedRuntime version=&quot;v4.0&quot; sku=&quot;.NETFramework,Version=v4.5&quot; /&gt;
+  &lt;/startup&gt;
+  &lt;connectionStrings&gt;
+    &lt;add name=&quot;myConnectionString&quot; connectionString=&quot;some connection string&quot;/&gt;
+  &lt;/connectionStrings&gt;
+  &lt;appSettings&gt;
+    &lt;add key =&quot;someKey&quot; value=&quot;someKeyValue&quot;/&gt;
+  &lt;/appSettings&gt;
+&lt;/configuration&gt;</pre>
+<p>And in modules.xml, we'll specify the Clifton.AppConfigService:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.AppConfigService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<h4>A Cheat</h4>
+<p>The question though is, how do you get the module dll (in this case, 
+Clifton.AppConfigService.dll) into the bin\Debug folder of the application?&nbsp; 
+I cheat by adding it as a reference to the application's references:</p>
+<p><img border="0" src="refs1.png" width="244" height="141"></p>
+<p>This is probably a bad practice because of course, the classes are now 
+directly accessible to your application!</p>
+<h4>Using The Service</h4>
+<p>This is also very simple -- get the service from the Service Manager and 
+start using it:</p>
+<pre>static void Main(string[] args)
+{
+  InitializeBootstrap();
+  Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+
+  IConfigService cfgSvc = serviceManager.Get&lt;IConfigService&gt;();
+  Console.WriteLine(cfgSvc.GetConnectionString(&quot;myConnectionString&quot;));
+  Console.WriteLine(cfgSvc.GetValue(&quot;someKey&quot;));
+}</pre>
+<p><img border="0" src="out1.png" width="277" height="119"></p>
+<p>Notice that we're requesting an <code>IConfigService</code> implementor.&nbsp; While we 
+could specify an <code>IAppConfigService</code> implementor, we'll see below why we reference 
+the abstract interface instead.</p>
+<h3>Clifton.EncryptedAppConfigService</h3>
+<p>In this example, we assume that your app.config is either completely 
+encrypted, or not encrypted at all -- in other words, the service that obtains 
+the values for us is exclusive, we use only one of them.&nbsp; This allows us to 
+utilize the <code>IConfigService</code> interface regardless of whether the concrete 
+implementation simply returns unencrypted values, or decrypts them for us first.&nbsp; 
+If we need to support both, then we would need to specify to the Service Manager 
+which one we want: the concrete interface <code>IAppConfigService</code> or 
+<code>IEncryptedAppConfigService</code>.</p>
+<p>The encrypted app config service looks like this:</p>
+<pre>public class ConfigService : ServiceBase, IEncryptedAppConfigService
+{
+  public virtual string GetConnectionString(string key)
+  {
+    string enc = ConfigurationManager.ConnectionStrings[key].ConnectionString;
+
+    return Decrypt(enc);
+  }
+
+  public virtual string GetValue(string key)
+  {
+    string enc = ConfigurationManager.AppSettings[key];
+
+    return Decrypt(enc);
+  }
+
+  protected string Decrypt(string enc)
+  {
+    return ServiceManager.Get&lt;IAppConfigDecryption&gt;().Decrypt(enc);
+  }
+}</pre>
+<p>Notice that to decrypt the strings in app.config, we use a service that must 
+be provided by the application: <code>IAppConfigDecryption</code>.&nbsp; We 
+could implement this in another module, but in this example, I'll add it to the 
+application directly.</p>
+<p>The interface looks like this:</p>
+<pre>public interface IAppConfigDecryption : IService
+{
+  string Password { get; set; }
+  string Salt { get; set; }
+  string Decrypt(string text);
+}</pre>
+<p>And the implementation of the service, as a new module:</p>
+<pre>using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.ServiceInterfaces;
+using Clifton.Core.ServiceManagement;
+
+namespace AppConfigDecryptionService
+{
+  public class AppConfigDecryptionModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IAppConfigDecryption, AppConfigDecryptionService&gt;(d =&gt;
+      {
+        d.Password = &quot;somepassword&quot;;
+        d.Salt = &quot;somesalt&quot;;
+      });
+   }
+  }
+
+  public class AppConfigDecryptionService : ServiceBase, IAppConfigDecryption
+  {
+    public string Password { get; set; }
+    public string Salt { get; set; }
+
+    public string Decrypt(string text)
+    {
+      return text.Decrypt(Password, Salt);
+    }
+  }
+}</pre>
+<p><img border="0" src="important.png" width="38" height="32"> Obviously (I 
+hope) you would want to get the password and salt from some secure location so 
+the strings aren't easily obtained by decompiling the DLL, or you would 
+initialize them in your application.</p>
+<p>Now, I really like extension methods, so the real implementation is there 
+(BTW, I'm not saying this is the best implementation, actually this is something 
+I found on StackOverflow, haha):</p>
+<pre>public static string Decrypt(this string base64, string password, string salt)
+{
+  string decryptedBytes = null;
+  byte[] saltBytes = Encoding.ASCII.GetBytes(salt);
+  byte[] passwordBytes = Encoding.ASCII.GetBytes(password);
+  byte[] decryptBytes = base64.FromBase64();
+
+  using (MemoryStream ms = new MemoryStream())
+  {
+    using (RijndaelManaged AES = new RijndaelManaged())
+    {
+      AES.KeySize = 256;
+      AES.BlockSize = 128;
+
+      var key = new Rfc2898DeriveBytes(passwordBytes, saltBytes, 1000);
+      AES.Key = key.GetBytes(AES.KeySize / 8);
+      AES.IV = key.GetBytes(AES.BlockSize / 8);
+
+      AES.Mode = CipherMode.CBC; // Cipher Block Chaining.
+
+      using (var cs = new CryptoStream(ms, AES.CreateDecryptor(), CryptoStreamMode.Write))
+      {
+        cs.Write(decryptBytes, 0, decryptBytes.Length);
+        cs.Close();
+      }
+
+      decryptedBytes = Encoding.Default.GetString(ms.ToArray());
+    }
+  }
+
+  return decryptedBytes;
+}</pre>
+<p>We can now provide encrypted values in the app.config file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;configuration&gt;
+  &lt;startup&gt; 
+    &lt;supportedRuntime version=&quot;v4.0&quot; sku=&quot;.NETFramework,Version=v4.5&quot; /&gt;
+  &lt;/startup&gt;
+  &lt;connectionStrings&gt;
+    &lt;add name=&quot;myConnectionString&quot; connectionString=&quot;<b>D+560OKzdaeBle1VHcKc+JyAWgRkVNTQxu/t7K5jSUo=</b>&quot;/&gt;
+  &lt;/connectionStrings&gt;
+  &lt;appSettings&gt;
+    &lt;add key =&quot;someKey&quot; value=&quot;<b>JggSd0i52WcOEERjBTQR+g==</b>&quot;/&gt;
+  &lt;/appSettings&gt;
+&lt;/configuration&gt;</pre>
+<p>And we also modify the modules.xml file to use the encrypted app config 
+service and, in addition, specify the decryption service we want:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.EncryptedAppConfigService.dll'/&gt;
+  &lt;Module AssemblyName='AppConfigDecryptionService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>Now we run the app, and get the same result, but now the strings are 
+unencrypted:</p>
+<p><img border="0" src="out1.png" width="277" height="119"></p>
+<p><img border="0" src="key-small.jpg" width="94" height="33"></p>
+<p>Notice how we didn't have to change the application code <i>at all. </i>This 
+works because the application can use the app config service, treated an <i>
+exclusive</i> service (whether 
+plain text or encrypted), with the abstract interface <code>IConfigService</code>.&nbsp; If 
+we were supporting both plain text and encrypted values, we'd have to acquire 
+the correct service using <code>IAppConfigService</code> (for plain-text values) or <code>IEncryptedAppConfigService</code> (for encrypted values.)</p>
+<h4>Interface Hell</h4>
+<p>If you thought DLL hell was bad, one of the things that starts to happen with 
+a module/service-based implementation is the potential for interface hell.&nbsp; 
+Each service implements an interface.&nbsp; Where do you keep them?&nbsp; How do 
+you organize them?&nbsp; Both the module implementing the service and the 
+application using the service require a reference to the interface.&nbsp; I 
+usually organize the interfaces in two separate projects:</p>
+<ul>
+	<li>Clifton.Core.ServiceInterface -- this if for services that are provided 
+	in my core library.</li>
+	<li>[MyAppServiceInterfaces] -- this is for application-specific services.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>Modules and services are a great way to implement dependency inversion, and 
+the above example hopefully illustrated how powerful this architecture is.&nbsp; 
+However, I still think it is not abstract enough, for the simple reason that the 
+application still needs references to either abstract or concrete interfaces 
+from which to obtain the implementing service.</p>
+<p>This will be addressed in the next article, where I introduce the <i>semantic 
+publisher-subscriber</i>.&nbsp; That will not be light-weight!</p>
 
 </body>
 

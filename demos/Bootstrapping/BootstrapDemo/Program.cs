@@ -1,17 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-using Clifton.Core;
+using Clifton.Core.ServiceInterfaces;
 
 namespace BootstrapDemo
 {
-	class Program
+    static partial class Program
 	{
 		static void Main(string[] args)
 		{
+            InitializeBootstrap();
+            Bootstrap((e) => Console.WriteLine(e.Message));
+
+            //Console.WriteLine("some connection string".Encrypt("somepassword", "somesalt"));
+            //Console.WriteLine("someKeyValue".Encrypt("somepassword", "somesalt"));
+
+            IConfigService cfgSvc = serviceManager.Get<IConfigService>();
+            Console.WriteLine(cfgSvc.GetConnectionString("myConnectionString"));
+            Console.WriteLine(cfgSvc.GetValue("someKey"));
 		}
 	}
 }

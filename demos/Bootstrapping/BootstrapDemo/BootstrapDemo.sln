@@ -1,7 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BootstrapDemo", "BootstrapDemo.csproj", "{398FF339-365C-4E91-A975-F66F4C57C2B3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{F6C6558A-234E-4C4C-92AF-11266C05EC90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.AppConfigService", "Services\Clifton.AppConfigService\Clifton.AppConfigService.csproj", "{805ABFD2-4222-4059-AB39-618D588778E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clifton.Core", "Clifton.Core", "{AFAF364D-9600-4214-AE3B-5B1DCEA25D05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.Core", "Clifton.Core\Clifton.Core\Clifton.Core.csproj", "{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clifton.EncryptedAppConfigService", "Services\Clifton.EncryptedAppConfigService\Clifton.EncryptedAppConfigService.csproj", "{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppConfigDecryptionService", "Services\AppConfigDecryptionService\AppConfigDecryptionService.csproj", "{EFF86BDC-0D62-4727-9C49-8404594ABFE6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,8 +27,30 @@ Global
 		{398FF339-365C-4E91-A975-F66F4C57C2B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{398FF339-365C-4E91-A975-F66F4C57C2B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{398FF339-365C-4E91-A975-F66F4C57C2B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{805ABFD2-4222-4059-AB39-618D588778E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{805ABFD2-4222-4059-AB39-618D588778E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{805ABFD2-4222-4059-AB39-618D588778E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{805ABFD2-4222-4059-AB39-618D588778E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFF86BDC-0D62-4727-9C49-8404594ABFE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFF86BDC-0D62-4727-9C49-8404594ABFE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFF86BDC-0D62-4727-9C49-8404594ABFE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFF86BDC-0D62-4727-9C49-8404594ABFE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{805ABFD2-4222-4059-AB39-618D588778E5} = {F6C6558A-234E-4C4C-92AF-11266C05EC90}
+		{8FBE8BA9-F91A-4AF7-982F-4BDBDB2C8366} = {AFAF364D-9600-4214-AE3B-5B1DCEA25D05}
+		{3E328CC8-0F7F-47E7-BAC8-2D54D22C566B} = {F6C6558A-234E-4C4C-92AF-11266C05EC90}
+		{EFF86BDC-0D62-4727-9C49-8404594ABFE6} = {F6C6558A-234E-4C4C-92AF-11266C05EC90}
 	EndGlobalSection
 EndGlobal

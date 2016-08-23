@@ -10,7 +10,7 @@ using Clifton.Core.Semantics;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceManagement;
 
-namespace BBBServer
+namespace BootstrapDemo
 {
     static partial class Program
     {

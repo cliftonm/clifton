@@ -83,7 +83,7 @@ namespace Clifton.Core.ModuleManagement
 
 			if (!File.Exists(fullPath.Value))
 			{
-				Assert.Not(assemblyResolver == null, "Module " + fullPath.Value + " not found.\r\n.  An assemblyResolver must be defined when attempting to load modules from the application's resources or specify the optionalPath to locate the assembly.");
+				Assert.Not(assemblyResolver == null, "Module " + fullPath.Value + " not found.\r\nAn assemblyResolver must be defined when attempting to load modules from the application's resources or specify the optionalPath to locate the assembly.");
 				assembly = assemblyResolver(assyName.Value);
 			}
 			else

@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{398FF339-365C-4E91-A975-F66F4C57C2B3}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{28EC665D-37C1-41D4-BD96-3005A7078630}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BootstrapDemo</RootNamespace>
-    <AssemblyName>BootstrapDemo</AssemblyName>
+    <RootNamespace>Clifton.AppConfigService</RootNamespace>
+    <AssemblyName>Clifton.AppConfigService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -33,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -41,36 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bootstrap.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="ConfigService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="bin\Debug\modules.xml">
-      <SubType>Designer</SubType>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Clifton.Core\Clifton.Core\Clifton.Core.csproj">
-      <Project>{8fbe8ba9-f91a-4af7-982f-4bdbdb2c8366}</Project>
+    <ProjectReference Include="..\..\Clifton.Core.csproj">
+      <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
       <Name>Clifton.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="Services\AppConfigDecryptionService\AppConfigDecryptionService.csproj">
-      <Project>{eff86bdc-0d62-4727-9c49-8404594abfe6}</Project>
-      <Name>AppConfigDecryptionService</Name>
-    </ProjectReference>
-    <ProjectReference Include="Services\Clifton.AppConfigService\Clifton.AppConfigService.csproj">
-      <Project>{805abfd2-4222-4059-ab39-618d588778e5}</Project>
-      <Name>Clifton.AppConfigService</Name>
-    </ProjectReference>
-    <ProjectReference Include="Services\Clifton.EncryptedAppConfigService\Clifton.EncryptedAppConfigService.csproj">
-      <Project>{3e328cc8-0f7f-47e7-bac8-2d54d22c566b}</Project>
-      <Name>Clifton.EncryptedAppConfigService</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
