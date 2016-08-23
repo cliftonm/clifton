@@ -21,22 +21,14 @@
 * SOFTWARE.
 */
 
-namespace Clifton.Core.ServiceManagement
+using System;
+
+using Clifton.Core.ServiceManagement;
+
+namespace Clifton.Core.ModuleManagement
 {
-	/// <summary>
-	/// A useful base class for a default implementation of IService methods.
-	/// </summary>
-	public abstract class ServiceBase : IService
+	public interface IModule
 	{
-		public IServiceManager ServiceManager { get; set; }
-
-		public virtual void Initialize(IServiceManager svcMgr)
-		{
-			ServiceManager = svcMgr;
-		}
-
-		public virtual void FinishedInitialization()
-		{
-		}
+		void InitializeServices(IServiceManager serviceManager);
 	}
 }

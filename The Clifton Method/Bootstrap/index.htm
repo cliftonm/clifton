@@ -1,0 +1,201 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Bootstrapping with the Module Ma</title>
+</head>
+
+<body>
+
+<p>Bootstrapping with the Module Manager and the Service Manager</p>
+<p>A Clifton Method Core Component</p>
+<h2>Introduction</h2>
+<p>In the previous two articles, I described the Module Manager, for dynamically 
+loading modules, and the Service Manager, for implementing object instantiation 
+using interface types.&nbsp; In this article, we'll take a breather and look at 
+how to put together a bootstrapper that can be used across pretty much any 
+application, whether it's a WinForm client application, a web server, or other.&nbsp;
+</p>
+<h2>Module Initialization</h2>
+<p>The bootstrapper uses the core class <code>ServiceModuleManager</code>.&nbsp; This class 
+derives from <code>ModuleManager</code> and coordinates the initialization of module.&nbsp; 
+As mentioned in the article on the Module Manager, <code>IModule</code> actually requires the 
+implementation of <code>InitializeServices</code>:</p>
+<pre>public interface IModule
+{
+  void InitializeServices(IServiceManager serviceManager);
+}</pre>
+<p>We can see this being applied in the <code>ServiceModuleManager</code>, which overides <code>InitializeRegistrants</code>:</p>
+<pre>using System;
+using System.Collections.Generic;
+
+using Clifton.Core.ServiceManagement;
+
+namespace Clifton.Core.ModuleManagement
+{
+  public class ServiceModuleManager : ModuleManager, IServiceModuleManager
+  {
+    public IServiceManager ServiceManager { get; set; }
+
+    public virtual void Initialize(IServiceManager svcMgr)
+    {
+      ServiceManager = svcMgr;
+    }
+
+    public virtual void FinishedInitialization()
+    {
+    }
+
+    /// &lt;summary&gt;
+    /// Initialize each registrant by passing in the service manager. This allows the module
+    /// to register the services it provides.
+    /// &lt;/summary&gt;
+    protected override void InitializeRegistrants(List&lt;IModule&gt; registrants)
+    {
+      registrants.ForEach(r =&gt;
+      {
+        try
+        {
+          r.InitializeServices(ServiceManager);
+        }
+        catch (System.Exception ex)
+        {
+          throw new ApplicationException(&quot;Error initializing &quot; + r.GetType().AssemblyQualifiedName + &quot;\r\n:&quot; + ex.Message);
+        }
+      });
+    }
+  }
+}
+</pre>
+<p align="center"><img border="0" src="hierarchy.png" width="372" height="266"></p>
+<p align="center"><i>Class and Interface Hierarchy</i></p>
+<p>This gives each module with a class that implements <code>IModule</code> the opportunity 
+to initialize the services that it provides.</p>
+<h2>The Bootstrapper</h2>
+<p>The bootstrapper instantiates, not a <code>ModuleManager</code>, but a 
+<code>ServiceModuleManager</code> and performs the two step initialization:</p>
+<pre>using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+
+using Clifton.Core.Assertions;
+using Clifton.Core.ExtensionMethods;
+using Clifton.Core.Semantics;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.ServiceManagement;
+
+namespace BBBServer
+{
+  static partial class Program
+  {
+    public static ServiceManager serviceManager;
+
+    public static void InitializeBootstrap()
+    {
+      serviceManager = new ServiceManager();
+      serviceManager.RegisterSingleton&lt;IServiceModuleManager, ServiceModuleManager&gt;();
+    }
+
+    public static void Bootstrap(Action&lt;Exception&gt; onBootstrapException)
+    {
+      try
+      {
+        IModuleManager moduleMgr = (IModuleManager)serviceManager.Get&lt;IServiceModuleManager&gt;();
+        List&lt;AssemblyFileName&gt; modules = GetModuleList(XmlFileName.Create(&quot;modules.xml&quot;));
+        moduleMgr.RegisterModules(modules);
+        serviceManager.FinishedInitialization();
+      }
+      catch (Exception ex)
+      {
+        onBootstrapException(ex);
+      }
+    }
+
+    /// &lt;summary&gt;
+    /// Return the list of assembly names specified in the XML file so that
+    /// we know what assemblies are considered modules as part of the application.
+    /// &lt;/summary&gt;
+    private static List&lt;AssemblyFileName&gt; GetModuleList(XmlFileName filename)
+    {
+      Assert.That(File.Exists(filename.Value), &quot;Module definition file &quot; + filename.Value + &quot; does not exist.&quot;);
+      XDocument xdoc = XDocument.Load(filename.Value);
+
+      return GetModuleList(xdoc);
+    }
+
+    /// &lt;summary&gt;
+    /// Returns the list of modules specified in the XML document so we know what
+    /// modules to instantiate.
+    /// &lt;/summary&gt;
+    private static List&lt;AssemblyFileName&gt; GetModuleList(XDocument xdoc)
+    {
+      List&lt;AssemblyFileName&gt; assemblies = new List&lt;AssemblyFileName&gt;();
+        (from module in xdoc.Element(&quot;Modules&quot;).Elements(&quot;Module&quot;)
+        select module.Attribute(&quot;AssemblyName&quot;).Value).ForEach(s =&gt; assemblies.Add(AssemblyFileName.Create(s)));
+
+      return assemblies;
+    }
+  }
+}</pre>
+<p align="left">I typically implement the bootstrapper as a partial <code>Program</code> 
+class.</p>
+<p align="center"><img border="0" src="process.png" width="319" height="498"></p>
+<p align="center"><i>Initialization Workflow</i></p>
+<p>Let's dissect this code a bit.&nbsp; In the bootstrap initialization...</p>
+<pre>serviceManager = new ServiceManager();
+serviceManager.RegisterSingleton&lt;IServiceModuleManager, ServiceModuleManager&gt;();</pre>
+<p>...we instantiate a ServiceManager and register the implementor of the 
+ServiceModuleManager.&nbsp; </p>
+<p><img border="0" src="important.png" width="38" height="32"> Because the 
+ServiceModuleManager is itself a service, you can replace it with your own 
+initialization process.</p>
+<p>Then, in the bootstrapper itself...</p>
+<pre>IModuleManager moduleMgr = (IModuleManager)serviceManager.Get&lt;IServiceModuleManager&gt;();
+List&lt;AssemblyFileName&gt; modules = GetModuleList(XmlFileName.Create(&quot;modules.xml&quot;));
+moduleMgr.RegisterModules(modules);
+serviceManager.FinishedInitialization();</pre>
+<ol>
+	<li>We acquire the service that initializes the registrants (the modules), 
+	which gives each class implementing <code>IModule</code> access to the Service Manager.&nbsp;
+	<img border="0" src="note.png" width="24" height="32"> The singleton 
+	returned is cast to an <code>IModuleManager</code> because <code>ServiceModuleManager</code> is 
+	derived from <code>ModuleManager</code> which implement <code>IModuleManager</code>.</li>
+	<li>The modules to be loaded by the application are acquired.&nbsp; In this 
+	example, they are specified in the file &quot;modules.xml&quot;</li>
+	<li>The modules are registered.&nbsp; This calls into the virtual method 
+	<code>InitializeRegistrants</code>, which is overridden in <code>ServiceModuleManager</code> 
+	and implements the first step of the initialization process.&nbsp; This is 
+	where modules that implement services can register those services, as well 
+	as locally save the service manager for use by those services.</li>
+	<li>Once all the module services have been registered, the bootstrapper 
+	tells the Service Manager to call <code>FinishInitialization</code> for all singletons 
+	registered in modules</li>
+</ol>
+<pre>public override void FinishedInitialization()
+{
+  singletons.ForEach(kvp =&gt; kvp.Value.FinishedInitialization());
+}</pre>
+<p><img border="0" src="important.png" width="38" height="32"> Only services 
+registered as singletons get the <code>FinishedInitialization</code> call.&nbsp; 
+As mentioned in the Service Manager article, singletons are instantiated 
+immediately and, because they exist, they can now complete whatever 
+initialization (including calling other services) they require.&nbsp; 
+Non-singleton services typically initialize themselves in their constructor.</p>
+<p><img border="0" src="important.png" width="38" height="32"> This is a bit 
+problematic if you have a service initialization that calls another service that 
+hasn't finished <i>its</i> initialization.&nbsp; At some point I might implement 
+an initialization order process, but technically, because the services are 
+initialized in the order of the module list, you can place dependencies higher 
+up in the list.</p>
+<p>Not bad for six lines of high level code!</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

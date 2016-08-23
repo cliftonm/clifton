@@ -21,12 +21,14 @@
 * SOFTWARE.
 */
 
-namespace Clifton.Core.ServiceManagement
+using System;
+using System.Collections.Generic;
+
+using Clifton.Core.ServiceManagement;
+
+namespace Clifton.Core.ModuleManagement
 {
-	/// <summary>
-	/// A useful base class for a default implementation of IService methods.
-	/// </summary>
-	public abstract class ServiceBase : IService
+	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
 	{
 		public IServiceManager ServiceManager { get; set; }
 
@@ -37,6 +39,26 @@ namespace Clifton.Core.ServiceManagement
 
 		public virtual void FinishedInitialization()
 		{
+		}
+
+		/// <summary>
+		/// Initialize each registrant by passing in the service manager.  This allows the module
+		/// to register the services it provides.
+		/// </summary>
+		protected override void InitializeRegistrants(List<IModule> registrants)
+		{
+			registrants.ForEach(r =>
+				{
+					try
+					{
+						r.InitializeServices(ServiceManager);
+					}
+					catch (System.Exception ex)
+					{
+						throw new ApplicationException("Error initializing " + r.GetType().AssemblyQualifiedName + "\r\n:" + ex.Message);
+					}
+				});
+
 		}
 	}
 }

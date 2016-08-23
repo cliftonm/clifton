@@ -21,22 +21,18 @@
 * SOFTWARE.
 */
 
-namespace Clifton.Core.ServiceManagement
+using System;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Reflection;
+
+using Clifton.Core.Semantics;
+
+namespace Clifton.Core.ModuleManagement
 {
-	/// <summary>
-	/// A useful base class for a default implementation of IService methods.
-	/// </summary>
-	public abstract class ServiceBase : IService
+	public interface IModuleManager
 	{
-		public IServiceManager ServiceManager { get; set; }
-
-		public virtual void Initialize(IServiceManager svcMgr)
-		{
-			ServiceManager = svcMgr;
-		}
-
-		public virtual void FinishedInitialization()
-		{
-		}
+		void RegisterModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath = null, Func<string, Assembly> resourceAssemblyResolver = null);
+		ReadOnlyCollection<IModule> Modules { get; }
 	}
 }

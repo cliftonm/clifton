@@ -21,22 +21,20 @@
 * SOFTWARE.
 */
 
-namespace Clifton.Core.ServiceManagement
+namespace Clifton.Core.Semantics
 {
-	/// <summary>
-	/// A useful base class for a default implementation of IService methods.
-	/// </summary>
-	public abstract class ServiceBase : IService
-	{
-		public IServiceManager ServiceManager { get; set; }
+    public class LogMessage : ImmutableSemanticType<LogMessage, string> { };
+    public class ExceptionMessage : ImmutableSemanticType<ExceptionMessage, string> { };
+    public class XmlFileName : ImmutableSemanticType<XmlFileName, string> { };
+	public class OptionalPath : ImmutableSemanticType<OptionalPath, string> { };
+	public class FullPath : ImmutableSemanticType<FullPath, string> { };
+	public class AssemblyFileName : ImmutableSemanticType<AssemblyFileName, string> { }
 
-		public virtual void Initialize(IServiceManager svcMgr)
-		{
-			ServiceManager = svcMgr;
-		}
-
-		public virtual void FinishedInitialization()
-		{
-		}
-	}
+	public class ConnectionString : ImmutableSemanticType<ConnectionString, string> { }
+	public class UserName : ImmutableSemanticType<UserName, string> { }
+	public class HashedPassword : ImmutableSemanticType<HashedPassword, string> { }
+	public class PlainTextPassword : ImmutableSemanticType<PlainTextPassword, string> { }
+	public class UserId : ImmutableSemanticType<UserId, int> { }
+	public class ViewName : ImmutableSemanticType<ViewName, string> { }
+	public class WhereClause : ImmutableSemanticType<WhereClause, string> { }
 }
