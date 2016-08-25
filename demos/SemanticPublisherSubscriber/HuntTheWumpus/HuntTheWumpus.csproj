@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BB552CB9-8A2E-4FCB-8ECF-466EBA6BC66A}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HuntTheWumpus</RootNamespace>
+    <AssemblyName>HuntTheWumpus</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Bootstrap.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Clifton.Core\Clifton.Core\Clifton.Core.csproj">
+      <Project>{013927ac-22ef-491a-8772-18dac136f96b}</Project>
+      <Name>Clifton.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
+      <Project>{3404bba6-6ea0-489b-a269-f07d9bbbca0e}</Project>
+      <Name>Clifton.SemanticProcessorService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\ConsoleLoggerService\ConsoleLoggerService.csproj">
+      <Project>{a2313d92-ee85-4f1d-bd6d-84afbecabb94}</Project>
+      <Name>ConsoleLoggerService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\Semantics\Semantics.csproj">
+      <Project>{c699e736-35c4-43c8-a590-b2b891a186b1}</Project>
+      <Name>Semantics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\SemanticWebRouterService\SemanticWebRouterService.csproj">
+      <Project>{e0beb684-e098-43c6-b5a2-d3cb7b914f01}</Project>
+      <Name>SemanticWebRouterService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\ServiceInterfaces\ServiceInterfaces.csproj">
+      <Project>{60c03b68-1459-4a07-b892-2feb124dfb0d}</Project>
+      <Name>ServiceInterfaces</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\WebFileResponseService\WebFileResponseService.csproj">
+      <Project>{53833fbc-8d5d-41e9-940c-a11ff08a7bfb}</Project>
+      <Name>WebFileResponseService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\WebResponseService\WebResponseService.csproj">
+      <Project>{8e0319e8-f526-433e-8c30-fd2af7a1be55}</Project>
+      <Name>WebResponseService</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Services\WebServerService\WebServerService.csproj">
+      <Project>{03e9e2eb-b4f6-456e-9162-6b582b2593b9}</Project>
+      <Name>WebServerService</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bin\Debug\modules.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="bin\Debug\Website\foobar.html" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

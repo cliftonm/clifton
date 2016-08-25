@@ -21,17 +21,20 @@
 * SOFTWARE.
 */
 
+using System;
+
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.ServiceInterfaces
+namespace Clifton.Core.Services.SemanticProcessorService
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public class SemanticProcessorModule : IModule
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		public void InitializeServices(IServiceManager serviceManager)
+		{
+			serviceManager.RegisterSingleton<ISemanticProcessor, SemanticProcessor>();
+		}
 	}
 }

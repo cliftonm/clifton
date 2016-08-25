@@ -21,12 +21,57 @@
 * SOFTWARE.
 */
 
-using Clifton.Core.ServiceManagement;
+using System;
+using System.Diagnostics;
 
-namespace Clifton.Core.ServiceInterfaces
+namespace Clifton.Core.Assertions
 {
-	public interface IAppConfigDecryption : IService
+	public class Assert
 	{
-		string Decrypt(string text);
+		/// <summary>
+		/// Assert that the condition is false.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void Not(bool b, string msg)
+		{
+			That(!b, msg);
+		}
+
+		/// <summary>
+		/// Assert that the condition is true.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public static void That(bool b, string msg)
+		{
+			if (!b)
+			{
+				throw new ApplicationException(msg);
+			}
+		}
+
+		public static void Try(Action a, Action<Exception> onErr = null)
+		{
+			try 
+			{ 
+				a(); 
+			}
+			catch(Exception ex)
+			{
+				if (onErr != null)
+				{
+					onErr(ex);
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+
+		public static void SilentTry(Action a)
+		{
+			try { a(); }
+			catch { }
+		}
 	}
 }

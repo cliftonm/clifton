@@ -21,17 +21,14 @@
 * SOFTWARE.
 */
 
+using System;
+
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.ServiceInterfaces
+namespace Clifton.Core.ModuleManagement
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public interface IModule
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		void InitializeServices(IServiceManager serviceManager);
 	}
 }

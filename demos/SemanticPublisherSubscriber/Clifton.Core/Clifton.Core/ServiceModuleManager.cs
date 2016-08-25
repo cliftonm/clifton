@@ -21,17 +21,48 @@
 * SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+
 using Clifton.Core.ServiceManagement;
 
-namespace Clifton.Core.ServiceInterfaces
+namespace Clifton.Core.ModuleManagement
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public class ServiceModuleManager : ModuleManager, IServiceModuleManager
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		public IServiceManager ServiceManager { get; set; }
+
+		public virtual void Initialize(IServiceManager svcMgr)
+		{
+			ServiceManager = svcMgr;
+		}
+
+		public virtual void FinishedInitialization()
+		{
+		}
+
+        public virtual void FinishedInitialization2()
+        {
+        }
+
+        /// <summary>
+        /// Initialize each registrant by passing in the service manager.  This allows the module
+        /// to register the services it provides.
+        /// </summary>
+        protected override void InitializeRegistrants(List<IModule> registrants)
+		{
+			registrants.ForEach(r =>
+				{
+					try
+					{
+						r.InitializeServices(ServiceManager);
+					}
+					catch (System.Exception ex)
+					{
+						throw new ApplicationException("Error initializing " + r.GetType().AssemblyQualifiedName + "\r\n" + ex.Message);
+					}
+				});
+
+		}
 	}
 }

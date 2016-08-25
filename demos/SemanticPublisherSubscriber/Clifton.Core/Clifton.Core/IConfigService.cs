@@ -25,13 +25,9 @@ using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.ServiceInterfaces
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public interface IConfigService : IService
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		string GetConnectionString(string key);
+		string GetValue(string key);
 	}
 }

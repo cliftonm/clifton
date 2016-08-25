@@ -21,49 +21,41 @@
 * SOFTWARE.
 */
 
-using System;
 using System.Configuration;
 
-using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Cores.Services.AppConfigService
 {
-	public class AppConfigModule : IModule
-	{
-		public void InitializeServices(IServiceManager serviceManager)
-		{
-			serviceManager.RegisterSingleton<IAppConfigService, ConfigService>();
-		}
-	}
+    public class AppConfigModule : IModule
+    {
+        public void InitializeServices(IServiceManager serviceManager)
+        {
+            serviceManager.RegisterSingleton<IAppConfigService, ConfigService>();
+        }
+    }
 
-	public class ConfigService : ServiceBase, IAppConfigService
-	{
-		public virtual string GetConnectionString(string key)
-		{
-			string text = ConfigurationManager.ConnectionStrings[key].ConnectionString;
+    public class ConfigService : ServiceBase, IEncryptedAppConfigService
+    {
+        public virtual string GetConnectionString(string key)
+        {
+            string enc = ConfigurationManager.ConnectionStrings[key].ConnectionString;
 
-			return DecryptOption(text);
-		}
+            return Decrypt(enc);
+        }
 
-		public virtual string GetValue(string key)
-		{
-			string text = ConfigurationManager.AppSettings[key];
+        public virtual string GetValue(string key)
+        {
+            string enc = ConfigurationManager.AppSettings[key];
 
-			return DecryptOption(text);
-		}
+            return Decrypt(enc);
+        }
 
-		protected string DecryptOption(string text)
-		{
-			if (text.BeginsWith("[e]"))
-			{
-				// Application must provide an IAppConfigDecryption service.
-				text = ServiceManager.Get<IAppConfigDecryption>().Decrypt(text.Substring(3));
-			}
-
-			return text;
-		}
-	}
+        protected string Decrypt(string enc)
+        {
+            return ServiceManager.Get<IAppConfigDecryption>().Decrypt(enc);
+        }
+    }
 }

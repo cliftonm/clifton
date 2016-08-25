@@ -55,7 +55,7 @@ namespace Clifton.Cores.Services.AppConfigService
 
         protected string Decrypt(string enc)
         {
-            return ServiceManager.Get<IAppConfigDecryption>().Decrypt(enc);
+            return ServiceManager.Get<IAppConfigDecryptionService>().Decrypt(enc);
         }
     }
 }

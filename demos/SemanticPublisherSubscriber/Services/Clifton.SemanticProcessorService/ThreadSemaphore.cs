@@ -21,17 +21,46 @@
 * SOFTWARE.
 */
 
-using Clifton.Core.ServiceManagement;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Clifton.Core.ServiceInterfaces
+using Clifton.Core.ServiceInterfaces;
+
+namespace Clifton.Core.Services.SemanticProcessorService
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public class ThreadSemaphore<T>
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		public int Count { get { return requests.Count; } }
+		protected Semaphore sem;
+
+		// Requests on this thread.
+		protected ConcurrentQueue<T> requests;
+
+		public ThreadSemaphore()
+		{
+			sem = new Semaphore(0, Int32.MaxValue);
+			requests = new ConcurrentQueue<T>();
+		}
+
+		public void Enqueue(T context)
+		{
+			requests.Enqueue(context);
+			sem.Release();
+		}
+
+		public void WaitOne()
+		{
+			sem.WaitOne();
+		}
+
+		public bool TryDequeue(out T context)
+		{
+			return requests.TryDequeue(out context);
+		}
 	}
 }

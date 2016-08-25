@@ -1,0 +1,1395 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>The Semantic Publisher/Subscribe</title>
+</head>
+
+<body>
+
+<p>The Semantic Publisher/Subscriber</p>
+<p>A Clifton Method Core Component - Part IV</p>
+<h2>Introduction</h2>
+<p>In the previous articles on the Module Manager and Service Manager, I 
+described an dependency inversion through the use of interfaces and dynamic 
+application configuration through the use of modules that implement services.&nbsp; 
+This results in the following high level application architecture:</p>
+<p align="center"><img border="0" src="arch1.png" width="319" height="399"></p>
+<p>The problem with this architecture is that the middle bubble &quot;Interfaces.&quot;&nbsp; 
+In my opinion, there is still too close of coupling between the application and 
+the services because of the dependency of common interfaces.</p>
+<p>Services typically fall into three categories:</p>
+<ol>
+	<li>A request for information that either returns immediately, or if it 
+	takes some time, the application probably implements a <code>Task</code> wrapper around 
+	the request.</li>
+	<li>The initiation of a &quot;computation&quot; (I'll use that term instead of 
+	&quot;process) in which the application doesn't care when it returns or the 
+	service &quot;fires and event&quot; when the computation is complete.</li>
+	<li>Monitoring some device, port, or other asynchronous activity and when a 
+	condition is met, it &quot;fires an event&quot; to initiate &quot;computation&quot; on that data 
+	to either the application or other services.</li>
+</ol>
+<p>While there are many simple services that satisfy the first category, it is 
+really the last two categories that I want to talk about here.&nbsp; For more 
+complex services, the architecture that I found most flexible replaces the 
+&quot;Interfaces&quot; bubble with a publisher/subscriber component:</p>
+<p align="center"><img border="0" src="arch2.png" width="386" height="399"></p>
+<p>Here, using the Service Manager to access services via dependency inversion 
+(interfaces) is of course still possible, but in many cases, the <i>primary</i> 
+mechanism becomes the publisher/subscriber.&nbsp; Instead of having a common 
+interface specification, a shared semantic &quot;dictionary&quot; is used.&nbsp; </p>
+<p><img border="0" src="key-small.jpg" width="94" height="33"></p>
+<p>Using a publisher/subscriber decouples the application and services from 
+needing to know the exact interface specification of another service.&nbsp; 
+Furthermore, different versions of a service can implement different semantic 
+messages, which increases an application's resilience to change.</p>
+<p>The publisher/subscriber implementation I present here has the following 
+features:</p>
+<ul>
+	<li>Is semantic -- routing to the subscriber is accomplished through the use 
+	of typed message &quot;envelopes.&quot;&nbsp; </li>
+	<li>Implements automatic logging of messages handled by, you guessed it, a 
+	logger service of your choice.</li>
+	<li>Subscriber exceptions are handled by the pub-sub and can be routed to an 
+	exception handling service.</li>
+	<li>Implements subscriber calls as either a synchronous or asynchronous 
+	call.</li>
+	<li>Utilizes a thread pool for asynchronous processing, queuing the call 
+	onto a worker thread with the least number of pending subscriber calls.</li>
+	<li>Is completely type safe.</li>
+	<li>Unhandled messages (no subscriber) are thrown away.</li>
+	<li>Subscribers are (usually) instantiated for each message, facilitating 
+	thread safety.</li>
+	<li>Isolate message publishers and subscribers in &quot;membranes.&quot;</li>
+	<li>Is itself implemented as a service, so it's accessible to all other 
+	services.</li>
+	<li>Multiple subscribers can receive the same message.</li>
+	<li>Automatic call on completion to <code>IDispose</code> for stateless subscribers 
+	implementing <code>IDisposable</code>.</li>
+</ul>
+<h3>Use Cases</h3>
+<p>I've used this architecture very successfully for:</p>
+<ul>
+	<li>Implementing web servers (in fact, it's the backbone of my defacto web 
+	server implementation nowadays.)</li>
+	<li>Handling RabbitMQ messages.</li>
+	<li>Processing asynchronous events from hardware such as credit card 
+	readers, pin pads, ID scanners,
+	<a href="https://www.maximintegrated.com/en/products/digital/ibutton.html">
+	iButton</a> readers, etc.</li>
+	<li>Implementing ATM transaction processing.</li>
+	<li>Implementing CefSharp and .NET's browser control as exchangeable 
+	services to create WinForm/WPF hosted web applications.</li>
+</ul>
+<p>A short list of what the combination of the Module Manager, Service Manager, 
+and Publisher/Subscriber allows me to do:</p>
+<ul>
+	<li>Mock communication interfaces, hardware, database I/O, etc.</li>
+	<li>Simulate inputs from protocols and hardware, which greatly facilitates 
+	workflow testing.</li>
+	<li>Quickly configure an application for a variety of hardware and 
+	computation configurations.</li>
+</ul>
+<p>The semantic publisher/subscriber is also (albeit an earlier incarnation) at 
+the heart of the <a href="http://www.higherorderprogramming.com/">Higher Order 
+Programming</a> project which I've
+<a href="http://www.codeproject.com/Articles/777843/HOPE-Higher-Order-Programming-Environment">
+written about</a> previously.</p>
+<h3>About Membrane Computing</h3>
+<p>A key concept in the publisher/subscriber is that of a &quot;membrane.&quot;&nbsp; You 
+can think of a membrane as a container, channel, vesicle, whatever.&nbsp; But it 
+keeps the message contained in that membrane &quot;space&quot; unless permeability rules 
+(which I won't discuss in this article) are set up.&nbsp; The term &quot;membrane&quot; 
+comes from the concept
+<a href="https://en.wikipedia.org/wiki/Membrane_computing">membrane computing</a>:</p>
+<p><i>Membrane computing deals with distributed and parallel computing models, 
+processing multisets of symbol objects in a localized manner. Thus, evolution 
+rules allow for evolving objects to be encapsulated into compartments defined by 
+membranes. The communications between compartments and with the environment play 
+an essential role in the processes.</i></p>
+<p><i>The intuition behind the notion of a membrane is a three-dimensional 
+vesicle from biology. However the concept itself is more general, and a membrane 
+is seen as a separator of two regions. The membrane provides for selective 
+communication between the two regions. As per Gheorghe P&#259;un, the separation is 
+of the Euclidean space into a finite “inside” and an infinite “outside”. The 
+selective communication is where the computing comes in.</i></p>
+<p><i>The variety of suggestions from biology and the range of possibilities to 
+define the architecture and the functioning of a membrane-based multiset 
+processing device are practically endless. Indeed the membrane computing 
+literature contains a very large number of models. Thus, MC is not merely a 
+theory related to a specific model, it is a framework for devising 
+compartmentalized models.</i></p>
+<p>If the term is weird, deal with it.
+<img border="0" src="smiley.png" width="32" height="32"></p>
+<h2>A Simple Hello World Example</h2>
+<p>It's probably best to start with a semantic &quot;hello world&quot; example.&nbsp; This 
+is the code (not including the Bootstrap, which is identical to what was used in 
+the previous article)::</p>
+<pre>using System;
+
+using Clifton.Core.Semantics;
+
+namespace SemanticPublisherSubscriberDemo
+{
+  static partial class Program
+  {
+    static void Main(string[] args)
+    {
+      InitializeBootstrap();
+      Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+
+      ISemanticProcessor semProc = serviceManager.Get&lt;ISemanticProcessor&gt;();
+      semProc.Register&lt;SurfaceMembrane, Subscriber&gt;();
+      semProc.ProcessInstance&lt;SurfaceMembrane, ST_Message&gt;(m =&gt; m.Text = &quot;Hello World&quot;, true);
+    }
+  }
+
+  public class ST_Message : ISemanticType
+  {
+    public string Text { get; set; }
+
+    public ST_Message()
+    {
+      Console.WriteLine(&quot;Message Instantiated.&quot;);
+    }
+  }
+
+  public class Subscriber : IReceptor
+  {
+    public Subscriber()
+    {
+      Console.WriteLine(&quot;Subscriber Instantiated.&quot;);
+    }
+
+    public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_Message msg)
+    {
+      Console.WriteLine(msg.Text);
+    }
+  }
+}</pre>
+<p>And the modules.xml file (see previous article) looks like this:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+&lt;/Modules&gt;;</pre>
+<p>The output is:</p>
+<p><img border="0" src="out1.png" width="305" height="147"></p>
+<h3>Dissecting the Hello World Example</h3>
+<p>Here's what's going on.</p>
+<h4>Acquire the Publisher/Subscriber</h4>
+<p>After the bootstrap, the first thing we do is acquire the Semantic 
+Publisher/Subscriber singleton:</p>
+<pre>ISemanticProcessor semProc = serviceManager.Get&lt;ISemanticProcessor&gt;();</pre>
+<h4>Register a Subscriber</h4>
+<p>Subscribers are called &quot;Receptors.&quot;&nbsp; Remember that.</p>
+<pre>semProc.Register&lt;SurfaceMembrane, Subscriber&gt;();</pre>
+<p>The SurfaceMembrane is a built-in membrane that is used for convenience for 
+messages sent to the subscriber.</p>
+<h4>Publishing a Message</h4>
+<p>The final line:</p>
+<pre>semProc.ProcessInstance&lt;SurfaceMembrane, ST_Message&gt;(m =&gt; m.Text = &quot;Hello World&quot;, true);</pre>
+<p>publishes a message.&nbsp; In this example, the message parameters are 
+initialized by an <code>Action&lt;T&gt;</code> that the publisher/subscriber calls after 
+instantiating the message.</p>
+<p><img border="0" src="note.png" width="24" height="32"> Here we supply the 
+optional value <code>true</code> to indicate that the message should be processed on the 
+caller's thread.&nbsp; If we didn't do this, our simple console app would end 
+without actually giving the thread pool time to process the message!</p>
+<h4>The Message Class</h4>
+<p>All messages must be derived from <code>ISemanticType</code>:</p>
+<pre>public class ST_Message : ISemanticType</pre>
+<p>This is merely a placeholder that provides compile-time type checking of the 
+generic parameter used in registration and publishing:</p>
+<pre>public interface ISemanticType { }</pre>
+<p><img border="0" src="important.png" width="38" height="32"> All receivers 
+receive the same message instance, so the message should be treated as 
+immutable.&nbsp;&nbsp; </p>
+<h4>The Subscriber</h4>
+<p>All subscribers must derive from <code>IReceptor</code>, (remember that 
+subscribers are also known as &quot;receptors&quot;) again used for compile-time type 
+of the generic parameter used in registration:</p>
+<pre>public interface IReceptor { }</pre>
+<p>I tend to prefix my semantic types with &quot;ST_&quot; to distinguish them from other 
+types.</p>
+<p>As with ISemanticType, the interface IReceptor is actually just a placeholder 
+for compile-time type checking:</p>
+<pre>public interface IReceptor { }</pre>
+<p><img border="0" src="key-small.jpg" width="94" height="33"></p>
+<p>Because the subscriber is (usually) instantiated for every message, any 
+non-static fields that the subscriber uses are specific to the instance that 
+processes the message.&nbsp; This really helps with thread safety when 
+subscriber is performing a complex task requiring internal state management.</p>
+<h4>Subscribing to Messages</h4>
+<p>Each message is received in an overloaded <code>Process</code> method:</p>
+<pre>public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_Message msg)</pre>
+<p>Note that the publisher/subscriber (the semantic processor) and the membrane 
+on which the message is being sent is provided as well.&nbsp; This gives the 
+responder the necessary information to publish a message on the same membrane, 
+if it so chooses. </p>
+<p>The class that implements the <code>Process</code> methods will only receive messages 
+published in the membrane declared when the class was registered.&nbsp; While 
+messages can permeate membranes, we won't be discussing that feature in this 
+article.</p>
+<h2>Under the Hood</h2>
+<p>Let's look next how the publisher / subscriber works.</p>
+<h3>Registering a Subscriber</h3>
+<p>There are a variety of ways of registering a subscriber, but the two common 
+ways are with or without an initializer:</p>
+<pre>public void Register&lt;M, T&gt;()
+  where M : IMembrane, new()
+  where T : IReceptor
+{
+  Register&lt;T&gt;();
+  IMembrane membrane = RegisterMembrane&lt;M&gt;();
+  membraneReceptorTypes[membrane].Add(typeof(T));
+}
+
+public void Register&lt;M, T&gt;(Action&lt;IReceptor&gt; receptorInitializer)
+  where M : IMembrane, new()
+  where T : IReceptor
+{
+  Register&lt;T&gt;();
+  Type receptorType = typeof(T);
+  IMembrane membrane = RegisterMembrane&lt;M&gt;();
+  membraneReceptorTypes[membrane].Add(receptorType);
+  receptorInitializers[new MembraneReceptor() { Membrane = membrane, ReceptorType = receptorType }] = 
+     new ReceptorInitializer() { Initializer = receptorInitializer };
+}</pre>
+<p>If you provide an initializer, it will be called when the receptor (the 
+subscriber class) is instantiated, where <code>IReceptor</code> is an instance of the class 
+being instantiated.&nbsp; Initializers are specific to the membrane containing 
+the receptor (the subscriber), providing the ability to initialize the same 
+receptor with different parameters depending on the membrane (channel) to which 
+it is associated.</p>
+<h3>Message Publishing</h3>
+<p>When a message is published using ProcessInstance, an initializer for the 
+message can be provided, as we saw in the example above:</p>
+<pre>/// &lt;summary&gt;
+/// Process a semantic type, allowing the caller to specify an initializer before processing the instance.
+/// &lt;/summary&gt;
+public void ProcessInstance&lt;M, T&gt;(Action&lt;T&gt; initializer, bool processOnCallerThread = false)
+  where M : IMembrane, new()
+  where T : ISemanticType, new()
+{
+  T inst = new T();
+  initializer(inst);
+  ProcessInstance&lt;M, T&gt;(inst, processOnCallerThread);
+}
+
+public void ProcessInstance&lt;M, T&gt;(bool processOnCallerThread = false)
+  where M : IMembrane, new()
+  where T : ISemanticType, new()
+{
+  T inst = new T();
+  ProcessInstance&lt;M, T&gt;(inst, processOnCallerThread);
+}</pre>
+<p>Also note the option to invoke the subscriber on the caller thread, which 
+defaults to <code>false</code>.</p>
+<h3>Message Processing</h3>
+<p>The core message processor identifies all receptors (subscribers) in the 
+membrane, instantiates them, and either queues the call or processes it 
+immediately:</p>
+<pre>protected void ProcessInstance&lt;T&gt;(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread)
+  where T : ISemanticType
+{
+  // We get the source object type.
+  Type tsource = obj.GetType();
+
+  // Then, for each target type that is interested in this source type, 
+  // we construct the target type, then invoke the correct target's Process method.
+  // Constructing the target type provides us with some really interesting abilities.
+  // The target type can be treated as an immutable object. We can, for instance, exceute
+  // the Process call on a separate thread. Constructing the target type ensures that the
+  // target is stateless -- state must be managed external of any type!
+
+  // Stateless receptors:
+
+  List&lt;Type&gt; receptors = GetReceptors(membrane, tsource);
+  Log(membrane, obj);
+
+  foreach (Type ttarget in receptors)
+  {
+    // We can use dynamic here because we have a &lt;T&gt; generic to resolve the call parameter.
+    // If we instead only have the interface ISemanticType, dynamic does not downcast to the concrete type --
+    // therefore it can't locate the call point because it implements the concrete type.
+    dynamic target = Activator.CreateInstance(ttarget);
+
+  ReceptorInitializer receptorInitializer;
+
+  if (receptorInitializers.TryGetValue(new MembraneReceptor() { Membrane = membrane, ReceptorType = ttarget }, out receptorInitializer))
+  {
+    receptorInitializer.Initializer(target);
+  }
+
+  // Call immediately?
+  if (processOnCallerThread)
+  {
+    Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () =&gt; target.Process(this, membrane, obj) });
+  }
+  else
+  {
+    // Pick a thread that has the least work to do.
+    threadPool.MinBy(tp =&gt; tp.Count).Enqueue(
+      new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () =&gt; target.Process(this, membrane, obj) });
+  }
+}
+
+  // Also check stateful receptors
+  List&lt;IReceptor&gt; sreceptors = GetStatefulReceptors(membrane, tsource);
+
+  foreach (IReceptor receptor in sreceptors)
+  {
+    dynamic target = receptor;
+    // Call immediately?
+    if (processOnCallerThread)
+    {
+      Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, 
+        Proc = () =&gt; target.Process(this, membrane, obj), AutoDispose = false });
+    }
+    else
+    {
+      threadPool.MinBy(tp =&gt; tp.Count).Enqueue(new DynamicCall() { SemanticInstance = obj, Receptor = target, 
+        Proc = () =&gt; target.Process(this, membrane, obj), AutoDispose = false });
+    }
+  }
+
+  ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
+  PermeateOut(membrane, caller, obj, processOnCallerThread);
+}</pre>
+<p>This looks fairly complicated at first glance, but it's really quite straight 
+forward.</p>
+<ol>
+	<li>First, all the receptors (subscribers) in the specified membrane that 
+	handle the message are acquired. </li>
+	<li>The message is logged, which can be handled by whatever logging service 
+	you've implemented.</li>
+	<li>Each receptor (subscriber class) is instantiated, optionally 
+	initialized, and the callback is executed or queued.&nbsp; </li>
+	<li>Stateful receptors (discussed later) are also invoked.</li>
+	<li>Two concluding steps are performed<ol>
+		<li>Messages that implement inner semantic types are also published.&nbsp; 
+		This is a bizarre but interesting feature that enables the application 
+		to subscribe to semantic messages within the body of a wrapper message.&nbsp; 
+		For example, an address message may include semantic types such as Zip 
+		Code.&nbsp; A subscriber may be interested in processing Zip Code for 
+		its own purposes.&nbsp; This mechanism facilitates creating automatic 
+		processing of inner semantic types.</li>
+		<li>As in Membrane Computing, a message can permeate other membranes if 
+		so configured.&nbsp; This feature enables the application to bridge 
+		membranes (channels / containers) with specific messages, so that 
+		additional computations on those messages can be performed by 
+		subscribers in other membranes.</li>
+	</ol>
+</li>
+</ol>
+<h4>Processing Inner Types</h4>
+<p>Handled by:</p>
+<pre>protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
+{
+  var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(
+      pi =&gt; pi.PropertyType.GetInterfaces().Contains(typeof(ISemanticType)));
+
+  properties.ForEach(pi =&gt;
+  {
+    ISemanticType prop = (ISemanticType)pi.GetValue(obj);
+    prop.IfNotNull((p) =&gt; ProcessInstance(membrane, caller, p, processOnCallerThread));
+  });
+}</pre>
+<h4>A Brief Look at Permeating Membranes</h4>
+<p align="center"><img border="0" src="membranes.png" width="436" height="266"></p>
+<p align="center"><i>From Wikipedia
+<a href="https://en.wikipedia.org/wiki/Membrane_computing">Membrane Computing</a></i></p>
+<p>In Membrane Computing, data (or in our case, the message) can permeate a 
+membrane both inwards, to inner membranes, and outwards, to the containing 
+membrane.&nbsp; In the illustration above, the &quot;environment&quot; is represented by 
+the <code>SurfaceMembrane</code> type.</p>
+<h5>Permeating Membranes</h5>
+<p>Handled by:</p>
+<pre>protected void PermeateOut&lt;T&gt;(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread)
+  where T : ISemanticType
+{
+  List&lt;IMembrane&gt; pmembranes = ((Membrane)membrane).PermeateTo(obj);
+  pmembranes.Where(m=&gt;m != caller).ForEach((m) =&gt; ProcessInstance(m, membrane, obj, processOnCallerThread));
+}
+</pre>
+<p>Infinite recursion is prevented by ignoring the membrane on the original 
+call.</p>
+<h5>Inbound and Outbound Permeability</h5>
+<p>A membrane (channel / container) is permeable to both an outer membrane and 
+to any inner membranes.</p>
+<pre>/// &lt;summary&gt;
+/// Given this membrane's outbound list, what membranes are inbound permeabe to the ST as well?
+/// &lt;/summary&gt;
+public List&lt;IMembrane&gt; PermeateTo(ISemanticType st)
+{
+  List&lt;IMembrane&gt; ret = new List&lt;IMembrane&gt;();
+  Type sttype = st.GetType();
+
+  if (outboundPermeableTo.Contains(sttype))
+  {
+    // Can we traverse to the parent?
+    if ((parent != null) &amp;&amp; (parent.inboundPermeableTo.Contains(sttype)))
+    {
+      ret.Add(parent);
+    }
+
+    // Can we traverse to children?
+    foreach (Membrane child in childMembranes)
+    {
+      if (child.inboundPermeableTo.Contains(sttype))
+      {
+        ret.Add(child);
+      }
+    }
+  }
+
+  return ret;
+}</pre>
+<h5>Membrane Types</h5>
+<p>A custom membrane (channel) type never implements anything, it's simply used so that the 
+&quot;channel&quot; can be specified as a generic type.&nbsp; It must however derive from
+<code>Membrane</code>, for example:</p>
+<pre>public class LoggerMembrane : Membrane { }</pre>
+<p>The base class handles the permeability functions.</p>
+<h3>Setting up the Subscriber Call</h3>
+<p>In the code illustrated earlier, the call to the subscriber is made either 
+immediately:</p>
+<pre>Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, 
+  Proc = () =&gt; target.Process(this, membrane, obj) });</pre>
+<p>or is queued on a worker thread:</p>
+<pre>// Pick a thread that has the least work to do.
+threadPool.MinBy(tp =&gt; tp.Count).Enqueue(
+  new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () =&gt; target.Process(this, membrane, obj) });</pre>
+<p>The call is implemented as an <code>Action</code> wrapped by the <code>DynamicCall</code> class:</p>
+<pre>public class DynamicCall : ProcessCall
+{
+  public Action Proc { get; set; }
+
+  public DynamicCall()
+  {
+    AutoDispose = true;
+  }
+
+  public override void MakeCall()
+  {
+    Proc();
+  }
+}</pre>
+<p>The target is of <code>dynamic</code> type.&nbsp; We use this type so that 
+the call is routed to the correct overloaded <code>Process</code> method in the subscriber.</p>
+<h3>Dequeuing Work</h3>
+<p>Dequeueing the message is handled by a thread in the thread pool:</p>
+<pre>protected void ProcessPoolItem(object state)
+{
+  ThreadSemaphore&lt;ProcessCall&gt; ts = (ThreadSemaphore&lt;ProcessCall&gt;)state;
+
+  while (true)
+  {
+    ts.WaitOne();
+    ProcessCall rc;
+
+    if (ts.TryDequeue(out rc))
+    {
+      Call(rc);
+    }
+  }
+}</pre>
+<p>Note that we are not using .NET's thread pooling or <code>Task</code> 
+mechanism as these introduce delays in processing the work and are meant for 
+short lived processes.&nbsp; Because the application's subscriber might be a 
+long running process, the thread pool is actual a collection of Thread 
+instances:</p>
+<pre>/// &lt;summary&gt;
+/// Setup thread pool to for calling receptors to process semantic types.
+/// Why do we use our own thread pool? Because .NET's implementation (and
+/// particularly Task) is crippled and non-functional for long running threads.
+/// &lt;/summary&gt;
+protected void InitializePoolThreads()
+{
+  for (int i = 0; i &lt; MAX_WORKER_THREADS; i++)
+  {
+    Thread thread = new Thread(new ParameterizedThreadStart(ProcessPoolItem));
+    thread.IsBackground = true;
+    ThreadSemaphore&lt;ProcessCall&gt; ts = new ThreadSemaphore&lt;ProcessCall&gt;();
+    threadPool.Add(ts);
+    thread.Start(ts);
+  }
+}</pre>
+<h3>Making the Call</h3>
+<p>The call itself is wrapped in an exception handler:</p>
+<pre>protected void Call(ProcessCall rc)
+{
+  try
+  {
+    rc.MakeCall();
+  }
+  catch (Exception ex)
+  {
+    Exception ex2 = ex;
+    // Prevent recursion if the exception process itself throws an exception.
+    if (!(rc.SemanticInstance is ST_Exception))
+    {
+      ProcessInstance(Logger, new ST_Exception(ex), true);
+    }
+
+    while (ex2.InnerException != null)
+    {
+      ex2 = ex2.InnerException;
+      // Prevent recursion if the exception process itself throws an exception.
+      if (!(rc.SemanticInstance is ST_Exception))
+      {
+        ProcessInstance(Logger, new ST_Exception(ex2), true);
+      }
+    }
+  }
+  finally
+  {
+    if ( (rc.Receptor is IDisposable) &amp;&amp; (rc.AutoDispose) )
+    {
+      ((IDisposable)rc.Receptor).Dispose();
+    }
+  }
+}</pre>
+<p>Exceptions (including inner exceptions) are published on the Logger membrane 
+which the Semantic Processor creates for us.</p>
+<pre>public IMembrane Logger { get; protected set; }
+...
+Logger = RegisterMembrane&lt;LoggerMembrane&gt;();</pre>
+<p>Note that in the finally block, a receptor (subscriber) has its <code>Dispose</code> 
+method called if it implements <code>IDisposable</code> and is a stateless 
+subscriber (one that was instantiated by the Semantic Processor (the 
+Publisher/Subscriber.)</p>
+<h3>Stateful Subscribers</h3>
+<p>A stateful subscriber can be useful when, not to be redundant, the overall 
+state of the subscriber needs to be maintained.&nbsp; Some use cases include a 
+subscriber that manages a connection, in which we want to keep the connection 
+open, rather than opening and closing it every time a message involving the 
+connection is processed.</p>
+<p>An example of a stateful receptor initialization looks like this:</p>
+<pre>semProc.Register&lt;SurfaceMembrane&gt;(new StatefulSubscriber());</pre>
+<p>Note that the subscriber type generic parameter is omitted and instead an 
+instance of the subscriber is passed into the <code>Register</code> method.</p>
+<p>A simple implementation of stateful subscriber looks like this:</p>
+<pre>public class StatefulSubscriber : IReceptor
+{
+  protected int counter = 0;
+
+  public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_Message2 msg)
+  {
+    Console.WriteLine(counter + &quot;: &quot; + msg.Text);
+    ++counter;
+  }
+}</pre>
+<p>Note that it is processing messages of type <code>ST_Message2</code>, which 
+is simply, for demo purposes, a way of keeping the two examples separate.&nbsp; 
+Publishing messages is exactly the same:</p>
+<pre>semProc.ProcessInstance&lt;SurfaceMembrane, ST_Message2&gt;(m =&gt; m.Text = &quot;Hello World&quot;, true);
+semProc.ProcessInstance&lt;SurfaceMembrane, ST_Message2&gt;(m =&gt; m.Text = &quot;Goodbye World&quot;, true);</pre>
+<p>Here we publish two messages, with the result being:</p>
+<p><img border="0" src="out2.png" width="340" height="133"></p>
+<p>We observe that the subscriber instance is preserved.</p>
+<h4>The Internal Magic</h4>
+<p>The publisher/subscriber extracts the messages that a stateful subscriber 
+handles through reflection:</p>
+<pre>/// &lt;summary&gt;
+/// Register a stateful receptor contained within the specified membrane.
+/// &lt;/summary&gt;
+public void Register(IMembrane membrane, IReceptor receptor)
+{
+  statefulReceptors.Add(receptor);
+  Type ttarget = receptor.GetType();
+
+  MethodInfo[] methods = ttarget.GetMethods();
+
+  foreach (MethodInfo method in methods)
+  {
+    // TODO: Use attribute, not specific function name.
+    if (method.Name == &quot;Process&quot;)
+    {
+      ParameterInfo[] parameters = method.GetParameters();
+      InstanceNotify(receptor, parameters[2].ParameterType);
+    }
+  }
+
+  membranes[membrane.GetType()] = membrane;
+  membraneReceptorInstances[membrane].Add(receptor);
+}</pre>
+<p>This inspects each Process method in the class and assumes that these methods 
+will have the expected signature (this code could be improved).&nbsp; The 
+message types are extracted so that later it can be determined whether the 
+stateful subscriber handles the published message.</p>
+<h3>Performance</h3>
+<p>From the above code, you've probably noticed that in the typical scenario, a 
+subscriber is being instantiated (and optionally disposed) for every message, 
+and an optional initializer is being executed.&nbsp; Also, 
+there is the use of the <code>dynamic</code> subscriber instance&nbsp;hides 
+internal reflection.&nbsp; There are also nested levels of calls and the 
+overhead of creating the call, either to be executed immediately or queued on a 
+worker thread.&nbsp; A complex configuration, involving membrane permeation and 
+inner message publishing, adds to the performance overhead.</p>
+<p>Conversely, the implementation of this publisher/subscriber is very flexible, 
+thread safe, and the application is resilient to exceptions that the subscriber 
+may throw.&nbsp; This is always the tradeoff when implementing a general purpose 
+component -- useful functionality at the cost of raw performance.&nbsp; Usually, 
+the messages that the publisher/subscriber processes come from low bandwidth 
+events, whether they are user inputs from hardware or even page or web service 
+requests.&nbsp; If you really need a high performance, there are simpler 
+publisher/subscriber implementations, or you may not even want to even use this 
+pattern.</p>
+<h2>Putting It All Together - An Example</h2>
+<p>Let's write a web server using the Module Manager, Service Manager, and 
+Publisher Subscriber!</p>
+<h3>First, A Logger Service</h3>
+<p>We start with a couple modules defined in the <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+  &lt;Module AssemblyName='ConsoleLoggerService.dll'/&gt;
+&lt;/Modules&gt;
+</pre>
+<p>Being able to log things (especially exceptions!) is really the first thing 
+any development process should start with.&nbsp; The logger service should be 
+able to handle both calls made to it as a service as well as logging exceptions 
+messages published by the Publisher / Subscriber.&nbsp; Here's the logger service 
+we'll use:</p>
+<pre>using System;
+
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
+
+using ServiceInterfaces;
+
+namespace ConsoleLoggerService
+{
+  public class LoggerModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IConsoleLoggerService, LoggerService&gt;();
+    }
+  }
+
+  public class LoggerService : ServiceBase, IConsoleLoggerService, IReceptor
+  {
+    public override void FinishedInitialization()
+    {
+      ISemanticProcessor semProc = ServiceManager.Get&lt;ISemanticProcessor&gt;();
+      semProc.Register&lt;LoggerMembrane, GenericTypeLogger&gt;();
+      semProc.Register&lt;LoggerMembrane, LoggerService&gt;();
+    }
+
+    public void Log(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+
+    public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_Exception msg)
+    {
+      Log(msg.Exception.Message);
+      Log(msg.Exception.StackTrace);
+    }
+
+    public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_Log msg)
+    {
+      Log(msg.Message);
+    }
+  }
+
+  public class GenericTypeLogger : IReceptor
+  {  
+    public void Process(ISemanticProcessor semProc, IMembrane membrane, ISemanticType t)
+    {
+      if ( (!(t is ST_Log)) &amp;&amp; (!(t is ST_Exception)) )
+      {
+        Console.WriteLine(&quot;Publishing type: &quot; + t.GetType().Name);
+      }
+    }
+  }
+}</pre>
+<p>There are three things that are interesting about this logger:</p>
+<ol>
+	<li>It is a service, so we can treat it as such.</li>
+<li>However, the service also implements IReceptor, enabling it to process both 
+<code>ST_Log</code> messages that the application posts as well as <code>ST_Exception</code> messages 
+issued by the Publisher/Subscriber on its internal <code>Logger</code> &quot;channel&quot;.</li>
+	<li>A generic type logger is instantiated as a separate receptor, which 
+	always logs (courtesy of the Publisher/Subscriber's ability to issue 
+	messages for base types/interface as well) the message type.&nbsp; We ignore 
+	log and exception message types, as logging the type, then the actual log or 
+	exception message, seems 
+	silly.</li>
+</ol>
+<p><img border="0" src="note.png" width="24" height="32"> The above is an 
+interesting implementation because a singleton service is registered, but the 
+Publisher/Subscriber creates an instance for each log message!</p>
+<p>A test application shows this all working:</p>
+<pre>static partial class Program
+{
+  static void Main(string[] args)
+  {
+    InitializeBootstrap();
+    Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+
+    TestLogging();
+    Console.WriteLine(&quot;Press ENTER to exit the server.&quot;);
+    Console.ReadLine();
+  }
+
+  static void TestLogging()
+  {
+    serviceManager.Get&lt;IConsoleLoggerService&gt;().Log(&quot;Foobar&quot;);
+    serviceManager.Get&lt;ISemanticProcessor&gt;().ProcessInstance&lt;LoggerMembrane, ST_Log&gt;(l =&gt; l.Message = &quot;Hi there!&quot;, true);
+    serviceManager.Get&lt;ISemanticProcessor&gt;().Register&lt;SurfaceMembrane, ExceptionProcess&gt;();
+    serviceManager.Get&lt;ISemanticProcessor&gt;().ProcessInstance&lt;SurfaceMembrane, ST_TestException&gt;();
+  }
+}
+
+public class ST_TestException : ISemanticType { }
+
+public class ExceptionProcess : IReceptor
+{
+  public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_TestException msg)
+  {
+    throw new ApplicationException(&quot;I Broke!&quot;);
+  }
+}</pre>
+<p>And here's the output:</p>
+<p><img border="0" src="out3.png" width="321" height="128"></p>
+<p>The output illustrates:</p>
+<ol>
+	<li>Using the logger as a service.</li>
+<li>Publishing a log message.</li>
+	<li>Logging generic type messages.</li>
+<li>The Publisher/Subscriber handling an exception and sending it to our logger.</li>
+</ol>
+<p>So now we have the logger module done.</p>
+<h3>Next, A Web Server</h3>
+<p>I prefer using my own technology rather than IIS, ASP.NET, Razor, MVC, 
+whatever.&nbsp; So we'll write a simple web server, built from several services.</p>
+<h4>An HTTP Listener Service</h4>
+<p>Here's an implementation of a very simple HTTP listener.&nbsp; It receives 
+requests and posts the request as a message to the Publisher/Subscriber:</p>
+<pre>using System.IO;
+using System.Net;
+using System.Threading.Tasks;
+
+using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
+
+using Semantics;
+using ServiceInterfaces;
+
+namespace WebServerService
+{
+  public class WebServerModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IWebServerService, WebServer&gt;();
+    }
+  }
+
+  public class WebServer : ServiceBase, IWebServerService
+  {
+    protected HttpListener listener;
+    protected ILoggerService logger;
+    protected ISemanticProcessor semProc;
+    protected bool httpOnly;
+
+    public virtual void Start(string ip, int port)
+    {
+      logger = ServiceManager.Get&lt;ILoggerService&gt;();
+      semProc = ServiceManager.Get&lt;ISemanticProcessor&gt;();
+      listener = new HttpListener();
+      string url = IpWithPort(ip, port);
+      logger.Log(&quot;Listening on &quot; + ip + &quot;:&quot; + port);
+      listener.Prefixes.Add(url);
+    }
+
+    listener.Start();
+    // Yes, this is a long running task.  One of them isn't a problem.
+    Task.Run(() =&gt; WaitForConnection(listener));
+  }
+
+    protected virtual void WaitForConnection(object objListener)
+    {
+      HttpListener listener = (HttpListener)objListener;
+
+      while (true)
+      {
+        // Wait for a connection. Return to caller while we wait.
+        HttpListenerContext context = listener.GetContext();
+        string verb = context.Request.HttpMethod;
+        string path = context.Request.RawUrl.LeftOf(&quot;?&quot;).RightOf(&quot;/&quot;);
+        string parms = context.Request.RawUrl.RightOf(&quot;?&quot;);
+        logger.Log(verb + &quot;: &quot; + path);
+
+        string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
+        ServiceManager.Get&lt;ISemanticProcessor&gt;().ProcessInstance&lt;WebServerMembrane, ST_HttpRequest&gt;(r =&gt;
+        {
+	  r.Context = context;
+          r.Verb = verb;
+          r.Path = path;
+          r.Parameters = parms;
+          r.Data = data;
+        });
+      }
+    }
+
+    /// &lt;summary&gt;
+    /// Returns the url appended with a / for port 80, otherwise, the [url]:[port]/ if the port is not 80.
+    /// &lt;/summary&gt;
+    protected string IpWithPort(string ip, int port)
+    {
+      string ret;
+
+      if (port == 80)
+      {
+        ret = &quot;http://&quot; + ip + &quot;/&quot;;
+      }
+      else
+      {
+        ret = &quot;http://&quot; + ip + &quot;:&quot; + port.ToString() + &quot;/&quot;;
+      }
+
+      return ret;
+    }
+  }
+}</pre>
+<p>The message gets handled on a separate thread, letting the listener loop 
+return immediately to the activity of waiting for another connection.</p>
+<p>We add this module to our modules.xml file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+  &lt;Module AssemblyName='ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='WebServerService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>And we can test the server by adding a single line to our application:</p>
+<pre>static void Main(string[] args)
+{
+  InitializeBootstrap();
+  Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+
+  <b>serviceManager.Get&lt;IWebServerService&gt;().Start(&quot;127.0.0.1&quot;, 80);
+</b>
+  Console.WriteLine(&quot;Press ENTER to exit the server.&quot;);
+  Console.ReadLine();
+}</pre>
+<p>Even though there is no subscriber, our logger will tell us that it has 
+received the web request message:</p>
+<p><img border="0" src="out4.png" width="355" height="204"></p>
+<p>Of course, the browser waits patiently for a response, which we're not giving 
+it!</p>
+<h4>A Semantic Router Service</h4>
+<p>Let's add a semantic router.&nbsp; This will have the responsibility of 
+mapping the request verb and path to a semantic type, rather than a method that 
+handles the path.&nbsp; The semantic type is dynamically instantiated and either 
+populated with query values on the URL itself or JSON data in the data stream.&nbsp; 
+I'll put together a rather simple one:</p>
+<pre>using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Reflection;
+
+using Newtonsoft.Json;
+
+using Clifton.Core.Utils;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
+
+using Semantics;
+using ServiceInterfaces;
+
+namespace SemanticWebRouterService
+{
+  // Struct, so it's key-able.
+  public struct Route
+  {
+    public string Verb { get; set; }
+    public string Path { get; set; }
+  }
+
+  public class SemanticWebRouterModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;ISemanticWebRouterService, WebRouterService&gt;();
+    }
+  }
+
+  public class WebRouterService : ServiceBase, ISemanticWebRouterService
+  {
+    protected Dictionary&lt;Route, Type&gt; semanticRoutes;
+
+    public WebRouterService()
+    {
+      semanticRoutes = new Dictionary&lt;Route, Type&gt;();
+    }
+
+    public override void FinishedInitialization()
+    {
+      base.FinishedInitialization2();
+      ServiceManager.Get&lt;ISemanticProcessor&gt;().Register&lt;WebServerMembrane, RouteProcessor&gt;();
+    }
+
+    public void Register&lt;T&gt;(string verb, string path) where T : ISemanticRoute
+    {
+      semanticRoutes[new Route() { Verb = verb.ToLower(), Path = path.ToLower() }] = typeof(T);
+    }
+
+    public void RouteRequest(ST_HttpRequest req)
+    {
+      Route route = new Route() { Verb = req.Verb.ToLower(), Path = req.Path.ToLower() };
+      Type routeHandler;
+      bool found = semanticRoutes.TryGetValue(route, out routeHandler);
+      ISemanticRoute semanticRoute = null;
+
+      if (found)
+      {
+        semanticRoute = InstantiateRouteHandler(routeHandler, req);
+        semanticRoute.Context = req.Context;
+        ServiceManager.Get&lt;ISemanticProcessor&gt;().ProcessInstance&lt;WebServerMembrane&gt;(semanticRoute);
+      }
+      else
+      {
+        ServiceManager.Get&lt;ILoggerService&gt;().Log(&quot;Route not found.&quot;);
+      }
+    }
+
+    protected ISemanticRoute InstantiateRouteHandler(Type routeHandler, ST_HttpRequest req)
+    {
+      ISemanticRoute semanticRoute = (ISemanticRoute)Activator.CreateInstance(routeHandler);
+
+      if (!string.IsNullOrEmpty(req.Data))
+      {
+        // We assume data will be in JSON format.
+        JsonConvert.PopulateObject(req.Data, semanticRoute);
+      }
+      else if (req.Verb.ToLower() == &quot;get&quot;)
+      {
+        PopulateFromQueryString(req, semanticRoute);
+      }
+
+      return semanticRoute;
+    }
+
+    protected void PopulateFromQueryString(ST_HttpRequest req, ISemanticRoute semanticRoute)
+    {
+      NameValueCollection nvc = req.Context.Request.QueryString;
+
+      foreach (string key in nvc.AllKeys)
+      {
+        PropertyInfo pi = semanticRoute.GetType().GetProperty(key, 
+          BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+        if (pi != null)
+        {
+          object valOfType = Converter.Convert(Uri.UnescapeDataString(nvc[key].Replace('+', ' ')), pi.PropertyType);
+          pi.SetValue(semanticRoute, valOfType);
+        }
+      }
+    }
+  }
+
+  public class RouteProcessor : IReceptor
+  {
+    public void Process(ISemanticProcessor semProc, IMembrane membrane, ST_HttpRequest req)
+    {
+      semProc.ServiceManager.Get&lt;ISemanticWebRouterService&gt;().RouteRequest(req);
+    }
+  }
+}</pre>
+<p>The pattern here should emerging:</p>
+<ol>
+	<li>Create a class that implements IModule</li>
+	<li>Register the service</li>
+	<li>In this case, the service registers a subscriber to the ST_HttpRequest 
+	message</li>
+	<li>The message subscriber simply calls back into the service for 
+	processing.</li>
+</ol>
+<h4>Testing</h4>
+<p>Let's add it to our <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+  &lt;Module AssemblyName='ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='WebServerService.dll'/&gt;
+<b>  &lt;Module AssemblyName='SemanticWebRouterService.dll'/&gt;</b>
+&lt;/Modules&gt;</pre>
+<p>Next, we'll write register a route that logs setting a property so we can 
+test at least the query parameter initialization process.&nbsp; Here's how we 
+register the route:</p>
+<pre>ISemanticWebRouterService router = serviceManager.Get&lt;ISemanticWebRouterService&gt;();
+router.Register&lt;ST_Foobar&gt;(&quot;get&quot;, &quot;foobar&quot;);</pre>
+<p><img border="0" src="key-small.jpg" width="94" height="33"></p>
+<p>Note that we're not registering a method to handle the route, we're 
+registering a semantic type that gets instantiated for a particular route.</p>
+<p>Here's a simple test type:</p>
+<pre>public class ST_Foobar : SemanticRoute
+{
+  public string Test
+  {
+    get { return Test; }
+    set
+    {
+      Program.serviceManager.Get&lt;ILoggerService&gt;().Log(&quot;test parameter set to: &quot; + value.Quote());
+    }
+  }
+}</pre>
+<p>Now we can try it:</p>
+<p><img border="0" src="out5.png" width="394" height="230"></p>
+<p>Of course, this is just a bare bones example.&nbsp; There is no 
+authentication, authorization, session management, and so forth.&nbsp; And we 
+still aren't responding to the browser request!</p>
+<p>A few interesting points:</p>
+<ul>
+	<li>The router thread will exit after finding (or not) the route, and the 
+	route handler message is published in a manner in which a new thread will 
+	receive the call.&nbsp; </li>
+	<li>Because we're using the publisher/subscriber, the route can be processed 
+	my multiple subscribers.&nbsp; Why you'd want to do that, I'm not sure.</li>
+	<li>Because we're associating a route with a <i>semantic type</i> (ok, fancy 
+	name for a class), we can deserialize the parameters into that class and, as 
+	it is actually a semantic message, it fits perfectly into the 
+	publisher/subscriber concept.</li>
+	<li>Ideally, we would implement the route handlers as modules themselves, 
+	keeping the application free of doing the route registration.<ul>
+	<li>This has the advantage of being able to add new behaviors to our web 
+	server by adding modules that define the semantic types for a given route 
+	and implementing the subscribers for those messages.</li>
+</ul>
+	</li>
+</ul>
+<h4>Responders</h4>
+<p>Lastly, our web server needs a few simple responders, again implemented as a 
+module.&nbsp; Note in this case, the service interface is a placeholder, as 
+there are no public methods that are directly callable:</p>
+<pre>using System.Text;
+
+using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
+
+using Semantics;
+
+namespace WebResponseService
+{
+  // Here we create a placeholder, because this service is not actually exposed.
+  // All activities are handled as a subscriber.
+  public interface IWebResponseService : IService { }
+
+  public class WebResponseModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;IWebResponseService, WebResponseService&gt;();
+    }
+  }
+
+  public class WebResponseService : ServiceBase, IWebResponseService
+  {
+    public override void FinishedInitialization()
+    {
+      base.FinishedInitialization2();
+      ServiceManager.Get&lt;ISemanticProcessor&gt;().Register&lt;WebServerMembrane, WebResponder&gt;();
+    }
+  }
+
+  public class WebResponder : IReceptor
+  {
+    public void Process(ISemanticProcessor proc, IMembrane membrane, ST_JsonResponse resp)
+    {
+      resp.Context.Response.StatusCode = resp.StatusCode;
+      resp.Context.Response.ContentType = &quot;text/json&quot;;
+      resp.Context.Response.ContentEncoding = Encoding.UTF8;
+      byte[] byteData = resp.Json.to_Utf8();
+      resp.Context.Response.ContentLength64 = byteData.Length;
+      resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
+      resp.Context.Response.Close();
+    }
+
+    public void Process(ISemanticProcessor proc, IMembrane membrane, ST_HtmlResponse resp)
+    {
+      byte[] utf8data = resp.Html.to_Utf8();
+      resp.Context.Response.ContentType = &quot;text/html&quot;;
+      resp.Context.Response.ContentEncoding = Encoding.UTF8;
+      resp.Context.Response.ContentLength64 = utf8data.Length;
+      resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
+      resp.Context.Response.Close();
+    }
+
+    public void Process(ISemanticProcessor proc, IMembrane membrane, ST_CssResponse resp)
+    {
+      byte[] utf8data = resp.Css.to_Utf8();
+      resp.Context.Response.ContentType = &quot;text/css&quot;;
+      resp.Context.Response.ContentEncoding = Encoding.UTF8;
+      resp.Context.Response.ContentLength64 = utf8data.Length;
+      resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
+      resp.Context.Response.Close();
+    }
+
+    public void Process(ISemanticProcessor proc, IMembrane membrane, ST_JavascriptResponse resp)
+    {
+      byte[] utf8data = resp.Javascript.to_Utf8();
+      resp.Context.Response.ContentType = &quot;text/javascript&quot;;
+      resp.Context.Response.ContentEncoding = Encoding.UTF8;
+      resp.Context.Response.ContentLength64 = utf8data.Length;
+      resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
+      resp.Context.Response.Close();
+    }
+
+    public void Process(ISemanticProcessor proc, IMembrane membrane, ST_RouteNotFound resp)
+    {
+      resp.Context.Response.StatusCode = 404;	// respond with page not found 404 error code.
+      resp.Context.Response.Close();
+    }
+  }
+}</pre>
+<p>Now let's go back to the semantic router and publish the ST_RouteNotFound 
+message for undefined routes:</p>
+<pre>ServiceManager.Get&lt;ILoggerService&gt;().Log(&quot;Route not found.&quot;);
+ServiceManager.Get&lt;ISemanticProcessor&gt;().ProcessInstance&lt;WebServerMembrane, ST_RouteNotFound&gt;(r=&gt;r.Context=req.Context);</pre>
+<p>We add this module to our <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+  &lt;Module AssemblyName='ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='WebServerService.dll'/&gt;
+  &lt;Module AssemblyName='SemanticWebRouterService.dll'/&gt;
+  <b>&lt;Module AssemblyName='WebResponseService.dll'/&gt;</b>
+&lt;/Modules&gt;
+</pre>
+<p>We now have our first successful response to the browser!</p>
+<p><img border="0" src="out6.png" width="308" height="224"></p>
+<p>No more spinny!</p>
+<h4>Responding with Data from Files (HTML, CSS, etc.)</h4>
+<p>We'll add one more service for routes that respond with data from HTML/CSS 
+files.&nbsp; Who knows, you may want to replace or extend this with data 
+returned from a server instead, so it makes sense to make this a YAM - Yet 
+Another Module.&nbsp; Again, the service interface is merely a placeholder, as 
+there are no exposed service methods.&nbsp; We'll only handle three file types 
+at the moment: HTML, CSS, and Javascript:</p>
+<pre>using System;
+using System.IO;
+using System.Net;
+
+using Clifton.Core.ExtensionMethods;
+using Clifton.Core.ModuleManagement;
+using Clifton.Core.Semantics;
+using Clifton.Core.ServiceManagement;
+
+using Semantics;
+using ServiceInterfaces;
+
+namespace WebFileResponseService
+{
+  // Here we create a placeholder, because this service is not actually exposed.
+  // All activities are handled as a subscriber.
+  public interface IFileResponseService : IService { }
+
+  public class FileResponseModule : IModule
+  {
+    public void InitializeServices(IServiceManager serviceManager)
+    {
+      serviceManager.RegisterSingleton&lt;FileResponseService, FileResponseService&gt;();
+    }
+  }
+
+    public class FileResponseService : ServiceBase, IFileResponseService
+    {
+      public override void FinishedInitialization()
+      {
+        base.FinishedInitialization2();
+        ServiceManager.Get&lt;ISemanticProcessor&gt;().Register&lt;WebServerMembrane, FileResponder&gt;();
+      }
+    }
+ 
+    public class FileResponder : IReceptor
+    {
+      public void Process(ISemanticProcessor proc, IMembrane membrane, ST_FileResponse resp)
+      {
+        ProcessFileRequest(proc, resp.Context);
+      }
+
+      protected void ProcessFileRequest(ISemanticProcessor semProc, HttpListenerContext context)
+      {
+        bool handled = false;
+        string path = context.Request.RawUrl.LeftOf(&quot;?&quot;).RightOf(&quot;/&quot;).LeftOfRightmostOf('.');
+        string ext = context.Request.RawUrl.RightOfRightmostOf('.');
+
+        if (String.IsNullOrEmpty(path))
+        {
+          path = &quot;index&quot;;
+        }
+
+        if (String.IsNullOrEmpty(ext))
+        {
+          ext = &quot;html&quot;;
+        }
+
+        path = path + &quot;.&quot; + ext;
+        // Hardcoded folder path for the website!
+        path = Path.Combine(&quot;Website&quot;, path);
+
+        if (File.Exists(path))
+        {
+          switch (ext)
+          {
+            case &quot;html&quot;:
+              semProc.ProcessInstance&lt;WebServerMembrane, ST_HtmlResponse&gt;(r =&gt;
+              {
+                r.Context = context;
+                r.Html = ReadTextFile(path);
+              });
+              break;
+
+            case &quot;js&quot;:
+              semProc.ProcessInstance&lt;WebServerMembrane, ST_JavascriptResponse&gt;(r =&gt;
+              {
+                r.Context = context;
+                r.Javascript = ReadTextFile(path);
+              });
+              break;
+
+            case &quot;css&quot;:
+              semProc.ProcessInstance&lt;WebServerMembrane, ST_CssResponse&gt;(r =&gt;
+              {
+                r.Context = context;
+                r.Css = ReadTextFile(path);
+              });
+              break;
+          }
+
+        handled = true;
+      }
+
+      if (!handled)
+      {
+        semProc.ServiceManager.Get&lt;ILoggerService&gt;().Log(&quot;Route not found.&quot;);
+        semProc.ProcessInstance&lt;WebServerMembrane, ST_RouteNotFound&gt;(r =&gt; r.Context = context);
+      }
+    }
+
+    protected string ReadTextFile(string fn)
+    {
+      string text = File.ReadAllText(fn);
+  
+      return text;
+    }
+
+    protected byte[] ReadBinaryFile(string fn)
+    {
+      FileStream fStream = new FileStream(fn, FileMode.Open, FileAccess.Read);
+      BinaryReader br = new BinaryReader(fStream);
+      byte[] data = br.ReadBytes((int)fStream.Length);
+      br.Close();
+      fStream.Close();
+
+      return data;
+    }
+  }
+}</pre>
+<h4>Testing</h4>
+<p>Again, we had this module to the <code>modules.xml</code> file:</p>
+<pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;Modules&gt;
+  &lt;Module AssemblyName='Clifton.SemanticProcessorService.dll'/&gt;
+  &lt;Module AssemblyName='ConsoleLoggerService.dll'/&gt;
+  &lt;Module AssemblyName='WebServerService.dll'/&gt;
+  &lt;Module AssemblyName='SemanticWebRouterService.dll'/&gt;
+  &lt;Module AssemblyName='WebResponseService.dll'/&gt;
+  &lt;Module AssemblyName='WebFileResponseService.dll'/&gt;
+&lt;/Modules&gt;</pre>
+<p>Now let's make simple change to our application.&nbsp; We'll use map the 
+ST_FileResponse semantic message the route &quot;foobar&quot; so that a specific page will 
+be loaded.&nbsp; Here's the entire program:</p>
+<pre>static partial class Program
+{
+  static void Main(string[] args)
+  {
+    InitializeBootstrap();
+    Bootstrap((e) =&gt; Console.WriteLine(e.Message));
+
+    serviceManager.Get&lt;IWebServerService&gt;().Start(&quot;127.0.0.1&quot;, 80);
+
+    ISemanticWebRouterService router = serviceManager.Get&lt;ISemanticWebRouterService&gt;();
+<b>    router.Register&lt;ST_FileResponse&gt;(&quot;get&quot;, &quot;foobar&quot;);</b>
+
+    Console.WriteLine(&quot;Press ENTER to exit the server.&quot;);
+    Console.ReadLine();
+  }
+}</pre>
+<p>The bolded line:</p>
+<pre>router.Register&lt;ST_FileResponse&gt;(&quot;get&quot;, &quot;foobar&quot;);</pre>
+<p>does the mapping of the route.</p>
+<p>Now let's add an HTML page to our Website folder, which lives in bin\Debug 
+(yes, I hard-coded the website path in the above code, typically I retrieve it 
+from the app.config file using, you guessed it, the AppConfigService I described 
+in a previous article in this series.</p>
+<p><img border="0" src="html1.png" width="254" height="102"></p>
+<p>The file is simply:</p>
+<pre>&lt;h1&gt;Foobar!&lt;/h1&gt;</pre>
+<p>And here's the result:</p>
+<p><img border="0" src="out7.png" width="304" height="272"></p>
+<h2>Conclusion</h2>
+<p>OK, that's enough for now.&nbsp; I had originally intended to use all the 
+tech for writing a simple game, but I think demonstrating the 
+Publisher/Subscriber with just the web server components is enough for this 
+article!&nbsp; In the demo code, you'll notice the web server demo is actually 
+in the project HuntTheWumpus.&nbsp; That was the game I was going to use to 
+demonstrate the Publisher/Subscriber, and that will probably be the next article 
+anyways.</p>
+<p>To review what has been achieved:</p>
+<ul>
+	<li>Further decoupling of services.&nbsp; Except for core services, like the 
+	logger, and direct access to the router service for registering routes, the 
+	intercommunication is handled entirely by the Publisher/Subscriber.&nbsp; In 
+	fact, several of the services don't even implement service methods, the 
+	interface is simply placeholders.</li>
+	<li>Messages are processed on independent threads, which is perfect for this 
+	kind of application.</li>
+	<li>Subscribers are instantiated for each message, a desirable feature where 
+	thread safety is paramount.</li>
+	<li>The Publisher/Subscriber implements logging and exception handling.</li>
+</ul>
+<p>So, these four articles demonstrates the four components that are the 
+foundation stones to The Clifton Method.&nbsp; Whether I'm writing a web or 
+client app, I almost always start with these components and the growing library 
+of services that I can just plug into an application.&nbsp; You can peruse the 
+whole kit and kaboodle on <a href="https://github.com/cliftonm/clifton">GitHub</a>.&nbsp; 
+There are minor variances to the implementation there, vs. what's presented 
+here.&nbsp; Through the process of writing these four articles, I've updated the 
+code in the GitHub repo to reflect bug fixes, and some of the code for minor 
+improvements.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img border="0" src="dodec.jpg" width="229" height="220"></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+<p>Let's see how this all works in a simple web app example that implements the 
+game <a href="https://en.wikipedia.org/wiki/Hunt_the_Wumpus">Hunt the Wumpus</a>, 
+my favorite way of illustrating a technology.&nbsp; Hunt the Wumpus was created 
+by <a href="https://en.wikipedia.org/wiki/Gregory_Yob">Gregory Yob</a> when I 
+was in 7th grade, and whom I actually met and became close friends with when I 
+was 18 (he walked into a computer store where I was a sales clerk to by some 
+stuff, and when I saw is credit card, I exclaimed &quot;Wow, YOU are Gregory Yob!?!?!&quot; 
+-- he was quite famous in the school I went to.)&nbsp; He was an interesting 
+person to say the least and my mentor for quite a while.</p>
+
+</body>
+
+</html>

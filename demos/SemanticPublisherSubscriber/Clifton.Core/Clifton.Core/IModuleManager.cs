@@ -21,17 +21,18 @@
 * SOFTWARE.
 */
 
-using Clifton.Core.ServiceManagement;
+using System;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Reflection;
 
-namespace Clifton.Core.ServiceInterfaces
+using Clifton.Core.Semantics;
+
+namespace Clifton.Core.ModuleManagement
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	public interface IModuleManager
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
+		void RegisterModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath = null, Func<string, Assembly> resourceAssemblyResolver = null);
+		ReadOnlyCollection<IModule> Modules { get; }
 	}
 }

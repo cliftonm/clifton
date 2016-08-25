@@ -21,17 +21,26 @@
 * SOFTWARE.
 */
 
-using Clifton.Core.ServiceManagement;
-
-namespace Clifton.Core.ServiceInterfaces
+namespace Clifton.Core.ServiceManagement
 {
-	public interface IAppConfigService : IConfigService { }
-	public interface IEncryptedAppConfigService : IConfigService { }
-
-	public interface IAppConfigDecryptionService : IService
+	/// <summary>
+	/// A useful base class for a default implementation of IService methods.
+	/// </summary>
+	public abstract class ServiceBase : IService
 	{
-		string Password { get; set; }
-		string Salt { get; set; }
-		string Decrypt(string text);
-	}
+		public IServiceManager ServiceManager { get; set; }
+
+		public virtual void Initialize(IServiceManager svcMgr)
+		{
+			ServiceManager = svcMgr;
+		}
+
+		public virtual void FinishedInitialization()
+		{
+		}
+
+        public virtual void FinishedInitialization2()
+        {
+        }
+    }
 }

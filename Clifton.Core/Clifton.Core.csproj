@@ -73,7 +73,6 @@
     <Compile Include="Clifton.Core.Semantics\ImmutableSemanticType.cs" />
     <Compile Include="Clifton.Core.Semantics\Interfaces.cs" />
     <Compile Include="Clifton.Core.Semantics\Membrane.cs" />
-    <Compile Include="Clifton.Core.ServiceInterfaces\IAppConfigDecryption.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IAppConfigService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IConfigService.cs" />
     <Compile Include="Clifton.Core.ServiceInterfaces\IConsoleCriticalExceptionService.cs" />

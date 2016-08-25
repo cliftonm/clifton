@@ -1,16 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{28EC665D-37C1-41D4-BD96-3005A7078630}</ProjectGuid>
+    <ProjectGuid>{8E0319E8-F526-433E-8C30-FD2AF7A1BE55}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Clifton.AppConfigService</RootNamespace>
-    <AssemblyName>Clifton.AppConfigService</AssemblyName>
+    <RootNamespace>WebResponseService</RootNamespace>
+    <AssemblyName>WebResponseService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,22 +32,30 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigService.cs" />
+    <Compile Include="WebResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Clifton.Core.csproj">
-      <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
+    <ProjectReference Include="..\..\Clifton.Core\Clifton.Core\Clifton.Core.csproj">
+      <Project>{013927ac-22ef-491a-8772-18dac136f96b}</Project>
       <Name>Clifton.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Semantics\Semantics.csproj">
+      <Project>{c699e736-35c4-43c8-a590-b2b891a186b1}</Project>
+      <Name>Semantics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ServiceInterfaces\ServiceInterfaces.csproj">
+      <Project>{60c03b68-1459-4a07-b892-2feb124dfb0d}</Project>
+      <Name>ServiceInterfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

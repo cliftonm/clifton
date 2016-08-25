@@ -9,7 +9,7 @@ namespace AppConfigDecryptionService
     {
         public void InitializeServices(IServiceManager serviceManager)
         {
-            serviceManager.RegisterSingleton<IAppConfigDecryption, AppConfigDecryptionService>(d =>
+            serviceManager.RegisterSingleton<IAppConfigDecryptionService, AppConfigDecryptionService>(d =>
             {
                 d.Password = "somepassword";
                 d.Salt = "somesalt";
@@ -17,7 +17,7 @@ namespace AppConfigDecryptionService
         }
     }
 
-    public class AppConfigDecryptionService : ServiceBase, IAppConfigDecryption
+    public class AppConfigDecryptionService : ServiceBase, IAppConfigDecryptionService
     {
         public string Password { get; set; }
         public string Salt { get; set; }
