@@ -27,6 +27,14 @@ using Clifton.Core.ServiceManagement;
 
 namespace Clifton.Core.Semantics
 {
+	public enum ProcStates
+	{
+		NotProcessed = 0,
+		OK = 1,
+		Exception = 2,
+		Timeout = 4,
+	}
+
 	public interface ISemanticProcessor : IService
 	{
 		IMembrane Surface { get; }
@@ -42,6 +50,10 @@ namespace Clifton.Core.Semantics
 		void Register(IMembrane membrane, IReceptor receptor);
 
 		void ProcessInstance<M, T>(Action<T> initializer, bool processOnCallerThread = false)
+			where M : IMembrane, new()
+			where T : ISemanticType, new();
+
+		ProcStates ProcessInstance<M, T>(Action<T> initializer, int msTimeout)
 			where M : IMembrane, new()
 			where T : ISemanticType, new();
 

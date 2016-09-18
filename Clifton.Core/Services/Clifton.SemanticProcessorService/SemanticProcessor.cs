@@ -303,6 +303,15 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			ProcessInstance<M, T>(inst, processOnCallerThread);
 		}
 
+		public ProcStates ProcessInstance<M, T>(Action<T> initializer, int msTimeout)
+			where M : IMembrane, new()
+			where T : ISemanticType, new()
+		{
+			T inst = new T();
+			initializer.IfNotNull(i => i(inst));
+			return ProcessInstance<M, T>(inst, msTimeout);
+		}
+
 		public void ProcessInstance<M, T>(bool processOnCallerThread = false)
 			where M : IMembrane, new()
 			where T : ISemanticType, new()
@@ -323,6 +332,15 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			ProcessInstance(membrane, obj, processOnCallerThread);
 		}
 
+		public ProcStates ProcessInstance<M, T>(T obj, int msTimeout)
+			where M : IMembrane, new()
+			where T : ISemanticType
+		{
+			Type mtype = typeof(M);
+			IMembrane membrane = RegisterMembrane<M>();
+			return ProcessInstance(membrane, obj, msTimeout);
+		}
+
 		/// <summary>
 		/// Process an instance of a specific type immediately.  The type T is determined implicitly from the parameter type, so 
 		/// a call can look like: ProcessInstance(t1).  This also allows the code here to use the "dynamic" keyword rather than 
@@ -334,10 +352,17 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			ProcessInstance(membrane, null, obj, processOnCallerThread);
 		}
 
-		protected void ProcessInstance<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread)
+		public ProcStates ProcessInstance<T>(IMembrane membrane, T obj, int msTimeout)
+			where T : ISemanticType
+		{
+			return ProcessInstance(membrane, null, obj, true, msTimeout);
+		}
+
+		protected ProcStates ProcessInstance<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread, int msTimeout = 0)
 			where T : ISemanticType
 		{
 			// ProcessInstance((ISemanticType)obj);
+			ProcStates ps = ProcStates.NotProcessed;
 
 			// We get the source object type.
 			Type tsource = obj.GetType();
@@ -371,7 +396,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				// Call immediately?
 				if (processOnCallerThread)
 				{
-					Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) });
+					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
 				}
 				else
 				{
@@ -389,7 +414,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				// Call immediately?
 				if (processOnCallerThread)
 				{
-					Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
+					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
 				}
 				else
 				{
@@ -399,6 +424,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
 			PermeateOut(membrane, caller, obj, processOnCallerThread);
+
+			return ps;
 		}
 
 		public void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
@@ -435,6 +462,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		/// </summary>
 		protected void ProcessInstance(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread = false)
 		{
+			// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
+			// ProcStates ps = ProcStates.NotProcessed;
+
 			// We get the source object type.
 			Type tsource = obj.GetType();
 
@@ -462,6 +492,10 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 				if (processOnCallerThread)
 				{
+					// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
+					// dynamic dtarget = target;
+					// ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => dtarget.Process(this, membrane, obj), AutoDispose = false });
+
 					method.Invoke(target, new object[] { this, membrane, obj });
 				}
 				else
@@ -498,6 +532,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		/// </summary>
 		protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
 		{
+			// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
+			// ProcStates ps = ProcStates.NotProcessed;
 			var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(pi => pi.PropertyType.GetInterfaces().Contains(typeof(ISemanticType)));
 
 			properties.ForEach(pi =>
@@ -506,6 +542,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 					if (prop != null)
 					{
+						// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 						ProcessInstance(membrane, caller, prop, processOnCallerThread);
 					}
 				});
@@ -654,11 +691,23 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			}
 		}
 
-		protected void Call(ProcessCall rc)
+		protected ProcStates Call(ProcessCall rc, int msTimeout = 0)
 		{
 			try
 			{
 				rc.MakeCall();
+
+				if (msTimeout != 0)
+				{
+					bool ok = Thread.CurrentThread.Join(msTimeout);
+
+					if (!ok)
+					{
+						return ProcStates.Timeout;
+					}
+				}
+
+				return ProcStates.OK;
 			}
 			catch (Exception ex)
 			{
@@ -666,18 +715,28 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				// Prevent recursion if the exception process itself throws an exception.
 				if (!(rc.SemanticInstance is ST_Exception))
 				{
-					ProcessInstance(Logger, new ST_Exception(ex), true);
+                    try
+                    {
+                        ProcessInstance(Logger, new ST_Exception(ex), true);
+                    }
+                    catch { }
 				}
-
+				// The ST_Exception handler should deal with inner exceptions.
+				/*
 				while (ex2.InnerException != null)
 				{
 					ex2 = ex2.InnerException;
 					// Prevent recursion if the exception process itself throws an exception.
 					if (!(rc.SemanticInstance is ST_Exception))
 					{
-						ProcessInstance(Logger, new ST_Exception(ex2), true);
+                        try
+                        {
+                            ProcessInstance(Logger, new ST_Exception(ex2), true);
+                        }
+                        catch { }
 					}
 				}
+				*/
 			}
 			finally
 			{
@@ -686,6 +745,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					((IDisposable)rc.Receptor).Dispose();
 				}
 			}
+
+			return ProcStates.Exception;
 		}
 
 		/// <summary>
