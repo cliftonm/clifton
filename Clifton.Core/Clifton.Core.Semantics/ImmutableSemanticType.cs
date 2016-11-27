@@ -36,7 +36,7 @@ namespace Clifton.Core.Semantics
 	{
 	}
 
-	public interface ISemanticType<T>
+	public interface ISemanticType<T> : ISemanticType
 	{
 		T Value { get; }
 	}

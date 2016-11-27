@@ -201,7 +201,7 @@ namespace Clifton.Core.ModelTableManagement
 
 			return mappedRecords[recType].Cast<T>().ToList();
 		}
-
+		/*
 		/// <summary>
 		/// Returns a collection cast to the specified model type, which can by used by the application to get a concrete collection of the model type, as opposed
 		/// the the GetEntityRecordCollection, which returns a collection of IEntity.
@@ -212,6 +212,7 @@ namespace Clifton.Core.ModelTableManagement
 
 			return mappedRecords[recType].Cast<T>().ToList();
 		}
+		*/
 
 		public bool TryGetView<T>(out DataView dv)
 		{
@@ -420,6 +421,7 @@ namespace Clifton.Core.ModelTableManagement
 				row.Table.Columns[fieldName].ReadOnly = false;
 				row[fieldName] = val ?? DBNull.Value;
 				row.Table.Columns[fieldName].ReadOnly = lastState;
+                row.Table.AcceptChanges();
 			}
 		}
 
