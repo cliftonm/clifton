@@ -22,6 +22,7 @@ namespace Clifton.DockingFormService
     public class DockingFormService : ServiceBase, IDockingFormService
     {
         public event EventHandler<ContentLoadedEventArgs> ContentLoaded;
+        public event EventHandler<EventArgs> ActiveDocumentChanged;
 
         protected DockPanel dockPanel;
         protected VS2015LightTheme theme = new VS2015LightTheme();
@@ -33,6 +34,8 @@ namespace Clifton.DockingFormService
             dockPanel.Dock = DockStyle.Fill;
             dockPanel.Theme = theme;
             form.Controls.Add(dockPanel);
+
+            dockPanel.ActiveDocumentChanged += (sndr, args) => ActiveDocumentChanged.Fire(dockPanel.ActiveDocument);
 
             return form;
         }

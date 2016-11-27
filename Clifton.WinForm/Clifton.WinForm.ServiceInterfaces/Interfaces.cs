@@ -49,6 +49,7 @@ namespace Clifton.WinForm.ServiceInterfaces
     public interface IDockingFormService : IService
     {
         event EventHandler<ContentLoadedEventArgs> ContentLoaded;
+        event EventHandler<EventArgs> ActiveDocumentChanged;
 
         Form CreateMainForm();
 
