@@ -46,6 +46,11 @@ namespace Clifton.WinForm.ServiceInterfaces
         event EventHandler<ProcessCmdKeyEventArgs> ProcessCmdKeyEvent;
     }
 
+    public interface IDockDocument
+    {
+        string TabText { get; set; }
+    }
+
     public interface IDockingFormService : IService
     {
         event EventHandler<ContentLoadedEventArgs> ContentLoaded;

@@ -1,8 +1,10 @@
 ﻿using WeifenLuo.WinFormsUI.Docking;
 
+using Clifton.WinForm.ServiceInterfaces;
+
 namespace Clifton.DockingFormService
 {
-    public class GenericDockContent : DockContent
+    public class GenericDockContent : DockContent, IDockDocument
     {
         public string Metadata { get; set; }
 
