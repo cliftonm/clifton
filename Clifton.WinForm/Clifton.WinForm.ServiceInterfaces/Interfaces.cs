@@ -48,6 +48,7 @@ namespace Clifton.WinForm.ServiceInterfaces
 
     public interface IDockDocument
     {
+        string Metadata { get; set; }
         string TabText { get; set; }
     }
 
