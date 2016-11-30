@@ -1326,47 +1326,23 @@ namespace Clifton.Core.ExtensionMethods
 			return b >= a && b <= c;
 		}
 
-	        /// <summary>
-	        /// Ensures that one integer is not greater than a certain value and changes 
-	        /// it if it is. If the integer (the first argument) is greater than the
-	        /// maximum allowable (the second argument), it is changed to equal the maximum
-	        /// allowable, then returned. If the first argument is less than or equal to 
-	        /// the second argument, it is returned unchanged.
-	        /// </summary>
-	        /// <param name="a">The integer to check.</param>
-	        /// <param name="max">The maximum value allowable of "a".</param>
-	        /// <returns>int</returns>
-		public static int Max(this int a, int max)
+        /// <summary>
+        /// Value cannot exceed max, otherwise max is returned.
+        /// </summary>
+		public static int Min(this int a, int max)
 		{
-			if (a > max)
-			{
-				a = max;
-			}
-
-			return a;
+            return (a > max) ? max : a;
 		}
 
-	        /// <summary>
-	        /// Ensures that an one integer is at least a certain value and changes 
-	        /// it if it is not. If the integer (the first argument) is less than the 
-	        /// minimum allowable (the second argument), it is changed to equal the minimum 
-	        /// allowable, then returned. If the first argument is greater than or equal to 
-	        /// the second argument, it is returned unchanged.
-	        /// </summary>
-	        /// <param name="a">The integer to check.</param>
-	        /// <param name="min">The minimum value allowable of "a".</param>
-	        /// <returns>int</returns>
-		public static int Min(this int a, int min)
-		{
-			if (a < min)
-			{
-				a = min;
-			}
+        /// <summary>
+        /// Value cannot be less than min, otherwise min is returned.
+        /// </summary>
+        public static int Max(this int a, int min)
+        {
+            return (a <min) ? min: a;
+        }
 
-			return a;
-		}
-
-		public static void Until(this int start, int max, Action<int> action)
+        public static void Until(this int start, int max, Action<int> action)
 		{
 			for (int i = start; i < max; i++) action(i);
 		}
