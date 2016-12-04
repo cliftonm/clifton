@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 using Clifton.Core.ServiceManagement;
@@ -57,6 +58,9 @@ namespace Clifton.WinForm.ServiceInterfaces
         event EventHandler<ContentLoadedEventArgs> ContentLoaded;
         event EventHandler<EventArgs> ActiveDocumentChanged;
 
+        Panel DockPanel { get; }
+        List<IDockDocument> Documents { get; }
+
         Form CreateMainForm();
 
         /// <summary>
@@ -68,6 +72,8 @@ namespace Clifton.WinForm.ServiceInterfaces
         /// Create a document adjacent to another document, in a separate pane.
         /// </summary>
         Control CreateDocument(Control pane, DockAlignment dockAlignment, string tabText, string metadata = "", double portion = 0.25);
+
+        void SetActiveDocument(IDockDocument document);
 
         void LoadLayout(string filename);
         void SaveLayout(string filename);

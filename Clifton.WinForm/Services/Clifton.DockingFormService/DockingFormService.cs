@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -23,6 +24,9 @@ namespace Clifton.DockingFormService
     {
         public event EventHandler<ContentLoadedEventArgs> ContentLoaded;
         public event EventHandler<EventArgs> ActiveDocumentChanged;
+
+        public Panel DockPanel { get { return dockPanel; } }
+        public List<IDockDocument> Documents { get { return dockPanel.DocumentsToArray().Cast<IDockDocument>().ToList(); } }
 
         protected DockPanel dockPanel;
         protected VS2015LightTheme theme = new VS2015LightTheme();
@@ -58,6 +62,11 @@ namespace Clifton.DockingFormService
             dockContent.Show(((DockContent)pane).Pane, (WeifenLuo.WinFormsUI.Docking.DockAlignment)dockAlignment, portion);
 
             return dockContent;
+        }
+
+        public void SetActiveDocument(IDockDocument document)
+        {
+            ((DockContent)document).Activate();
         }
 
         public void SaveLayout(string filename)
