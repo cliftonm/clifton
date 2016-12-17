@@ -374,15 +374,8 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
 
-			T record = null;
 			List<IEntity> items = mappedRecords[typeof(T)];
-
-			T item = items.SingleOrDefault(predicate);
-
-			if (item != null)
-			{
-				record = item;
-			}
+			T record = items.SingleOrDefault(predicate);
 
 			return record;
 		}

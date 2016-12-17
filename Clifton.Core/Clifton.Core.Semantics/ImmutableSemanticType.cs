@@ -29,12 +29,12 @@ using System.Threading.Tasks;
 
 namespace Clifton.Core.Semantics
 {
-	/// <summary>
-	/// Topmost abstraction.
-	/// </summary>
-	public interface ISemanticType
-	{
-	}
+    /// <summary>
+    /// Topmost abstraction.
+    /// </summary>
+    public interface ISemanticType { }
+
+    public interface ISemanticQualifier : ISemanticType { }
 
 	public interface ISemanticType<T> : ISemanticType
 	{

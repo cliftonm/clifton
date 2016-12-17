@@ -86,6 +86,13 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		public Action<IReceptor> Initializer { get; set; }
 	}
 
+    public class SemanticQualifier
+    {
+        public Type SemanticType { get; set; }
+        public IReceptor Receptor { get; set; }
+        public Func<ISemanticQualifier, bool> Qualifier { get; set; }
+    }
+
 	public class SemanticProcessor : ServiceBase, ISemanticProcessor
 	{
 		public IMembrane Surface { get; protected set; }
@@ -99,6 +106,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		protected ConcurrentDictionary<IMembrane, List<Type>> membraneReceptorTypes;
 		protected ConcurrentDictionary<IMembrane, List<IReceptor>> membraneReceptorInstances;
 
+        protected ConcurrentList<SemanticQualifier> qualifiers;
 		protected ConcurrentList<IReceptor> statefulReceptors;
 		protected ConcurrentDictionary<Type, List<Type>> typeNotifiers;
 		protected ConcurrentDictionary<Type, List<IReceptor>> instanceNotifiers;
@@ -107,6 +115,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 		public SemanticProcessor()
 		{
+            qualifiers = new ConcurrentList<SemanticProcessorService.SemanticQualifier>();
 			membranes = new ConcurrentDictionary<Type, IMembrane>();
 			membraneReceptorTypes = new ConcurrentDictionary<IMembrane, List<Type>>();
 			membraneReceptorInstances = new ConcurrentDictionary<IMembrane, List<IReceptor>>();
@@ -234,6 +243,11 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			membranes[membrane.GetType()] = membrane;
 			membraneReceptorInstances[membrane].Add(receptor);
 		}
+
+        public void RegisterQualifier<T>(IReceptor receptor, Func<ISemanticQualifier, bool> qualifier) where T : ISemanticQualifier
+        {
+            qualifiers.Add(new SemanticQualifier() { SemanticType = typeof(T), Receptor = receptor, Qualifier = qualifier });
+        }
 
 		/// <summary>
 		/// Remove a semantic (source) type from a target (receptor).
@@ -410,16 +424,20 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			foreach (IReceptor receptor in sreceptors)
 			{
-				dynamic target = receptor;
-				// Call immediately?
-				if (processOnCallerThread)
-				{
-					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
-				}
-				else
-				{
-					threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
-				}
+                if (Qualified(receptor, obj))
+                {
+
+                    dynamic target = receptor;
+                    // Call immediately?
+                    if (processOnCallerThread)
+                    {
+                        ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
+                    }
+                    else
+                    {
+                        threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
+                    }
+                }
 			}
 
 			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
@@ -510,27 +528,45 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			foreach (IReceptor receptor in sreceptors)
 			{
-				MethodInfo method = GetProcessMethod(receptor, tsource);
+                // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
+                if (Qualified(receptor, obj))
+                {
+                    MethodInfo method = GetProcessMethod(receptor, tsource);
 
-				// Call immediately?
-				if (processOnCallerThread)
-				{
-					method.Invoke(receptor, new object[] { this, membrane, obj });
-				}
-				else
-				{
-					threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall() { Method = method, SemanticInstance = obj, Receptor = receptor, Parameters = new object[] { this, membrane, obj }, AutoDispose = false });
-				}
+                    // Call immediately?
+                    if (processOnCallerThread)
+                    {
+                        method.Invoke(receptor, new object[] { this, membrane, obj });
+                    }
+                    else
+                    {
+                        threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall() { Method = method, SemanticInstance = obj, Receptor = receptor, Parameters = new object[] { this, membrane, obj }, AutoDispose = false });
+                    }
+                }
 			}
 
 			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
 			PermeateOut(membrane, caller, obj, processOnCallerThread);
 		}
 
-		/// <summary>
-		/// Any public properties that are of ISemanticType type and not null are also emitted into the membrane.
-		/// </summary>
-		protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
+        protected bool Qualified(IReceptor receptor, ISemanticType obj)
+        {
+            bool ret = true;
+            // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
+            var checkReceptors = qualifiers.Where(q => q.Receptor == receptor && q.SemanticType == obj.GetType());
+
+            if (checkReceptors.Count() > 0)
+            {
+                ret = checkReceptors.Any(q => q.Qualifier((ISemanticQualifier)obj));
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Any public properties that are of ISemanticType type and not null are also emitted into the membrane.
+        /// </summary>
+        protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
 		{
 			// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 			// ProcStates ps = ProcStates.NotProcessed;
