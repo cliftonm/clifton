@@ -115,7 +115,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 		public SemanticProcessor()
 		{
-            qualifiers = new ConcurrentList<SemanticProcessorService.SemanticQualifier>();
+            qualifiers = new ConcurrentList<SemanticQualifier>();
 			membranes = new ConcurrentDictionary<Type, IMembrane>();
 			membraneReceptorTypes = new ConcurrentDictionary<IMembrane, List<Type>>();
 			membraneReceptorInstances = new ConcurrentDictionary<IMembrane, List<IReceptor>>();
@@ -421,10 +421,11 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			// Also check stateful receptors
 			List<IReceptor> sreceptors = GetStatefulReceptors(membrane, tsource);
+            Dictionary<SemanticQualifier, bool> qstate = CaptureQualifierState(sreceptors, obj);
 
 			foreach (IReceptor receptor in sreceptors)
 			{
-                if (Qualified(receptor, obj))
+                if (IsQualified(qstate, receptor, obj))
                 {
 
                     dynamic target = receptor;
@@ -525,11 +526,12 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			// Also check stateful receptors
 			List<IReceptor> sreceptors = GetStatefulReceptors(membrane, tsource);
+            Dictionary<SemanticQualifier, bool> qstate = CaptureQualifierState(sreceptors, obj);
 
-			foreach (IReceptor receptor in sreceptors)
+            foreach (IReceptor receptor in sreceptors)
 			{
                 // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
-                if (Qualified(receptor, obj))
+                if (IsQualified(qstate, receptor, obj))
                 {
                     MethodInfo method = GetProcessMethod(receptor, tsource);
 
@@ -549,7 +551,28 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			PermeateOut(membrane, caller, obj, processOnCallerThread);
 		}
 
-        protected bool Qualified(IReceptor receptor, ISemanticType obj)
+        /// <summary>
+        /// Get the current qualified state of all receptors that are to be triggered.
+        /// </summary>
+        protected Dictionary<SemanticQualifier, bool> CaptureQualifierState(List<IReceptor> receptors, ISemanticType obj)
+        {
+            Dictionary<SemanticQualifier, bool> qstate = new Dictionary<SemanticQualifier, bool>();
+            qualifiers.ForEach(q => qstate[q] = false);
+
+            foreach (IReceptor receptor in receptors)
+            {
+                var checkReceptors = qualifiers.Where(q => q.Receptor == receptor && q.SemanticType == obj.GetType());
+                checkReceptors.ForEach(q => qstate[q] = q.Qualifier((ISemanticQualifier)obj));
+            }
+
+            return qstate;
+        }
+
+        /// <summary>
+        /// Return true if the receptor-semantic type pair does not have any qualifiers, 
+        /// or if it does, that at least one qualifier returns true.
+        /// </summary>
+        protected bool IsQualified(Dictionary<SemanticQualifier, bool> qstate, IReceptor receptor, ISemanticType obj)
         {
             bool ret = true;
             // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
@@ -557,7 +580,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
             if (checkReceptors.Count() > 0)
             {
-                ret = checkReceptors.Any(q => q.Qualifier((ISemanticQualifier)obj));
+                ret = checkReceptors.Any(q => qstate[q]);
             }
 
             return ret;
