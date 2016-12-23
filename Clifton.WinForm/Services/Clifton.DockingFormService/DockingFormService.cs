@@ -24,6 +24,7 @@ namespace Clifton.DockingFormService
     {
         public event EventHandler<ContentLoadedEventArgs> ContentLoaded;
         public event EventHandler<EventArgs> ActiveDocumentChanged;
+        public event EventHandler<EventArgs> DocumentClosing;
 
         public Panel DockPanel { get { return dockPanel; } }
         public List<IDockDocument> Documents { get { return dockPanel.DocumentsToArray().Cast<IDockDocument>().ToList(); } }
@@ -50,6 +51,7 @@ namespace Clifton.DockingFormService
             dockContent.DockAreas = DockAreas.Float | DockAreas.DockBottom | DockAreas.DockLeft | DockAreas.DockRight | DockAreas.DockTop | DockAreas.Document;
             dockContent.TabText = tabText;
             dockContent.Show(dockPanel, (WeifenLuo.WinFormsUI.Docking.DockState)dockState);
+            dockContent.FormClosing += (sndr, args) => DocumentClosing.Fire(dockContent, EventArgs.Empty);
 
             return dockContent;
         }

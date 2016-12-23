@@ -57,6 +57,7 @@ namespace Clifton.WinForm.ServiceInterfaces
     {
         event EventHandler<ContentLoadedEventArgs> ContentLoaded;
         event EventHandler<EventArgs> ActiveDocumentChanged;
+        event EventHandler<EventArgs> DocumentClosing;
 
         Panel DockPanel { get; }
         List<IDockDocument> Documents { get; }
