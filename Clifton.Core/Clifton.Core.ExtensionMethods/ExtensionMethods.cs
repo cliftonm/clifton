@@ -1346,5 +1346,23 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			for (int i = start; i < max; i++) action(i);
 		}
-	}
+
+        /// <summary>
+        /// Returns iterable enumerator of all indices of the substring occurring in source.
+        /// </summary>
+        public static IEnumerable<int> AllIndexesOf(this string source, string substring)
+        {
+            for (int index = 0; ; index += substring.Length)
+            {
+                index = source.IndexOf(substring, index);
+
+                if (index == -1)
+                {
+                    break;
+                }
+
+                yield return index;
+            }
+        }
+    }
 }
