@@ -31,6 +31,12 @@ namespace Clifton.Core.ServiceManagement
 {
 	public class ServiceManager : ServiceBase, IServiceManager
 	{
+        /// <summary>
+        /// Normally we have only one service manager for the entire application.
+        /// If this is NOT the case, DO NOT use the singleton Instance property!
+        /// </summary>
+        public static IServiceManager Instance { get; protected set; }
+
 		protected ConcurrentDictionary<Type, Type> interfaceServiceMap;
 		protected ConcurrentDictionary<Type, IService> singletons;
 		protected ConcurrentDictionary<Type, ConstructionOption> constructionOption;
@@ -42,6 +48,7 @@ namespace Clifton.Core.ServiceManagement
 			interfaceServiceMap = new ConcurrentDictionary<Type, Type>();
 			singletons = new ConcurrentDictionary<Type, IService>();
 			constructionOption = new ConcurrentDictionary<Type, ConstructionOption>();
+            Instance = this;
 		}
 
 		/// <summary>
