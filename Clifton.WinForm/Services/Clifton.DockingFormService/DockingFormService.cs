@@ -62,6 +62,7 @@ namespace Clifton.DockingFormService
             dockContent.DockAreas = DockAreas.Float | DockAreas.DockBottom | DockAreas.DockLeft | DockAreas.DockRight | DockAreas.DockTop | DockAreas.Document;
             dockContent.TabText = tabText;
             dockContent.Show(((DockContent)pane).Pane, (WeifenLuo.WinFormsUI.Docking.DockAlignment)dockAlignment, portion);
+            dockContent.FormClosing += (sndr, args) => DocumentClosing.Fire(dockContent, EventArgs.Empty);
 
             return dockContent;
         }
@@ -94,8 +95,11 @@ namespace Clifton.DockingFormService
 
         protected void LoadApplicationContent()
         {
-            foreach (DockContent document in dockPanel.Contents)
+            // ToList(), in case contents are modified while iterating.
+            foreach (DockContent document in dockPanel.Contents.ToList())
             {
+                // For content loaded from a layout, we need to rewire FormClosing, since we didn't actually create the DockContent instance.
+                document.FormClosing += (sndr, args) => DocumentClosing.Fire(document, EventArgs.Empty);
                 ContentLoaded.Fire(this, new ContentLoadedEventArgs() { DockContent = document, Metadata = ((GenericDockContent)document).Metadata });
             }
 
