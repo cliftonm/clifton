@@ -73,6 +73,7 @@ namespace Clifton.WinForm.ServiceInterfaces
         /// Create a document adjacent to another document, in a separate pane.
         /// </summary>
         Control CreateDocument(Control pane, DockAlignment dockAlignment, string tabText, string metadata = "", double portion = 0.25);
+        Control CreateDocument(Control panel, DockState dockState, string tabText, string metadata = "");
 
         void SetActiveDocument(IDockDocument document);
 

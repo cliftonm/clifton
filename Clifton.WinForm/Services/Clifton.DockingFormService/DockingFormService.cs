@@ -45,6 +45,9 @@ namespace Clifton.DockingFormService
             return form;
         }
 
+        /// <summary>
+        /// Create a document in the active document panel.
+        /// </summary>
         public Control CreateDocument(WinForm.ServiceInterfaces.DockState dockState, string tabText, string metadata = "")
         {
             DockContent dockContent = new GenericDockContent(metadata);
@@ -56,6 +59,29 @@ namespace Clifton.DockingFormService
             return dockContent;
         }
 
+        /// <summary>
+        /// Creates a document in the specified document panel.
+        /// </summary>
+        /// <param name="panel">Must be a DockContent object.</param>
+        /// <param name="dockState"></param>
+        /// <param name="tabText"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public Control CreateDocument(Control panel, WinForm.ServiceInterfaces.DockState dockState, string tabText, string metadata = "")
+        {
+            DockPanel dockPanel = ((DockContent)panel).DockPanel;
+            DockContent dockContent = new GenericDockContent(metadata);
+            dockContent.DockAreas = DockAreas.Float | DockAreas.DockBottom | DockAreas.DockLeft | DockAreas.DockRight | DockAreas.DockTop | DockAreas.Document;
+            dockContent.TabText = tabText;
+            dockContent.Show(dockPanel, (WeifenLuo.WinFormsUI.Docking.DockState)dockState);
+            dockContent.FormClosing += (sndr, args) => DocumentClosing.Fire(dockContent, EventArgs.Empty);
+
+            return dockContent;
+        }
+
+        /// <summary>
+        /// Create a document relative to specified pane, in a new container.
+        /// </summary>
         public Control CreateDocument(Control pane, WinForm.ServiceInterfaces.DockAlignment dockAlignment, string tabText, string metadata = "", double portion = 0.25)
         {
             DockContent dockContent = new GenericDockContent(metadata);

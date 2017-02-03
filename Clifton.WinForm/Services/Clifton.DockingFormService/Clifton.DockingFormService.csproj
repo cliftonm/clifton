@@ -43,10 +43,6 @@
     <Reference Include="Clifton.Semantics">
       <HintPath>..\..\..\..\FlowSharpCode\Libs\Clifton.Semantics.dll</HintPath>
     </Reference>
-    <Reference Include="Clifton.WinForm.ServiceInterfaces, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\FlowSharp\Libs\Clifton.WinForm.ServiceInterfaces.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -76,6 +72,12 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Clifton.WinForm.ServiceInterfaces\Clifton.WinForm.ServiceInterfaces.csproj">
+      <Project>{2c326de7-2f39-49cb-9a2b-1fe6de7918b0}</Project>
+      <Name>Clifton.WinForm.ServiceInterfaces</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
