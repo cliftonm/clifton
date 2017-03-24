@@ -1334,6 +1334,11 @@ namespace Clifton.Core.ExtensionMethods
             return (a > max) ? max : a;
 		}
 
+		public static int MinDelta(this int a, int delta)
+		{
+			return a > a + delta ? a + delta : a;
+		}
+
         /// <summary>
         /// Value cannot be less than min, otherwise min is returned.
         /// </summary>
@@ -1341,6 +1346,11 @@ namespace Clifton.Core.ExtensionMethods
         {
             return (a <min) ? min: a;
         }
+
+		public static int MaxDelta(this int a, int delta)
+		{
+			return a < a + delta ? a + delta : a;
+		}
 
         public static void Until(this int start, int max, Action<int> action)
 		{
