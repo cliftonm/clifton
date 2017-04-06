@@ -22,13 +22,7 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Linq;
-using System.Data.Linq.Mapping;
-using System.Linq.Expressions;
-
-using System.Xml.Serialization;
 
 using Clifton.Core.ModelTableManagement;
 using Clifton.Core.Semantics;
@@ -41,9 +35,10 @@ namespace Clifton.Core.ServiceInterfaces
 		void InitializeContext(DataContext context);
 
 		/// <summary>
+		/// Deprecated.  Use migrations instead.
 		/// Returns true if tables were created.
 		/// </summary>
-		bool CreateDatabaseAndTablesIfNotExists();
+		// bool CreateDatabaseAndTablesIfNotExists();
 
 		bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity;
 		bool RecordExists<T>(Func<T, bool> whereClause, out int id) where T : class, IEntity;

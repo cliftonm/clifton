@@ -26,9 +26,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Net;
 
-using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.StateManagement;
 using Clifton.Core.ServiceManagement;
 
@@ -152,7 +150,7 @@ namespace Clifton.WebSessionService
 
 			if (sessionObjects.TryGetValue(objectName, out val))
 			{
-				ret = (T)val;
+				ret = (T)Convert.ChangeType(val, typeof(T));
 			}
 
 			return ret;

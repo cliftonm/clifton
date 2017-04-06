@@ -93,13 +93,13 @@ namespace Clifton.Core.TemplateEngine
 
 		private void AppendCodeOrLiteralLine(StringBuilder sb, string line, ref bool inCode)
 		{
-			if (line.BeginsWith(Constants.END_CODE_BLOCK))
+			if (line.Trim().BeginsWith(Constants.END_CODE_BLOCK))
 			{
 				inCode = false;
 			}
 			else if (line.Trim().BeginsWith(Constants.LITERAL) || inLiteralBlock)
 			{
-				if (line.BeginsWith(Constants.END_LITERAL_BLOCK))
+				if (line.Trim().BeginsWith(Constants.END_LITERAL_BLOCK))
 				{
 					inLiteralBlock = false;
 				}
@@ -113,7 +113,7 @@ namespace Clifton.Core.TemplateEngine
 					sb.AppendLine("sb.Append" + (parsedLiteral + Constants.CRLF).Quote().Parens() + ";");
 				}
 			}
-			else if (line.BeginsWith(Constants.START_LITERAL_BLOCK))
+			else if (line.Trim().BeginsWith(Constants.START_LITERAL_BLOCK))
 			{
 				inLiteralBlock = true;
 			}

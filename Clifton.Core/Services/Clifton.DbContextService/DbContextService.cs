@@ -62,7 +62,8 @@ namespace Clifton.DbContextService
 		{
 			this.context = context;
 		}
-
+		// Deprecated -- use migrations instead.
+/*
 		public bool CreateDatabaseAndTablesIfNotExists()
 		{
 			var models = from prop in context.GetType().GetProperties()
@@ -86,7 +87,7 @@ namespace Clifton.DbContextService
 			// TODO: Even better, figure out the migrations based on the current schema vs. the model schema!
 			return false;
 		}
-
+*/
 		public bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity
 		{
 			return context.Count<T>(whereClause) != 0;
