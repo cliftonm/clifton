@@ -26,21 +26,21 @@
 
 using System;
 using System.IO.Pipes;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Clifton.Core.Pipes
 {
     public abstract class BasicPipe
     {
-        private const int BUFFER_SIZE = 1024 * 1024;
-
         public event EventHandler<PipeEventArgs> DataReceived;
         public event EventHandler<EventArgs> PipeClosed;
 
-        protected byte[] pipeBuffer = new byte[BUFFER_SIZE];
         protected PipeStream pipeStream;
+		protected Action<BasicPipe> asyncReaderStart;
 
-        public BasicPipe()
+		public BasicPipe()
         {
         }
 
@@ -52,37 +52,80 @@ namespace Clifton.Core.Pipes
             pipeStream = null;
         }
 
-        /// <summary>
-        /// Called when Server pipe gets a connection, or when Client pipe is created.
-        /// </summary>
-        public void StartReadingAsync()
-        {
-            byte[] buffer = new byte[BUFFER_SIZE];
+		/// <summary>
+		/// Reads an array of bytes, where the first [n] bytes (based on the server's intsize) indicates the number of bytes to read 
+		/// to complete the packet.
+		/// </summary>
+		public void StartByteReaderAsync()
+		{
+			StartByteReaderAsync((b) => DataReceived?.Invoke(this, new PipeEventArgs(b, b.Length)));
+		}
 
-            pipeStream.ReadAsync(buffer, 0, BUFFER_SIZE).ContinueWith(t =>
-            {
-                int len = t.Result;
+		/// <summary>
+		/// Reads an array of bytes, where the first [n] bytes (based on the server's intsize) indicates the number of bytes to read 
+		/// to complete the packet, and invokes the DataReceived event with a string converted from UTF8 of the byte array.
+		/// </summary>
+		public void StartStringReaderAsync()
+		{
+			StartByteReaderAsync((b) =>
+			{
+				string str = Encoding.UTF8.GetString(b).TrimEnd('\0');
+				DataReceived?.Invoke(this, new PipeEventArgs(str));
+			});
+		}
 
-                if (len == 0)
-                {
-                    PipeClosed?.Invoke(this, EventArgs.Empty);
-                    return;
-                }
-
-                DataReceived?.Invoke(this, new PipeEventArgs(buffer, len));
-                StartReadingAsync();
-            });
-        }
-
-        public void Flush()
+		public void Flush()
         {
             pipeStream.Flush();
         }
 
-        public Task WriteByteArray(byte[] bytes)
+        public Task WriteString(string str)
         {
-            // this will start writing, but does it copy the memory before returning?
-            return pipeStream.WriteAsync(bytes, 0, bytes.Length);
+            return WriteBytes(Encoding.UTF8.GetBytes(str));
         }
-    }
+
+        public Task WriteBytes(byte[] bytes)
+        {
+            var blength = BitConverter.GetBytes(bytes.Length);
+            var bfull = blength.Concat(bytes).ToArray();
+
+            return pipeStream.WriteAsync(bfull, 0, bfull.Length);
+        }
+
+		protected void StartByteReaderAsync(Action<byte[]> packetReceived)
+		{
+			int intSize = sizeof(int);
+			byte[] bDataLength = new byte[intSize];
+
+			pipeStream.ReadAsync(bDataLength, 0, intSize).ContinueWith(t =>
+			{
+				int len = t.Result;
+
+				if (len == 0)
+				{
+					PipeClosed?.Invoke(this, EventArgs.Empty);
+				}
+				else
+				{
+					int dataLength = BitConverter.ToInt32(bDataLength, 0);
+					byte[] data = new byte[dataLength];
+
+					pipeStream.ReadAsync(data, 0, dataLength).ContinueWith(t2 =>
+					{
+						len = t2.Result;
+
+						if (len == 0)
+						{
+							PipeClosed?.Invoke(this, EventArgs.Empty);
+						}
+						else
+						{
+							packetReceived(data);
+							StartByteReaderAsync(packetReceived);
+						}
+					});
+				}
+			});
+		}
+	}
 }

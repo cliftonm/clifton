@@ -24,6 +24,7 @@
 // From: http://stackoverflow.com/questions/34478513/c-sharp-full-duplex-asynchronous-named-pipes-net
 // See Eric Frazer's Q and self answer
 
+using System;
 using System.IO.Pipes;
 
 namespace Clifton.Core.Pipes
@@ -32,16 +33,17 @@ namespace Clifton.Core.Pipes
     {
         protected NamedPipeClientStream clientPipeStream;
 
-        public ClientPipe(string serverName, string pipeName)
+		public ClientPipe(string serverName, string pipeName, Action<BasicPipe> asyncReaderStart)
         {
-            clientPipeStream = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+			this.asyncReaderStart = asyncReaderStart;
+			clientPipeStream = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             pipeStream = clientPipeStream;
         }
 
         public void Connect()
         {
             clientPipeStream.Connect();
-            StartReadingAsync();
-        }
+			asyncReaderStart(this);
+		}
     }
 }

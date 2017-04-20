@@ -36,8 +36,9 @@ namespace Clifton.Core.Pipes
         protected NamedPipeServerStream serverPipeStream;
         protected string PipeName { get; set; }
 
-        public ServerPipe(string pipeName)
+		public ServerPipe(string pipeName, Action<BasicPipe> asyncReaderStart)
         {
+			this.asyncReaderStart = asyncReaderStart;
             PipeName = pipeName;
 
             serverPipeStream = new NamedPipeServerStream(
@@ -55,7 +56,7 @@ namespace Clifton.Core.Pipes
         {
             serverPipeStream.EndWaitForConnection(ar);
             Connected?.Invoke(this, new EventArgs());
-            StartReadingAsync();
+			asyncReaderStart(this);
         }
     }
 }
