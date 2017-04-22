@@ -78,6 +78,7 @@ namespace Clifton.WebInterfaces
 		T GetSessionObject<T>(HttpListenerContext context, string objectName);
 		dynamic GetSessionObjectAsDynamic(HttpListenerContext context, string objectName);
 		void SetSessionObject(HttpListenerContext context, string objectName, object val);
+		void RemoveSessionObject(HttpListenerContext context, string objectName);
 		SessionState GetState(HttpListenerContext context);
 		bool IsAuthenticated(HttpListenerContext context);
 		bool IsExpired(HttpListenerContext context);

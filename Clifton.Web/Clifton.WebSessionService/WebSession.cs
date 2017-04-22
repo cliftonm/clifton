@@ -190,6 +190,13 @@ namespace Clifton.WebSessionService
 			sessionObjects[objectName] = val;
 		}
 
+		public virtual void RemoveSessionObject(HttpListenerContext context, string objectName)
+		{
+			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
+			object val;		// not used.
+			sessionObjects.TryRemove(objectName, out val);
+		}
+
 		public virtual void ClearSession(SessionStateInstance sessionState)
 		{
 			SessionInfo sessionInfo;
