@@ -1374,5 +1374,10 @@ namespace Clifton.Core.ExtensionMethods
                 yield return index;
             }
         }
+
+		public static int CountOf(this string src, char c)
+		{
+			return src.Count(q => q == c);
+		}
     }
 }

@@ -112,6 +112,7 @@ namespace Clifton.WebRouterService
 							// $.post("/geeks/createProfile", { "profileName": profileName }
 							// Note the lack of surrounding ' around the { }
 							// Example: "username=sdfsf&password=sdfsdf&LoginButton=Login"
+							// Use $.post(url, JSON.stringify(data) to convert to JSON
 							string[] parms = data.Split('&');
 
 							foreach (string parm in parms)

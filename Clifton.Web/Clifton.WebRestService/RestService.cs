@@ -88,12 +88,28 @@ namespace Clifton.WebRestService
 		/// </summary>
 		public R Get<R>(string url) where R : IRestResponse
         {
-			string ret = Get(url);
 			R target = Activator.CreateInstance<R>();
-			JObject jobj = JObject.Parse(ret);
-            JsonConvert.PopulateObject(jobj.ToString(), target);
+			string ret = String.Empty;
 
-            return target;
+			try
+			{
+				ret = Get(url);
+
+				target.RawJsonRet = ret;
+				JObject jobj = JObject.Parse(ret);
+				JsonConvert.PopulateObject(jobj.ToString(), target);
+			}
+			catch(Exception ex)
+			{
+				target.Exception = ex;
+
+				if (ex.Source == "Newtonsoft.Json")
+				{
+					target.RawJsonRet = ret;
+				}
+			}
+
+			return target;
         }
 
         public R Post<R>(string url, object obj) where R : IRestResponse
@@ -119,6 +135,7 @@ namespace Clifton.WebRestService
 
                 WebResponse resp = request.GetResponse();
                 retjson = new StreamReader(resp.GetResponseStream()).ReadToEnd();
+				target.RawJsonRet = retjson;
                 LastRetJson = retjson;
 
                 JObject jobj = JObject.Parse(retjson);

@@ -107,6 +107,7 @@ namespace Clifton.WebInterfaces
     public interface IRestResponse
     {
         string RawJsonRet { get; set; }
+		Exception Exception { get; set; }
     }
 
 	public interface IWebWorkflowService : IService

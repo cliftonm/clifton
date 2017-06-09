@@ -1,0 +1,66 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Introduction</title>
+</head>
+
+<body>
+
+<p>Introduction</p>
+<p>I needed a simple way to communicate between multiple applications running 
+locally on the same computer -- basically, the &quot;server&quot; application spawned 
+&quot;client&quot; applications and needed to communicate with the child apps, directing 
+them to perform certain tasks and return their results.</p>
+<p>There's a lot of ways to communicate between apps nowadays -- web sockets, 
+HTTP, WCF, memory mapped files, even using files, to name a few.&nbsp; I ended 
+up selecting named pipes because it's a:</p>
+<ul>
+	<li>Simple approach with little overhead.</li>
+	<li>Doesn't require opening custom ports.</li>
+	<li>Doesn't require complex configuration like WCF.</li>
+	<li>Bit more higher level than memory mapped files.</li>
+</ul>
+<p>I figured there must be a GitHub (or other) library out there already, and I 
+was surprised that for something as &quot;old tech&quot; has named pipes, I didn't find 
+anything, either on GitHub or Code Project.&nbsp; Eventually I came across a 
+post by Eric Frazer where he was looking for a full duplex asynchronous named 
+pipe implementation, and ended up answering his own question with some code.&nbsp; 
+See
+<a href="http://stackoverflow.com/questions/34478513/c-sharp-full-duplex-asynchronous-named-pipes-net">
+here</a>.</p>
+<p>The code presented here is basically his code, though I've refactored it 
+quite a bit in some cases, as well as implemented a demo and some unit tests 
+around it.&nbsp; </p>
+<p>So what you'll learn here is how to implement full duplex named pipe 
+communication, and even though it's old technology, there are times when you 
+just want something brain-dead simple!&nbsp; And of course the core named pipe 
+client/server code is implemented in a library separate from the demo app.</p>
+<p>The Demo</p>
+<p>The demo app guides you through creating the name pipe server and 
+instantiating clients and sending text messages between each client/server 
+connection.&nbsp; While the demo runs in a single application process space, it 
+would of course work as separate client applications.</p>
+<p>Every time you create a new client, a &quot;client-server&quot; messaging window pair 
+is added to the UI.&nbsp; Don't create more than you can see, as I the demo 
+doesn't bother with scrolling -- it's just a simple demo!&nbsp; But the point 
+is, it illustrates having multiple clients connecting and communicating to a 
+single server, in full duplex mode.</p>
+<p>Buffers</p>
+<p>One of the low-level issues is that named pipes don't have a concept of the 
+amount of data being sent, so that's something that you have to manage.&nbsp; 
+Creating a receive buffer of fixed size is wasteful if the buffer is bigger than 
+the data being sent, and conversely susceptible to overruns when the data being 
+sent is larger than allocated size.</p>
+<p>This is one of the refactorings that I ended up doing to Eric's code -- 
+always sending the length of the data as the initial portion of the packet 
+(you're application is responsible for serializing the data into a string or 
+byte stream, these are the only two supported methods of communication.)</p>
+<p>The Server</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

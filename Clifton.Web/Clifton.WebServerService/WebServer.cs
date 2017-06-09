@@ -23,12 +23,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 
 using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
@@ -105,7 +107,6 @@ namespace Clifton.WebServerService
 			{
 				// Wait for a connection.  Return to caller while we wait.
 				HttpListenerContext context = listener.GetContext();
-				logger.Log(LogMessage.Create(context.Verb().Value + ": " + context.Path().Value));
 
 				// Redirect to HTTPS if not local and not secure.
 				if (!context.Request.IsLocal && !context.Request.IsSecureConnection && !httpOnly)
@@ -118,6 +119,10 @@ namespace Clifton.WebServerService
 				else
 				{
 					string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
+					NameValueCollection nvc = context.Request.QueryString;
+					string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
+					string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password");
+					logger.Log(LogMessage.Create(context.Request.RemoteEndPoint.ToString() + " - [" + context.Verb().Value + ": " + context.Path().Value + "] Parameters: " + parms));
 
 					// If the pre-router lets us continue, the route the request.
 					if (ServiceManager.Exists<IWebWorkflowService>())
@@ -160,10 +165,10 @@ namespace Clifton.WebServerService
             {
                 ret = "http://" + ip + "/";
             }
-            else if ((ip == "localhost") || (ip == "127.0.0.1"))
-            {
-                ret = "http://" + ip + ":" + port.ToString() + "/";
-            }
+            //else if ((ip == "localhost") || (ip == "127.0.0.1"))
+            //{
+            //    ret = "http://" + ip + ":" + port.ToString() + "/";
+            //}
             else
             {
                 ret = "https://" + ip + ":" + port.ToString() + "/";
