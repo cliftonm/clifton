@@ -21,14 +21,9 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Net;
-using System.Text;
-
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 
 using Clifton.WebInterfaces;
@@ -59,63 +54,32 @@ namespace Clifton.WebResponseService
 		{
 			// proc.ServiceManager.Get<ILoggerService>().Log(LogMessage.Create(resp.Exception.Message));
 			proc.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex => ex.Exception = resp.Exception);
-			resp.Context.Response.StatusCode = 500;
-			resp.Context.Response.ContentType = "text/text";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-            byte[] byteData = resp.Exception.Message.to_Utf8();
-            resp.Context.Response.ContentLength64 = byteData.Length;
-			resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Exception.Message, "text/text", 500);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, StringResponse resp)
 		{
-			resp.Context.Response.StatusCode = resp.StatusCode;
-			resp.Context.Response.ContentType = "text/text";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-            byte[] byteData = resp.Message.to_Utf8();
-            resp.Context.Response.ContentLength64 = byteData.Length;
-            resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Message, "text/text", resp.StatusCode);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, JsonResponse resp)
 		{
-			resp.Context.Response.StatusCode = resp.StatusCode;
-			resp.Context.Response.ContentType = "text/json";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-            byte[] byteData = resp.Json.to_Utf8();
-            resp.Context.Response.ContentLength64 = byteData.Length;
-			resp.Context.Response.OutputStream.Write(byteData, 0, byteData.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Json, "text/json", resp.StatusCode);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, ImageResponse resp)
 		{
-			resp.Context.Response.ContentType = resp.ContentType;
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
-			resp.Context.Response.OutputStream.Write(resp.BinaryData, 0, resp.BinaryData.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, FontResponse resp)
 		{
-			resp.Context.Response.ContentType = resp.ContentType;
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
-			resp.Context.Response.OutputStream.Write(resp.BinaryData, 0, resp.BinaryData.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, DataResponse resp)
 		{
-			byte[] utf8data = resp.Data.ToBase64().to_Utf8();
-			resp.Context.Response.StatusCode = resp.StatusCode;
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = utf8data.Length;
-			resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Data.ToBase64(), "text/text", resp.StatusCode);
 		}
 
 		/// <summary>
@@ -125,32 +89,17 @@ namespace Clifton.WebResponseService
 		public void Process(ISemanticProcessor proc, IMembrane membrane, HtmlResponse resp)
 		{
 			proc.ServiceManager.IfExists<IWebWorkflowService>(wws => wws.PostRouter(resp.Context, resp));
-			byte[] utf8data = resp.Html.to_Utf8();
-			resp.Context.Response.ContentType = "text/html";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = utf8data.Length;
-			resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Html, "text/html");
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, JavascriptResponse resp)
 		{
-			byte[] utf8data = resp.Script.to_Utf8();
-			resp.Context.Response.ContentType = "text/javascript";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = utf8data.Length;
-			resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Script, "text/javascript");
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, CssResponse resp)
 		{
-			byte[] utf8data = resp.Script.to_Utf8();
-			resp.Context.Response.ContentType = "text/css";
-			resp.Context.Response.ContentEncoding = Encoding.UTF8;
-			resp.Context.Response.ContentLength64 = utf8data.Length;
-			resp.Context.Response.OutputStream.Write(utf8data, 0, utf8data.Length);
-			resp.Context.Response.Close();
+			resp.Context.Response.Write(resp.Script, "text/css");
 		}
 	}
 }

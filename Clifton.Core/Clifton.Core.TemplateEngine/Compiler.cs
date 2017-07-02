@@ -47,7 +47,7 @@ namespace Clifton.Core.TemplateEngine
 			cp.GenerateInMemory = true;
 			cp.TreatWarningsAsErrors = false;
 			cp.ReferencedAssemblies.Add("System.dll");
-			cp.ReferencedAssemblies.Add("Clifton.Core.TemplateEngine.dll");
+			cp.ReferencedAssemblies.Add(@"c:\websites\projourn\bin\Clifton.Core.TemplateEngine.dll");
 			
 			// to support the "dynamic" keyword, add references for:
 			// "Microsoft.CSharp.dll"

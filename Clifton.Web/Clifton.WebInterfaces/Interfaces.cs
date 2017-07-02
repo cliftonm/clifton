@@ -60,6 +60,8 @@ namespace Clifton.WebInterfaces
 		Stream OutputStream { get; }
 
 		void Close();
+		void Write(string data, string contentType = "text/text", int statusCode = 200);
+		void Write(byte[] data, string contentType = "text/text", int statusCode = 200);
 	}
 
 		public interface IWebDefaultWorkflowService : IService 

@@ -95,6 +95,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 	public class SemanticProcessor : ServiceBase, ISemanticProcessor
 	{
+		public bool ForceSingleThreaded { get; set; }
 		public IMembrane Surface { get; protected set; }
 		public IMembrane Logger { get; protected set; }
 
@@ -408,7 +409,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				}
 
 				// Call immediately?
-				if (processOnCallerThread)
+				if (processOnCallerThread || ForceSingleThreaded)
 				{
 					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
 				}
@@ -430,7 +431,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
                     dynamic target = receptor;
                     // Call immediately?
-                    if (processOnCallerThread)
+                    if (processOnCallerThread || ForceSingleThreaded)
                     {
                         ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
                     }
@@ -509,7 +510,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				// Call immediately?
 				MethodInfo method = GetProcessMethod(target, tsource);
 
-				if (processOnCallerThread)
+				if (processOnCallerThread || ForceSingleThreaded)
 				{
 					// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 					// dynamic dtarget = target;
@@ -536,7 +537,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     MethodInfo method = GetProcessMethod(receptor, tsource);
 
                     // Call immediately?
-                    if (processOnCallerThread)
+                    if (processOnCallerThread || ForceSingleThreaded)
                     {
                         method.Invoke(receptor, new object[] { this, membrane, obj });
                     }

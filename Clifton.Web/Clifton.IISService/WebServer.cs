@@ -134,11 +134,12 @@ namespace Clifton.IISService
 
 		protected void ProcessRoute(IContext context, string data)
 		{
+			// Must be processed on the IIS caller thread, otherwise we exit the EndRequest handler too soon.
 			semProc.ProcessInstance<WebServerMembrane, Route>(r =>
 			{
 				r.Context = context;
 				r.Data = data;
-			});
+			}, true);
 		}
 	}
 }

@@ -150,6 +150,7 @@ namespace Clifton.WebRouterService
 
 					// Must be done AFTER populating the object -- sometimes the json converter nulls the base class!
 					semanticRoute.Context = context;
+					// TODO: Why are we doing this on the caller thread, except for debugging???
 					proc.ProcessInstance<WebServerMembrane>(semanticRoute, true);
 				}
 				else

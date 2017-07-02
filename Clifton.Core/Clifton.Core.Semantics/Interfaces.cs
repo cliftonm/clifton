@@ -37,6 +37,11 @@ namespace Clifton.Core.Semantics
 
 	public interface ISemanticProcessor : IService
 	{
+		/// <summary>
+		/// This flag forces single threaded processing, particularly necessary for handling IIS HttpApplication EndRequest.
+		/// </summary>
+		bool ForceSingleThreaded { get; set; }
+
 		IMembrane Surface { get; }
 		IMembrane Logger { get; }
 

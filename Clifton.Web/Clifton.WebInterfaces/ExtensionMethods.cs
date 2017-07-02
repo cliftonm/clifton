@@ -81,7 +81,14 @@ namespace Clifton.WebInterfaces
 
 		public static IPAddress EndpointAddress(this HttpContext context)
 		{
-			return new IPAddress(context.Request.UserHostAddress.Split('.').Select(addr => Convert.ToByte(addr)).ToArray());
+			string addr2 = context.Request.UserHostAddress;
+
+			if (context.Request.UserHostAddress == "::1")
+			{
+				addr2 = "127.0.0.1";
+			}
+
+			return new IPAddress(addr2.Split('.').Select(addr => Convert.ToByte(addr)).ToArray());
 		}
 
 		/// <summary>
