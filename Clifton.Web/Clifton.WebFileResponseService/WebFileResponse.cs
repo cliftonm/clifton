@@ -56,7 +56,7 @@ namespace Clifton.WebFileResponseService
 			semProc.Register<WebServerMembrane, WebFileResponseReceptor>();
 		}
 
-		public bool ProcessFileRequest(HttpListenerContext context)
+		public bool ProcessFileRequest(IContext context)
 		{
 			bool handled = false;
 			string path = context.Path().Value.Replace('/', '\\').LeftOfRightmostOf('.');	// without extension

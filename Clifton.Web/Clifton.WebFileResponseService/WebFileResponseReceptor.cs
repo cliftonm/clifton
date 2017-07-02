@@ -58,7 +58,7 @@ namespace Clifton.WebFileResponseService
 			}
 		}
 
-		protected virtual void RouteNotFoundResponse(ISemanticProcessor proc, HttpListenerContext context)
+		protected virtual void RouteNotFoundResponse(ISemanticProcessor proc, IContext context)
 		{
 			proc.ProcessInstance<WebServerMembrane, StringResponse>(r =>
 			{

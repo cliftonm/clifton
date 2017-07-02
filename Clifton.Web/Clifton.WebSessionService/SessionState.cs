@@ -37,10 +37,10 @@ namespace Clifton.WebSessionService
 	/// </summary>
 	public class SessionStateInstance : IStateContext
 	{
-		public HttpListenerContext Context { get; protected set; }
+		public IContext Context { get; protected set; }
 		public IWebSessionService SessionService { get; protected set; }
 
-		public SessionStateInstance(HttpListenerContext context, IWebSessionService sessionService)
+		public SessionStateInstance(IContext context, IWebSessionService sessionService)
 		{
 			Context = context;
 			SessionService = sessionService;

@@ -55,6 +55,13 @@ namespace Clifton.Core.ModuleManagement
 			InitializeRegistrants(registrants);
 		}
 
+		public virtual void RegisterModulesFrom(List<AssemblyFileName> moduleFilenames, string path)
+		{
+			List<Assembly> modules = LoadModulesFrom(moduleFilenames, path);
+			List<IModule> registrants = InstantiateRegistrants(modules);
+			InitializeRegistrants(registrants);
+		}
+
 		/// <summary>
 		/// Load the assemblies and return the list of loaded assemblies.  In order to register
 		/// services that the module implements, we have to load the assembly.
@@ -66,6 +73,19 @@ namespace Clifton.Core.ModuleManagement
 			moduleFilenames.ForEach(a =>
 			{
 				Assembly assembly = LoadAssembly(a, optionalPath, assemblyResolver);
+				modules.Add(assembly);
+			});
+
+			return modules;
+		}
+
+		protected virtual List<Assembly> LoadModulesFrom(List<AssemblyFileName> moduleFilenames, string path)
+		{
+			List<Assembly> modules = new List<Assembly>();
+
+			moduleFilenames.ForEach(a =>
+			{
+				Assembly assembly = LoadAssemblyFrom(a, path);
 				modules.Add(assembly);
 			});
 
@@ -91,6 +111,30 @@ namespace Clifton.Core.ModuleManagement
 				try
 				{
 					assembly = Assembly.LoadFile(fullPath.Value);
+				}
+				catch (Exception ex)
+				{
+					throw new ModuleManagerException("Unable to load module " + assyName.Value + ": " + ex.Message);
+				}
+			}
+
+			return assembly;
+		}
+
+		protected virtual Assembly LoadAssemblyFrom(AssemblyFileName assyName, string path)
+		{
+			string fullPath = Path.Combine(path, assyName.Value);
+			Assembly assembly = null;
+
+			if (!File.Exists(fullPath))
+			{
+				throw new ApplicationException( "Module " + fullPath + " not found.\r\n.");
+			}
+			else
+			{
+				try
+				{
+					assembly = Assembly.LoadFile(fullPath);
 				}
 				catch (Exception ex)
 				{

@@ -21,15 +21,7 @@
 * SOFTWARE.
 */
 
-using System;
-using System.IO;
-using System.Net;
-using System.Text;
-
-using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
-using Clifton.Core.Semantics;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Workflow;
 
@@ -66,14 +58,14 @@ namespace WebWorkflowService
 			postRouteWorkflow.AddItem(item);
 		}
 
-		public bool PreRouter(HttpListenerContext context)
+		public bool PreRouter(IContext context)
 		{
 			WorkflowState state = preRouteWorkflow.Execute(new PreRouteWorkflowData(context));
 
 			return state == WorkflowState.Done;
 		}
 
-		public bool PostRouter(HttpListenerContext context, HtmlResponse response)
+		public bool PostRouter(IContext context, HtmlResponse response)
 		{
 			WorkflowState state = postRouteWorkflow.Execute(new PostRouteWorkflowData(ServiceManager, context, response));
 

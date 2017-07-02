@@ -30,6 +30,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Script.Serialization;
 
 using Clifton.Core.Assertions;
@@ -99,6 +100,11 @@ namespace Clifton.WebServerService
 			Task.Run(() => WaitForConnection(listener));
 		}
 
+		public virtual void Start(HttpApplication application)
+		{
+			throw new Exception("Please use Clifton.IISService if you want to use IIS as the listener.");
+		}
+
 		protected virtual void WaitForConnection(object objListener)
 		{
 			HttpListener listener = (HttpListener)objListener;
@@ -124,12 +130,14 @@ namespace Clifton.WebServerService
 					string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password");
 					logger.Log(LogMessage.Create(context.Request.RemoteEndPoint.ToString() + " - [" + context.Verb().Value + ": " + context.Path().Value + "] Parameters: " + parms));
 
+					IContext contextWrapper = new HttpListenerContextWrapper(context);
+
 					// If the pre-router lets us continue, the route the request.
 					if (ServiceManager.Exists<IWebWorkflowService>())
 					{
-						if (ServiceManager.Get<IWebWorkflowService>().PreRouter(context))
+						if (ServiceManager.Get<IWebWorkflowService>().PreRouter(contextWrapper))
 						{
-							ProcessRoute(context, data);
+							ProcessRoute(contextWrapper, data);
 						}
 						else
 						{
@@ -139,13 +147,13 @@ namespace Clifton.WebServerService
 					}
 					else
 					{
-						ProcessRoute(context, data);
+						ProcessRoute(contextWrapper, data);
 					}
 				}
 			}
 		}
 
-		protected void ProcessRoute(HttpListenerContext context, string data)
+		protected void ProcessRoute(IContext context, string data)
 		{
 			semProc.ProcessInstance<WebServerMembrane, Route>(r =>
 			{

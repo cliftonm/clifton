@@ -23,15 +23,46 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Net;
+using System.Text;
+using System.Web;
 
-using Clifton.Core.Semantics;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Workflow;
 
 namespace Clifton.WebInterfaces
 {
-	public interface IWebDefaultWorkflowService : IService 
+	public interface IContext
+	{
+		IPAddress EndpointAddress();
+		HttpVerb Verb();
+		UriPath Path();
+		UriExtension Extension();
+		IRequest Request { get; }
+		IResponse Response { get; }
+
+		void Redirect(string url);
+	}
+
+	public interface IRequest
+	{
+		NameValueCollection QueryString { get; }
+	}
+
+	public interface IResponse
+	{
+		int StatusCode { get; set; }
+		string ContentType { get; set; }
+		Encoding ContentEncoding { get; set; }
+		long ContentLength64 { get; set; }
+		Stream OutputStream { get; }
+
+		void Close();
+	}
+
+		public interface IWebDefaultWorkflowService : IService 
 	{
 		void RegisterAppTemplateObject(string name, object obj);
 	}
@@ -71,30 +102,31 @@ namespace Clifton.WebInterfaces
 
 	public interface IWebSessionService : IService
 	{
-		void UpdateState(HttpListenerContext context);
-		void Authenticate(HttpListenerContext context);
-		void Logout(HttpListenerContext context);
-		string GetSessionObject(HttpListenerContext context, string objectName);
-		T GetSessionObject<T>(HttpListenerContext context, string objectName);
-		dynamic GetSessionObjectAsDynamic(HttpListenerContext context, string objectName);
-		void SetSessionObject(HttpListenerContext context, string objectName, object val);
-		void RemoveSessionObject(HttpListenerContext context, string objectName);
-		SessionState GetState(HttpListenerContext context);
-		bool IsAuthenticated(HttpListenerContext context);
-		bool IsExpired(HttpListenerContext context);
+		void UpdateState(IContext context);
+		void Authenticate(IContext context);
+		void Logout(IContext context);
+		string GetSessionObject(IContext context, string objectName);
+		T GetSessionObject<T>(IContext context, string objectName);
+		dynamic GetSessionObjectAsDynamic(IContext context, string objectName);
+		void SetSessionObject(IContext context, string objectName, object val);
+		void RemoveSessionObject(IContext context, string objectName);
+		SessionState GetState(IContext context);
+		bool IsAuthenticated(IContext context);
+		bool IsExpired(IContext context);
 	}
 
 	public interface IWebResponder : IService { }
 
 	public interface IWebFileResponse : IService
 	{
-		bool ProcessFileRequest(HttpListenerContext context);
+		bool ProcessFileRequest(IContext context);
 	}
 
 	public interface IWebServerService : IService
 	{
 		List<IPAddress> GetLocalHostIPs();
-		void Start(string ip, int[] ports);
+		void Start(string ip, int[] ports);				// Clifton.WebServerService handles the listener.
+		void Start(HttpApplication application);		// Hook in to IIS.
 	}
 
     public interface IWebRestService : IService
@@ -114,7 +146,7 @@ namespace Clifton.WebInterfaces
 	{
 		void RegisterPreRouterWorkflow(WorkflowItem<PreRouteWorkflowData> item);
 		void RegisterPostRouterWorkflow(WorkflowItem<PostRouteWorkflowData> item);
-		bool PreRouter(HttpListenerContext context);
-		bool PostRouter(HttpListenerContext context, HtmlResponse response);
+		bool PreRouter(IContext context);
+		bool PostRouter(IContext context, HtmlResponse response);
 	}
 }

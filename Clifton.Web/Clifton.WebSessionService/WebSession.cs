@@ -87,28 +87,28 @@ namespace Clifton.WebSessionService
 			InitializeStateSystem();
 		}
 
-		public virtual SessionState GetState(HttpListenerContext context)
+		public virtual SessionState GetState(IContext context)
 		{
 			CreateSessionIfMissing(context);
 
 			return sessionInfoMap[context.EndpointAddress()].CurrentState;
 		}
 
-		public virtual bool IsAuthenticated(HttpListenerContext context)
+		public virtual bool IsAuthenticated(IContext context)
 		{
 			CreateSessionIfMissing(context);
 
 			return sessionInfoMap[context.EndpointAddress()].CurrentState == SessionState.Authenticated;
 		}
 
-		public virtual bool IsExpired(HttpListenerContext context)
+		public virtual bool IsExpired(IContext context)
 		{
 			CreateSessionIfMissing(context);
 
 			return sessionInfoMap[context.EndpointAddress()].IsExpired;
 		}
 
-		public virtual void UpdateState(HttpListenerContext context)
+		public virtual void UpdateState(IContext context)
 		{
 			CreateSessionIfMissing(context);
 			SessionInfo si = sessionInfoMap[context.EndpointAddress()];
@@ -125,14 +125,14 @@ namespace Clifton.WebSessionService
 			}
 		}
 
-		public virtual void Authenticate(HttpListenerContext context)
+		public virtual void Authenticate(IContext context)
 		{
 			CreateSessionIfMissing(context);
 			SessionInfo si = sessionInfoMap[context.EndpointAddress()];
 			si.StateManager.ToState(SessionState.Authenticated, new SessionStateInstance(context, this));
 		}
 
-		public virtual void Logout(HttpListenerContext context)
+		public virtual void Logout(IContext context)
 		{
 			CreateSessionIfMissing(context);
 			SessionInfo si = sessionInfoMap[context.EndpointAddress()];
@@ -142,7 +142,7 @@ namespace Clifton.WebSessionService
 		/// <summary>
 		/// A return value of null indicates that the object doesn't exist in the collection.
 		/// </summary>
-		public virtual T GetSessionObject<T>(HttpListenerContext context, string objectName)
+		public virtual T GetSessionObject<T>(IContext context, string objectName)
 		{
 			T ret = default(T);
 			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
@@ -156,7 +156,7 @@ namespace Clifton.WebSessionService
 			return ret;
 		}
 
-		public virtual string GetSessionObject(HttpListenerContext context, string objectName)
+		public virtual string GetSessionObject(IContext context, string objectName)
 		{
 			string ret = "";
 			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
@@ -170,7 +170,7 @@ namespace Clifton.WebSessionService
 			return ret;
 		}
 
-		public virtual dynamic GetSessionObjectAsDynamic(HttpListenerContext context, string objectName)
+		public virtual dynamic GetSessionObjectAsDynamic(IContext context, string objectName)
 		{
 			dynamic ret = null;
 			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
@@ -184,13 +184,13 @@ namespace Clifton.WebSessionService
 			return ret;
 		}
 
-		public virtual void SetSessionObject(HttpListenerContext context, string objectName, object val)
+		public virtual void SetSessionObject(IContext context, string objectName, object val)
 		{
 			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
 			sessionObjects[objectName] = val;
 		}
 
-		public virtual void RemoveSessionObject(HttpListenerContext context, string objectName)
+		public virtual void RemoveSessionObject(IContext context, string objectName)
 		{
 			ConcurrentDictionary<string, object> sessionObjects = CreateSessionIfMissing(context);
 			object val;		// not used.
@@ -203,7 +203,7 @@ namespace Clifton.WebSessionService
 			sessionInfoMap.TryRemove(sessionState.Context.EndpointAddress(), out sessionInfo);
 		}
 
-		protected ConcurrentDictionary<string, object> CreateSessionIfMissing(HttpListenerContext context)
+		protected ConcurrentDictionary<string, object> CreateSessionIfMissing(IContext context)
 		{
 			SessionInfo sessionInfo;
 			IPAddress addr = context.EndpointAddress();

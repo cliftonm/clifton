@@ -53,7 +53,7 @@ namespace Clifton.WebRouterService
 		public void Process(ISemanticProcessor proc, IMembrane membrane, Route route)
 		{
 			IAuthenticatingRouterService routerService = proc.ServiceManager.Get<IAuthenticatingRouterService>();
-			HttpListenerContext context = route.Context;
+			IContext context = route.Context;
 			HttpVerb verb = context.Verb();
 			UriPath path = context.Path();
 			string searchRoute = GetSearchRoute(verb, path);

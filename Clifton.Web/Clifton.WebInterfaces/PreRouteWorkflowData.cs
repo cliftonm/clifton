@@ -27,9 +27,9 @@ namespace Clifton.WebInterfaces
 {
 	public class PreRouteWorkflowData
 	{
-		public HttpListenerContext Context { get; protected set; }
+		public IContext Context { get; protected set; }
 
-		public PreRouteWorkflowData(HttpListenerContext context)
+		public PreRouteWorkflowData(IContext context)
 		{
 			Context = context;
 		}
