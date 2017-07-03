@@ -76,10 +76,10 @@ namespace Clifton.WebSessionService
 
 	public class WebSession : ServiceBase, IWebSessionService
 	{
-		protected ConcurrentDictionary<IPAddress, SessionInfo> sessionInfoMap;
-
 		// Shared across all sessions.
-		protected List<StateInfo<SessionStateInstance>> states = new List<StateInfo<SessionStateInstance>>();
+		// TODO: Get Session working for IIS.  Workaround for right now is we've made these static, but I'm not convinced that that is a robust solution.
+		private ConcurrentDictionary<IPAddress, SessionInfo> sessionInfoMap;
+		private List<StateInfo<SessionStateInstance>> states = new List<StateInfo<SessionStateInstance>>();
 
 		public WebSession()
 		{

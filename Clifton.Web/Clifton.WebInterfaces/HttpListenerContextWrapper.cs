@@ -21,10 +21,12 @@
 * SOFTWARE.
 */
 
+using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Web.SessionState;
 
 using Clifton.Core.ExtensionMethods;
 
@@ -86,6 +88,7 @@ namespace Clifton.WebInterfaces
 
 	public class HttpListenerContextWrapper : IContext
 	{
+		public HttpSessionState Session { get { throw new ApplicationException("Please use IWebSessionService."); } }
 		public IRequest Request { get { return request; } }
 		public IResponse Response { get { return response; } }
 

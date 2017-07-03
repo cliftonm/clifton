@@ -21,12 +21,12 @@
 * SOFTWARE.
 */
 
-using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
+using System.Web.SessionState;
 
 using Clifton.Core.ExtensionMethods;
 
@@ -63,40 +63,29 @@ namespace Clifton.WebInterfaces
 		public void Close()
 		{
 			// Never close the response from IIS.
-			response.End();
+			// response.End();
 		}
 
 		public void Write(string data, string contentType = "text/text", int statusCode = 200)
 		{
-			// TODO: For some inane reason, IIS is triggering EndRequest twice for the exact same content,
-			// and these values are already set from the previous response.  Why???  How do we stop this???
-			try
-			{
-				StatusCode = statusCode;
-				ContentType = contentType;
-				ContentEncoding = Encoding.UTF8;
-			}
-			catch { }
-
+			// IIS will fire the EndRequest event twice, the second time, setting header information will throw an exception.
+			// This is handled by the IISService, testing for context.Response.HeadersWritten to prevent processing of the second
+			// request.
+			StatusCode = statusCode;
+			ContentType = contentType;
+			ContentEncoding = Encoding.UTF8;
 			byte[] byteData = data.to_Utf8();
 			response.OutputStream.Write(byteData, 0, byteData.Length);
-			// Close();
+			Close();
 		}
 
 		public void Write(byte[] data, string contentType = "text/text", int statusCode = 200)
 		{
-			// TODO: For some inane reason, IIS is triggering EndRequest twice for the exact same content,
-			// and these values are already set from the previous response.  Why???  How do we stop this???
-			try
-			{
-				StatusCode = statusCode;
-				ContentType = contentType;
-				ContentEncoding = Encoding.UTF8;
-			}
-			catch { }
-
+			StatusCode = statusCode;
+			ContentType = contentType;
+			ContentEncoding = Encoding.UTF8;
 			response.OutputStream.Write(data, 0, data.Length);
-			// Close();
+			Close();
 		}
 	}
 
@@ -104,6 +93,7 @@ namespace Clifton.WebInterfaces
 	{
 		public IRequest Request { get { return request; } }
 		public IResponse Response { get { return response; } }
+		public HttpSessionState Session { get { return context.Session; } }
 
 		protected HttpRequestWrapper request;
 		protected HttpContext context;

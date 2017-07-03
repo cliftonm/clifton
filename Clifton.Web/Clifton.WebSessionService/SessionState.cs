@@ -21,9 +21,6 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Net;
-
 using Clifton.Core.StateManagement;
 using Clifton.WebInterfaces;
 

@@ -28,6 +28,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web;
+using System.Web.SessionState;
 
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Workflow;
@@ -42,6 +43,7 @@ namespace Clifton.WebInterfaces
 		UriExtension Extension();
 		IRequest Request { get; }
 		IResponse Response { get; }
+		HttpSessionState Session { get; } 
 
 		void Redirect(string url);
 	}

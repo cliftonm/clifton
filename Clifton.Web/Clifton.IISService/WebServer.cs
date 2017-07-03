@@ -90,10 +90,17 @@ namespace Clifton.IISService
 		public virtual void Start(HttpApplication application)
 		{
 			application.EndRequest += (source, args) => ProcessRequest(((HttpApplication)source).Context);
+
+			// This event fires only once, unlike EndRequest, which fires twice.
+			// application.PostRequestHandlerExecute += (source, args) => ProcessRequest(((HttpApplication)source).Context);
 		}
 
 		protected virtual void ProcessRequest(HttpContext context)
 		{
+			// IIS will fire this event twice (or more?)  The HeadersWritten flag is false only on the first entry.
+			// TODO: This is such a fucking kludge to handle bizarre behavior on IIS.
+			if (context.Response.HeadersWritten) return;
+
 			// Redirect to HTTPS if not local and not secure.
 			if (!context.Request.IsLocal && !context.Request.IsSecureConnection && !httpOnly)
 			{

@@ -22,18 +22,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Net;
 using System.Reflection;
-using System.Text;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-using Clifton.Core.ExtensionMethods;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceManagement;
 using Clifton.Core.Utils;
 using Clifton.WebInterfaces;
 
