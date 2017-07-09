@@ -87,19 +87,11 @@ namespace Clifton.IISService
 			throw new Exception("Please use Clifton.WebServerService if you want to handle the listener context directly.");
 		}
 
-		public virtual void Start(HttpApplication application)
-		{
-			application.EndRequest += (source, args) => ProcessRequest(((HttpApplication)source).Context);
-
-			// This event fires only once, unlike EndRequest, which fires twice.
-			// application.PostRequestHandlerExecute += (source, args) => ProcessRequest(((HttpApplication)source).Context);
-		}
-
-		protected virtual void ProcessRequest(HttpContext context)
+		public virtual void ProcessRequest(HttpContext context)
 		{
 			// IIS will fire this event twice (or more?)  The HeadersWritten flag is false only on the first entry.
 			// TODO: This is such a fucking kludge to handle bizarre behavior on IIS.
-			if (context.Response.HeadersWritten) return;
+			// if (context.Response.HeadersWritten) return;
 
 			// Redirect to HTTPS if not local and not secure.
 			if (!context.Request.IsLocal && !context.Request.IsSecureConnection && !httpOnly)
@@ -114,7 +106,8 @@ namespace Clifton.IISService
 				string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 				NameValueCollection nvc = context.Request.QueryString;
 				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
-				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password");
+				// TODO: The removal of the password when logging is really kludgy.
+				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
 				logger.Log(LogMessage.Create(context.Request.UserHostAddress + " - [" + context.Request.HttpMethod + ": " + context.Request.FilePath + "] Parameters: " + parms));
 
 				IContext contextWrapper = new WebInterfaces.HttpContextWrapper(context);

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Linq;
 using System.Web.SessionState;
 
 using Clifton.Core.ModuleManagement;
@@ -32,8 +33,9 @@ using Clifton.Core.StateManagement;
 using Clifton.Core.ServiceManagement;
 
 using Clifton.WebInterfaces;
+using Clifton.WebSessionService;
 
-namespace Clifton.WebSessionService
+namespace Clifton.IISSessionService
 {
 	public static class IISExtensionMethods
 	{
@@ -53,57 +55,23 @@ namespace Clifton.WebSessionService
 		}
 	}
 
-	public class SessionInfo : IStateContext
+	public class IISSessionModule : IModule
 	{
-		public ConcurrentDictionary<string, object> SessionObjectMap { get; protected set; }
-		public StateManager<SessionStateInstance> StateManager { get; set; }
-		public DateTime LastTransaction { get; set; }
-		public int ExpiresInSeconds { get; set; }
-		public SessionState CurrentState { get { return (SessionState)StateManager.CurrentState; } }
-
-		/// <summary>
-		/// By default, session expires in 5 minutes.
-		/// </summary>
-		public bool IsExpired { get { return (DateTime.Now - LastTransaction).TotalSeconds > ExpiresInSeconds; } }
-
-		public SessionInfo(List<StateInfo<SessionStateInstance>> states)
-		{
-			SessionObjectMap = new ConcurrentDictionary<string, object>();
-			StateManager = new StateManager<SessionStateInstance>();
-			RegisterStates(states);
-			StateManager.InitialState(SessionState.New);
-			LastTransaction = DateTime.Now;
-			ExpiresInSeconds = 60 * 60;
-		}
-
-		protected void RegisterStates(List<StateInfo<SessionStateInstance>> states)
-		{
-			states.ForEach(state =>
-				{
-					StateManager.StateTransitionMap.Add(state.State, state);
-				});
-		}
-	}
-
-    public class WebSessionModule : IModule
-    {
 		public void InitializeServices(IServiceManager serviceManager)
 		{
-			serviceManager.RegisterSingleton<IWebSessionService, WebSession>();
+			serviceManager.RegisterSingleton<IWebSessionService, IISSession>();
 		}
 	}
 
-	public class WebSession : ServiceBase, IWebSessionService
+	public class IISSession : ServiceBase, IWebSessionService
 	{
 		// Shared across all sessions.
-		// TODO: Get Session working for IIS.  Workaround for right now is we've made these static, but I'm not convinced that that is a robust solution.
-		private ConcurrentDictionary<IPAddress, SessionInfo> sessionInfoMap;
-		private List<StateInfo<SessionStateInstance>> states = new List<StateInfo<SessionStateInstance>>();
+		protected List<StateInfo<SessionStateInstance>> states = new List<StateInfo<SessionStateInstance>>();
 		private const string SESSION_INFO = "_SessionInfo_";
 
-		public WebSession()
+		public IISSession()
 		{
-			sessionInfoMap = new ConcurrentDictionary<IPAddress, SessionInfo>();
+			// sessionInfoMap = new ConcurrentDictionary<IPAddress, SessionInfo>();
 			InitializeStateSystem();
 		}
 
@@ -214,35 +182,23 @@ namespace Clifton.WebSessionService
 			si.SessionObjectMap.TryRemove(objectName, out val);
 		}
 
-		public virtual void ClearSession(SessionStateInstance sessionState)
+		protected void ClearSession(IContext context)
 		{
-			SessionInfo sessionInfo;
-			sessionInfoMap.TryRemove(sessionState.Context.EndpointAddress(), out sessionInfo);
+			SessionInfo si = CreateSessionInfoIfMissing(context);
+			List<string> keys = si.SessionObjectMap.Keys.ToList();
+			object val;			// not used.
+			keys.ForEach(key => si.SessionObjectMap.TryRemove(key, out val));
 		}
 
 		protected SessionInfo CreateSessionInfoIfMissing(IContext context)
 		{
 			SessionInfo sessionInfo;
 
-			// if (context is HttpListenerContextWrapper)
-			//if (true) 
-			//{
-				IPAddress addr = context.EndpointAddress();
-
-				if (!sessionInfoMap.TryGetValue(addr, out sessionInfo))
-				{
-					sessionInfo = new SessionInfo(states);
-					sessionInfoMap[addr] = sessionInfo;
-				}
-			//}
-			//else
-			//{
-			//	if (!context.Session.TryGetValue(SESSION_INFO, out sessionInfo))
-			//	{
-			//		sessionInfo = new SessionInfo(states);
-			//		context.Session[SESSION_INFO] = sessionInfo;
-			//	}
-			//}
+			if (!context.Session.TryGetValue(SESSION_INFO, out sessionInfo))
+			{
+				sessionInfo = new SessionInfo(states);
+				context.Session[SESSION_INFO] = sessionInfo;
+			}
 
 			return sessionInfo;
 		}
@@ -254,7 +210,7 @@ namespace Clifton.WebSessionService
 		{
 			states = new List<StateInfo<SessionStateInstance>>()
 			{
-				new StateInfo<SessionStateInstance>() 
+				new StateInfo<SessionStateInstance>()
 				{
 					State=SessionState.New,
 					OnEnter = s => s.SessionService.SetSessionObject(s.Context, "Authenticated", "false"),
@@ -287,7 +243,7 @@ namespace Clifton.WebSessionService
 				new StateInfo<SessionStateInstance>()
 				{
 					State=SessionState.Expired,
-					OnEnter = sessionState => ClearSession(sessionState),
+					OnEnter = sessionState => ClearSession(sessionState.Context),
 					StateTransitions=new List<StateTransition>()
 					{
 						// An expired session can transition to new (a login page for example) or authenticated, if authentication provided by some other means (a login web service)

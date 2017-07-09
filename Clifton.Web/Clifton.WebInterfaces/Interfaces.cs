@@ -129,8 +129,8 @@ namespace Clifton.WebInterfaces
 	public interface IWebServerService : IService
 	{
 		List<IPAddress> GetLocalHostIPs();
-		void Start(string ip, int[] ports);				// Clifton.WebServerService handles the listener.
-		void Start(HttpApplication application);		// Hook in to IIS.
+		void Start(string ip, int[] ports);					// Clifton.WebServerService handles the listener.
+		void ProcessRequest(HttpContext context);			// IIS HttpHandler.ProcessRequest hook
 	}
 
     public interface IWebRestService : IService

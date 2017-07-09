@@ -100,7 +100,7 @@ namespace Clifton.WebServerService
 			Task.Run(() => WaitForConnection(listener));
 		}
 
-		public virtual void Start(HttpApplication application)
+		public virtual void ProcessRequest(HttpContext application)
 		{
 			throw new Exception("Please use Clifton.IISService if you want to use IIS as the listener.");
 		}
@@ -127,7 +127,8 @@ namespace Clifton.WebServerService
 					string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
 					NameValueCollection nvc = context.Request.QueryString;
 					string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
-					string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password");
+					// TODO: The removal of the password when logging is really kludgy.
+					string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
 					logger.Log(LogMessage.Create(context.Request.RemoteEndPoint.ToString() + " - [" + context.Verb().Value + ": " + context.Path().Value + "] Parameters: " + parms));
 
 					IContext contextWrapper = new HttpListenerContextWrapper(context);

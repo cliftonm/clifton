@@ -90,7 +90,7 @@ namespace Clifton.Core.ServiceManagement
 
 			// Singletons are always instantiated immediately so that they can be initialized
 			// for global behaviors.  A good example is the global exception handler services.
-			CreateAndRegisterSingleton<I>(initializer);
+			CreateAndRegisterSingleton(initializer);
 		}
 
 		/// <summary>
@@ -143,7 +143,7 @@ namespace Clifton.Core.ServiceManagement
 					break;
 
 				case ConstructionOption.AlwaysSingleton:
-					instance = CreateOrGetSingleton<T>(initializer);
+					instance = CreateOrGetSingleton(initializer);
 					break;
 
 				default:
@@ -162,12 +162,12 @@ namespace Clifton.Core.ServiceManagement
             switch (constructionOption[interfaceType])
             {
                 case ConstructionOption.AlwaysInstance:
-                    instance = CreateInstance<T>(interfaceType, initializer);
+                    instance = CreateInstance(interfaceType, initializer);
                     instance.Initialize(this);
                     break;
 
                 case ConstructionOption.AlwaysSingleton:
-                    instance = CreateOrGetSingleton<T>(interfaceType, initializer);
+                    instance = CreateOrGetSingleton(interfaceType, initializer);
                     break;
 
                 default:
@@ -199,7 +199,7 @@ namespace Clifton.Core.ServiceManagement
 		{
 			VerifyRegistered<T>();
 			VerifySingletonOption<T>();
-			IService instance = CreateOrGetSingleton<T>(initializer);
+			IService instance = CreateOrGetSingleton(initializer);
 
 			return (T)instance;
 		}
@@ -217,7 +217,7 @@ namespace Clifton.Core.ServiceManagement
 			{
 				if (!singletons.TryGetValue(t, out instance))
 				{
-					instance = CreateAndRegisterSingleton<T>(initializer);
+					instance = CreateAndRegisterSingleton(initializer);
                 }
             }
 
@@ -233,7 +233,7 @@ namespace Clifton.Core.ServiceManagement
             {
                 if (!singletons.TryGetValue(t, out instance))
                 {
-                    instance = CreateAndRegisterSingleton<T>(initializer);
+                    instance = CreateAndRegisterSingleton(initializer);
                 }
             }
 
@@ -246,7 +246,7 @@ namespace Clifton.Core.ServiceManagement
         protected virtual IService CreateAndRegisterSingleton<T>(Action<T> initializer = null)
 			where T : IService
 		{
-			IService instance = CreateInstance<T>(initializer);
+			IService instance = CreateInstance(initializer);
 			Register<T>(instance);
 			instance.Initialize(this);
 
