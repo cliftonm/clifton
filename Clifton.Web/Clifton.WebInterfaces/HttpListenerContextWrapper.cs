@@ -35,6 +35,10 @@ namespace Clifton.WebInterfaces
 	public class HttpListenerRequestWrapper : IRequest
 	{
 		public NameValueCollection QueryString { get { return request.QueryString; } }
+		public Uri Url {get { return request.Url; } }
+		public Stream InputStream { get { return request.InputStream; } }
+		public Encoding ContentEncoding { get { return request.ContentEncoding; } }
+		public IPEndPoint RemoteEndPoint { get { return request.RemoteEndPoint; } }
 
 		protected HttpListenerRequest request;
 
@@ -91,6 +95,8 @@ namespace Clifton.WebInterfaces
 		public HttpSessionState Session { get { throw new ApplicationException("Please use IWebSessionService."); } }
 		public IRequest Request { get { return request; } }
 		public IResponse Response { get { return response; } }
+		public bool IsLocal { get { return context.Request.IsLocal; } }
+		public bool IsSecureConnection { get { return context.Request.IsSecureConnection; } }
 
 		protected HttpListenerRequestWrapper request;
 		protected HttpListenerResponseWrapper response;

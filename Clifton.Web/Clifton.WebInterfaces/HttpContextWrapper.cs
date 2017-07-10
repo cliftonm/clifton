@@ -21,8 +21,10 @@
 * SOFTWARE.
 */
 
+using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Web;
@@ -35,6 +37,21 @@ namespace Clifton.WebInterfaces
 	public class HttpRequestWrapper : IRequest
 	{
 		public NameValueCollection QueryString { get { return request.QueryString; } }
+		public Uri Url { get { return request.Url; } }
+		public Stream InputStream { get { return request.InputStream; } }
+		public Encoding ContentEncoding { get { return request.ContentEncoding; } }
+		public IPEndPoint RemoteEndPoint { get
+			{
+				string ip = request.UserHostAddress;
+
+				if (request.UserHostAddress == "::1")
+				{
+					ip = "127.0.0.1";
+				}
+
+				return new IPEndPoint(new IPAddress(ip.Split('.').Select(s => Convert.ToByte(s)).ToArray()), 0);
+			}
+		}
 
 		protected HttpRequest request;
 
@@ -94,6 +111,8 @@ namespace Clifton.WebInterfaces
 		public IRequest Request { get { return request; } }
 		public IResponse Response { get { return response; } }
 		public HttpSessionState Session { get { return context.Session; } }
+		public bool IsLocal { get { return context.Request.IsLocal; } }
+		public bool IsSecureConnection { get { return context.Request.IsSecureConnection; } }
 
 		protected HttpRequestWrapper request;
 		protected HttpContext context;

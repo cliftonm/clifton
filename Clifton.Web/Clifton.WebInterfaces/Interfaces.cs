@@ -43,7 +43,9 @@ namespace Clifton.WebInterfaces
 		UriExtension Extension();
 		IRequest Request { get; }
 		IResponse Response { get; }
-		HttpSessionState Session { get; } 
+		HttpSessionState Session { get; }
+		bool IsLocal { get; }
+		bool IsSecureConnection { get; }
 
 		void Redirect(string url);
 	}
@@ -51,6 +53,10 @@ namespace Clifton.WebInterfaces
 	public interface IRequest
 	{
 		NameValueCollection QueryString { get; }
+		Uri Url { get; }
+		Stream InputStream { get; }
+		Encoding ContentEncoding { get; }
+		IPEndPoint RemoteEndPoint { get; }
 	}
 
 	public interface IResponse

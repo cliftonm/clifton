@@ -100,9 +100,10 @@ namespace Clifton.WebServerService
 			Task.Run(() => WaitForConnection(listener));
 		}
 
-		public virtual void ProcessRequest(HttpContext application)
+		public virtual void ProcessRequest(HttpContext context)
 		{
-			throw new Exception("Please use Clifton.IISService if you want to use IIS as the listener.");
+			IContext contextWrapper = new WebInterfaces.HttpContextWrapper(context);
+			ProcessRequest(contextWrapper);
 		}
 
 		protected virtual void WaitForConnection(object objListener)
@@ -113,43 +114,46 @@ namespace Clifton.WebServerService
 			{
 				// Wait for a connection.  Return to caller while we wait.
 				HttpListenerContext context = listener.GetContext();
+				IContext contextWrapper = new HttpListenerContextWrapper(context);
+				ProcessRequest(contextWrapper);
+			}
+		}
 
-				// Redirect to HTTPS if not local and not secure.
-				if (!context.Request.IsLocal && !context.Request.IsSecureConnection && !httpOnly)
+		protected virtual void ProcessRequest(IContext contextWrapper)
+		{
+			// Redirect to HTTPS if not local and not secure.
+			if (!contextWrapper.IsLocal && !contextWrapper.IsSecureConnection && !httpOnly)
+			{
+				logger.Log(LogMessage.Create("Redirecting to HTTPS"));
+				string redirectUrl = contextWrapper.Request.Url.ToString().Replace("http:", "https:");
+				contextWrapper.Redirect(redirectUrl);
+				contextWrapper.Response.Close();
+			}
+			else
+			{
+				string data = new StreamReader(contextWrapper.Request.InputStream, contextWrapper.Request.ContentEncoding).ReadToEnd();
+				NameValueCollection nvc = contextWrapper.Request.QueryString;
+				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
+				// TODO: The removal of the password when logging is really kludgy.
+				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
+				logger.Log(LogMessage.Create(contextWrapper.Request.RemoteEndPoint.ToString() + " - [" + contextWrapper.Verb().Value + ": " + contextWrapper.Path().Value + "] Parameters: " + parms));
+
+				// If the pre-router lets us continue, the route the request.
+				if (ServiceManager.Exists<IWebWorkflowService>())
 				{
-					logger.Log(LogMessage.Create("Redirecting to HTTPS"));
-					string redirectUrl = context.Request.Url.ToString().Replace("http:", "https:");
-					context.Response.Redirect(redirectUrl);
-					context.Response.Close();
-				}
-				else
-				{
-					string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
-					NameValueCollection nvc = context.Request.QueryString;
-					string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
-					// TODO: The removal of the password when logging is really kludgy.
-					string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
-					logger.Log(LogMessage.Create(context.Request.RemoteEndPoint.ToString() + " - [" + context.Verb().Value + ": " + context.Path().Value + "] Parameters: " + parms));
-
-					IContext contextWrapper = new HttpListenerContextWrapper(context);
-
-					// If the pre-router lets us continue, the route the request.
-					if (ServiceManager.Exists<IWebWorkflowService>())
-					{
-						if (ServiceManager.Get<IWebWorkflowService>().PreRouter(contextWrapper))
-						{
-							ProcessRoute(contextWrapper, data);
-						}
-						else
-						{
-							// Otherwise just close the response.
-							context.Response.Close();
-						}
-					}
-					else
+					if (ServiceManager.Get<IWebWorkflowService>().PreRouter(contextWrapper))
 					{
 						ProcessRoute(contextWrapper, data);
 					}
+					else
+					{
+						// Otherwise just close the response.
+						contextWrapper.Response.Close();
+					}
+				}
+				else
+				{
+					ProcessRoute(contextWrapper, data);
 				}
 			}
 		}
