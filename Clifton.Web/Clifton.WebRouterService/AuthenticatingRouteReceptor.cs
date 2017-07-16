@@ -22,11 +22,12 @@
 */
 
 using System;
-using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.Reflection;
 
 using Newtonsoft.Json;
 
+using Clifton.Core.ExtensionMethods;
 using Clifton.Core.Semantics;
 using Clifton.Core.Utils;
 using Clifton.WebInterfaces;
@@ -99,6 +100,7 @@ namespace Clifton.WebRouterService
 						if (data[0] == '{')
 						{
 							JsonConvert.PopulateObject(data, semanticRoute);
+							SetUrlParameters(context.Request.Url.ToString(), semanticRoute, receptorSemanticType);
 						}
 						else
 						{
@@ -125,21 +127,7 @@ namespace Clifton.WebRouterService
 					}
 					else if (verb.Value == "GET")
 					{
-						// Parse parameters
-						NameValueCollection nvc = context.Request.QueryString;
-
-						foreach (string key in nvc.AllKeys)
-						{
-							PropertyInfo pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-							if (pi != null)
-							{
-								// pi.SetValue(semanticRoute, Uri.UnescapeDataString(nvc[key].Replace('+', ' ')));
-								// TODO: Should handling of "+" be before or after the UnescapedDataString call?
-								object valOfType = Converter.Convert(Uri.UnescapeDataString(nvc[key].Replace('+', ' ')), pi.PropertyType);
-								pi.SetValue(semanticRoute, valOfType);
-							}
-						}
+						SetUrlParameters(context.Request.Url.ToString(), semanticRoute, receptorSemanticType);
 					}
 
 					// Must be done AFTER populating the object -- sometimes the json converter nulls the base class!
@@ -198,6 +186,36 @@ namespace Clifton.WebRouterService
 		protected string GetSearchRoute(HttpVerb verb, UriPath path)
 		{
 			return verb.Value + ":" + path.Value;
+		}
+
+		protected void SetUrlParameters(string url, SemanticRoute semanticRoute, Type receptorSemanticType)
+		{
+			// Parse parameters
+			// NameValueCollection nvc = context.Request.QueryString;
+			// We process the parameters ourselves because we may have to convert URL formatting, like %3D, to their original characters, like '='
+			Dictionary<string, string> keyValues = new Dictionary<string, string>();
+			string urlParams = Uri.UnescapeDataString(url.RightOf('?')).Replace('+', ' ');
+			string[] kv = urlParams.Split('&');         // split by params
+
+			foreach (string kvparam in kv)
+			{
+				string[] kv2 = kvparam.Split('=');
+
+				if (kv2.Length == 2 && !String.IsNullOrEmpty(kv2[0]))
+				{
+					string key = kv2[0];
+					string val = kv2[1];
+					PropertyInfo pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+
+					if (pi != null)
+					{
+						// pi.SetValue(semanticRoute, Uri.UnescapeDataString(nvc[key].Replace('+', ' ')));
+						// TODO: Should handling of "+" be before or after the UnescapedDataString call?
+						object valOfType = Converter.Convert(val, pi.PropertyType);
+						pi.SetValue(semanticRoute, valOfType);
+					}
+				}
+			}
 		}
 	}
 }

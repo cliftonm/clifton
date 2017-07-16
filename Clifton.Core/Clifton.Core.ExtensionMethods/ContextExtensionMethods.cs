@@ -466,7 +466,7 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				List<T> records = Query<T>(context, whereClause);
+				List<T> records = QueryWithContext<T>(newContext, whereClause);
 				newContext.GetTable<T>().DeleteAllOnSubmit<T>(records);
 				newContext.SubmitChanges();
 			}
@@ -543,6 +543,31 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+		}
+
+		private static List<T> QueryWithContext<T>(DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		{
+			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+			List<T> data = null;
+
+			try
+			{
+				if (whereClause == null)
+				{
+					data = context.GetTable<T>().ToList();
+				}
+				else
+				{
+					data = context.GetTable<T>().Where(whereClause).ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				LogException(ex);
+				throw;
+			}
+
+			return data;
 		}
 
 		/// <summary>

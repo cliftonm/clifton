@@ -132,9 +132,10 @@ namespace Clifton.WebServerService
 			else
 			{
 				string data = new StreamReader(contextWrapper.Request.InputStream, contextWrapper.Request.ContentEncoding).ReadToEnd();
-				NameValueCollection nvc = contextWrapper.Request.QueryString;
-				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.ToDictionary(k => k, k => nvc[k]));
+
 				// TODO: The removal of the password when logging is really kludgy.
+				NameValueCollection nvc = contextWrapper.Request.QueryString;
+				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.Where(k=>k != null).ToDictionary(k => k, k => nvc[k]));
 				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
 				logger.Log(LogMessage.Create(contextWrapper.Request.RemoteEndPoint.ToString() + " - [" + contextWrapper.Verb().Value + ": " + contextWrapper.Path().Value + "] Parameters: " + parms));
 
