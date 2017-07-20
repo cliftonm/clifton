@@ -47,6 +47,7 @@ namespace Clifton.WebRouterService
 	{
 		public void Process(ISemanticProcessor proc, IMembrane membrane, Route route)
 		{
+			Console.WriteLine("URL: " + route.Context.Request.Url);
 			IAuthenticatingRouterService routerService = proc.ServiceManager.Get<IAuthenticatingRouterService>();
 			IContext context = route.Context;
 			HttpVerb verb = context.Verb();

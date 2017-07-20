@@ -69,17 +69,19 @@ namespace Clifton.WebInterfaces
 			ContentType = contentType;
 			ContentEncoding = Encoding.UTF8;
 			byte[] byteData = data.to_Utf8();
-			ContentLength64 = byteData.Length;
+			// https://stackoverflow.com/a/35442761/2276361
+			// ContentLength64 = byteData.Length;
 			OutputStream.Write(byteData, 0, byteData.Length);
 			Close();
 		}
-
+																												 
 		public void Write(byte[] data, string contentType = "text/text", int statusCode = 200)
 		{
 			StatusCode = statusCode;
 			ContentType = contentType;
 			ContentEncoding = Encoding.UTF8;
-			ContentLength64 = data.Length;
+			// https://stackoverflow.com/a/35442761/2276361
+			// ContentLength64 = data.Length;
 			OutputStream.Write(data, 0, data.Length);
 			Close();
 		}

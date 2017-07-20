@@ -76,7 +76,16 @@ namespace Clifton.WebInterfaces
 		/// </summary>
 		public static IPAddress EndpointAddress(this HttpListenerContext context)
 		{
-			return context.Request.RemoteEndPoint.Address;
+			IPAddress addr = context.Request.RemoteEndPoint.Address;
+			string ip = addr.ToString();
+
+			// Handle localhost format.
+			if (ip == "::1")
+			{
+				addr = new IPAddress(new byte[] { 127, 0, 0, 1 });
+			}
+
+			return addr;
 		}
 
 		public static IPAddress EndpointAddress(this HttpContext context)

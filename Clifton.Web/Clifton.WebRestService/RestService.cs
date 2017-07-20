@@ -24,6 +24,7 @@
 using System;
 using System.IO;
 using System.Net;
+// using System.Net.Cache;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -124,8 +125,11 @@ namespace Clifton.WebRestService
                 // was: json = JsonConvert.SerializeObject(obj);
                 json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
                 LastJson = json;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Timeout = TIMEOUT;
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+				// https://msdn.microsoft.com/en-us/library/system.net.webrequest.cachepolicy%28v=vs.110%29.aspx?f=255&MSPPError=-2147217396
+				//HttpRequestCachePolicy noCachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+				//request.CachePolicy = noCachePolicy;
+				request.Timeout = TIMEOUT;
                 request.Method = "POST";
                 request.ContentType = "application/json";
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
