@@ -86,6 +86,11 @@ namespace Clifton.WebRouterService
 					}
 				}
 
+				if (authenticatedRoute)     // user is authenticated
+				{
+					session.UpdateLastTransaction(context);
+				}
+
 				if (authenticatedRoute && authorizedRoute)
 				{
 					Type receptorSemanticType = routeInfo.ReceptorSemanticType;

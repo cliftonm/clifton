@@ -114,6 +114,7 @@ namespace Clifton.WebInterfaces
 	{
 		void UpdateState(IContext context);
 		void Authenticate(IContext context);
+		void UpdateLastTransaction(IContext context);
 		void Logout(IContext context);
 		string GetSessionObject(IContext context, string objectName);
 		T GetSessionObject<T>(IContext context, string objectName);

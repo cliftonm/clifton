@@ -47,7 +47,7 @@ namespace Clifton.WebRestService
 
     public class WebRestService : ServiceBase, IWebRestService
     {
-        public const int TIMEOUT = 150000;
+        public const int TIMEOUT = 1000;		// one second.
         public string LastJson;
         public string LastRetJson;
 
