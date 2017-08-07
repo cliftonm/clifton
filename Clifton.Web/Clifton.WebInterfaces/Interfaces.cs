@@ -80,6 +80,7 @@ namespace Clifton.WebInterfaces
     public interface IWebSocketServerService : IService
     {
 		void Start(string ipAddress, int port, string path);
+        void Stop();
     }
 
 	public interface IWebSocketSession
