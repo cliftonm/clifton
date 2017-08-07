@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Reflection;
 
 using Newtonsoft.Json;
@@ -47,7 +48,6 @@ namespace Clifton.WebRouterService
 	{
 		public void Process(ISemanticProcessor proc, IMembrane membrane, Route route)
 		{
-			Console.WriteLine("URL: " + route.Context.Request.Url);
 			IAuthenticatingRouterService routerService = proc.ServiceManager.Get<IAuthenticatingRouterService>();
 			IContext context = route.Context;
 			HttpVerb verb = context.Verb();
@@ -55,6 +55,17 @@ namespace Clifton.WebRouterService
 			string searchRoute = GetSearchRoute(verb, path);
 			string data = route.Data;
 			RouteInfo routeInfo;
+
+			IPAddress addr = context.Request.RemoteEndPoint.Address;
+			string ip = addr.ToString();
+
+			// Handle localhost format.
+			if (ip == "::1")
+			{
+				addr = new IPAddress(new byte[] { 127, 0, 0, 1 });
+			}
+
+			Console.WriteLine("IP: " + addr.ToString() + "    URL: " + route.Context.Request.Url);
 
 			// TODO: Session manager may not exist.  How do we handle services that are missing?
 			IWebSessionService session = proc.ServiceManager.Get<IWebSessionService>();
