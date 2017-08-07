@@ -58,6 +58,7 @@ namespace WebSocketSharp
     /// <summary>
     /// Indicates the top logging level.
     /// </summary>
-    Fatal
+    Fatal,
+    NoLogging,
   }
 }
