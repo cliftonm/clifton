@@ -16,13 +16,21 @@ namespace Clifton.Core.Web.WebSocketService
 {
 	public class WebSocketServerService : ServiceBase, IWebSocketServerService
 	{
-		public void Start(string address, int port, string path)
+        protected WebSocketServer wss;
+
+        public void Start(string address, int port, string path)
 		{
 			IPAddress ipaddr = new IPAddress(address.Split('.').Select(a => (byte)a.to_i()).ToArray());
-			WebSocketServer wss = new WebSocketServer(ipaddr, port, this);
+			wss = new WebSocketServer(ipaddr, port, this);
 			wss.AddWebSocketService<ServerReceiver>(path);
+            wss.Log.Level = LogLevel.NoLogging;
 			wss.Start();
 		}
+
+        public void Stop()
+        {
+            wss.Stop();
+        }
 	}
 
 	public class ServerReceiver : WebSocketBehavior, Clifton.WebInterfaces.IWebSocketSession
@@ -32,7 +40,12 @@ namespace Clifton.Core.Web.WebSocketService
 			Send(msg);
 		}
 
-		protected override void OnMessage(MessageEventArgs e)
+        protected override void OnOpen()
+        {
+            Console.WriteLine("Open");
+        }
+
+        protected override void OnMessage(MessageEventArgs e)
 		{
 			IService service = e.CallerContext as IService;
 			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ServerSocketMessage>(msg => 
@@ -41,5 +54,15 @@ namespace Clifton.Core.Web.WebSocketService
 					msg.Session = this;
 				});
 		}
-	}
+
+        protected override void OnError(ErrorEventArgs e)
+        {
+            Console.WriteLine("Error: " + e.Message);
+        }
+
+        protected override void OnClose(CloseEventArgs e)
+        {
+            Console.WriteLine("Close: " + e.Reason);
+        }
+    }
 }
