@@ -50,19 +50,23 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\clifton\Clifton.Core\Clifton.Core.csproj">
+    <ProjectReference Include="..\..\..\..\Clifton.Core\Clifton.Core.csproj">
       <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
       <Name>Clifton.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\clifton\Clifton.Core\Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
+    <ProjectReference Include="..\..\..\..\Clifton.Core\Services\Clifton.SemanticProcessorService\Clifton.SemanticProcessorService.csproj">
       <Project>{b716a014-8c9f-4a24-83a4-acbae19c28c5}</Project>
       <Name>Clifton.SemanticProcessorService</Name>
     </ProjectReference>
-    <ProjectReference Include="..\clifton\Clifton.Web\Clifton.WebInterfaces\Clifton.WebInterfaces.csproj">
+    <ProjectReference Include="..\..\..\..\Third Party\websocket-sharp\websocket-sharp.csproj">
+      <Project>{b357bac7-529e-4d81-a0d2-71041b19c8de}</Project>
+      <Name>websocket-sharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Clifton.WebInterfaces\Clifton.WebInterfaces.csproj">
       <Project>{0a5483c7-cbcf-4033-8d92-cdfcf7856b54}</Project>
       <Name>Clifton.WebInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\clifton\Clifton.Web\Clifton.WebSocketService\Clifton.WebSocketService.csproj">
+    <ProjectReference Include="..\..\Clifton.WebSocketService.csproj">
       <Project>{0f58caee-9462-4691-b44d-5059f471e576}</Project>
       <Name>Clifton.WebSocketService</Name>
     </ProjectReference>
