@@ -24,10 +24,16 @@ namespace websocketServer
 
             semproc.Register<SocketMembrane, ServerSocketReceiver>();
 
-            wsClient.Start("ws://127.0.0.1", 1000, "/wstest");
+            // wsClient.Start("ws://127.0.0.1", 1000, "/wstest");
+			wsClient.Start("ws://24.105.201.179", 31415, "/wstest");
+			// wsClient.Start("ws://emsserver.club", 443, "/wstest");
 
-            Console.WriteLine("WS client connected to 127.0.0.1:1000");
-            wsClient.Send("Hello World!");
+
+			// wsClient.Start("wss://24.105.201.179", 443, "/wstest");
+			// wsClient.Start("wss://emsserver.club", 443, "/wstest");
+
+			// Console.WriteLine("WS client connected to 127.0.0.1:1000");
+			wsClient.Send("Hello World!");
             Console.ReadLine();
         }
     }

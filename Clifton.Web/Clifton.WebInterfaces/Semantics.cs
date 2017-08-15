@@ -46,6 +46,19 @@ namespace Clifton.WebInterfaces
 		public string Text { get; set; }
 	}
 
+	public class ServerSocketError : ISemanticType
+	{
+		public IWebSocketSession Session { get; set; }
+	}
+
+	public class ServerSocketClosed : ISemanticType
+	{
+		public IWebSocketSession Session { get; set; }
+	}
+
+	public class ClientSocketError : ISemanticType { }
+	public class ClientSocketClosed : ISemanticType { }
+
 	/// <summary>
 	/// A route before it has been semantic-ized.
 	/// </summary>

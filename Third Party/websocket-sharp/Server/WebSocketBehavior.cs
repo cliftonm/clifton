@@ -310,17 +310,17 @@ namespace WebSocketSharp.Server
         return;
 
       _sessions.Remove (_id);
-      OnClose (e);
+      OnClose(sender, e);
     }
 
     private void onError (object sender, ErrorEventArgs e)
     {
-      OnError (e);
+      OnError(sender, e);
     }
 
     private void onMessage (object sender, MessageEventArgs e)
     {
-      OnMessage (e);
+      OnMessage(e);
     }
 
     private void onOpen (object sender, EventArgs e)
@@ -390,7 +390,7 @@ namespace WebSocketSharp.Server
     protected void Error (string message, Exception exception)
     {
       if (message != null && message.Length > 0)
-        OnError (new ErrorEventArgs (message, exception));
+        OnError (null, new ErrorEventArgs (message, exception));
     }
 
     /// <summary>
@@ -400,7 +400,7 @@ namespace WebSocketSharp.Server
     /// A <see cref="CloseEventArgs"/> that represents the event data passed to
     /// a <see cref="WebSocket.OnClose"/> event.
     /// </param>
-    protected virtual void OnClose (CloseEventArgs e)
+    protected virtual void OnClose (object sender, CloseEventArgs e)
     {
     }
 
@@ -411,7 +411,7 @@ namespace WebSocketSharp.Server
     /// A <see cref="ErrorEventArgs"/> that represents the event data passed to
     /// a <see cref="WebSocket.OnError"/> event.
     /// </param>
-    protected virtual void OnError (ErrorEventArgs e)
+    protected virtual void OnError (object sender, ErrorEventArgs e)
     {
     }
 

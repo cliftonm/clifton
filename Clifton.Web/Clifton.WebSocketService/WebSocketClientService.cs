@@ -46,12 +46,14 @@ namespace Clifton.Core.Web.WebSocketService
 
         protected void OnError(object sender, ErrorEventArgs e)
         {
-            Console.WriteLine("Error: " + e.Message);
-        }
+			IService service = ((WebSocket)sender).CallerContext as IService;
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ClientSocketError>();
+		}
 
-        protected void OnClose(object sender, CloseEventArgs e)
+		protected void OnClose(object sender, CloseEventArgs e)
         {
-            Console.WriteLine("Close: " + e.Reason);
-        }
-    }
+			IService service = ((WebSocket)sender).CallerContext as IService;
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ClientSocketClosed>();
+		}
+	}
 }

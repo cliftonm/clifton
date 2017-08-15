@@ -55,14 +55,18 @@ namespace Clifton.Core.Web.WebSocketService
 				});
 		}
 
-        protected override void OnError(ErrorEventArgs e)
+        protected override void OnError(object sender, ErrorEventArgs e)
         {
-            Console.WriteLine("Error: " + e.Message);
-        }
+			// Console.WriteLine("Error: " + e.Message);
+			IService service = ((WebSocket)sender).CallerContext as IService;
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ServerSocketError>(msg => msg.Session = this);
+		}
 
-        protected override void OnClose(CloseEventArgs e)
+        protected override void OnClose(object sender, CloseEventArgs e)
         {
-            Console.WriteLine("Close: " + e.Reason);
-        }
-    }
+			// Console.WriteLine("Close: " + e.Reason);
+			IService service = ((WebSocket)sender).CallerContext as IService;
+			service.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<SocketMembrane, ServerSocketClosed>(msg => msg.Session = this);
+		}
+	}
 }
