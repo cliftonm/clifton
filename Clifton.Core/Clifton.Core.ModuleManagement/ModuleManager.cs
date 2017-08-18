@@ -55,9 +55,9 @@ namespace Clifton.Core.ModuleManagement
 			InitializeRegistrants(registrants);
 		}
 
-		public virtual void RegisterModulesFrom(List<AssemblyFileName> moduleFilenames, string path)
+		public virtual void RegisterModulesFrom(List<AssemblyFileName> moduleFilenames, string path, Func<string, Assembly> assemblyResolver = null)
 		{
-			List<Assembly> modules = LoadModulesFrom(moduleFilenames, path);
+			List<Assembly> modules = LoadModulesFrom(moduleFilenames, path, assemblyResolver);
 			List<IModule> registrants = InstantiateRegistrants(modules);
 			InitializeRegistrants(registrants);
 		}
@@ -79,13 +79,13 @@ namespace Clifton.Core.ModuleManagement
 			return modules;
 		}
 
-		protected virtual List<Assembly> LoadModulesFrom(List<AssemblyFileName> moduleFilenames, string path)
+		protected virtual List<Assembly> LoadModulesFrom(List<AssemblyFileName> moduleFilenames, string path, Func<string, Assembly> assemblyResolver = null)
 		{
 			List<Assembly> modules = new List<Assembly>();
 
 			moduleFilenames.ForEach(a =>
 			{
-				Assembly assembly = LoadAssemblyFrom(a, path);
+				Assembly assembly = LoadAssemblyFrom(a, path, assemblyResolver);
 				modules.Add(assembly);
 			});
 
@@ -121,7 +121,7 @@ namespace Clifton.Core.ModuleManagement
 			return assembly;
 		}
 
-		protected virtual Assembly LoadAssemblyFrom(AssemblyFileName assyName, string path)
+		protected virtual Assembly LoadAssemblyFrom(AssemblyFileName assyName, string path, Func<string, Assembly> assemblyResolver = null)
 		{
 			string fullPath = Path.Combine(path, assyName.Value);
 			Assembly assembly = null;
@@ -129,6 +129,8 @@ namespace Clifton.Core.ModuleManagement
 			if (!File.Exists(fullPath))
 			{
 				throw new ApplicationException( "Module " + fullPath + " not found.\r\n.");
+				Assert.Not(assemblyResolver == null, "Module " + fullPath + " not found.\r\n.  An assemblyResolver must be defined when attempting to load modules from the application's resources or specify the optionalPath to locate the assembly.");
+				assembly = assemblyResolver(assyName.Value);
 			}
 			else
 			{

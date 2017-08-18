@@ -34,6 +34,8 @@ namespace Clifton.Core.TemplateEngine
 {
 	public static class Compiler
 	{
+		public static string TemplateEnginePath = null;
+
 		public static Assembly Compile(string code, out List<string> errors, List<string> references = null)
 		{
 			Assembly assy = null;
@@ -48,7 +50,7 @@ namespace Clifton.Core.TemplateEngine
 			cp.TreatWarningsAsErrors = false;
 			cp.ReferencedAssemblies.Add("System.dll");
 			//cp.ReferencedAssemblies.Add(@"c:\websites\projourn\bin\Clifton.Core.TemplateEngine.dll");
-			cp.ReferencedAssemblies.Add("Clifton.Core.TemplateEngine.dll");
+			cp.ReferencedAssemblies.Add(TemplateEnginePath ?? "Clifton.Core.TemplateEngine.dll");
 
 			// to support the "dynamic" keyword, add references for:
 			// "Microsoft.CSharp.dll"

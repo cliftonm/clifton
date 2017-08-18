@@ -112,6 +112,12 @@ namespace Clifton.IISSessionService
 			}
 		}
 
+		public virtual void UpdateLastTransaction(IContext context)
+		{
+			SessionInfo si = CreateSessionInfoIfMissing(context);
+			si.LastTransaction = DateTime.Now;
+		}
+
 		public virtual void Authenticate(IContext context)
 		{
 			SessionInfo si = CreateSessionInfoIfMissing(context);

@@ -222,7 +222,16 @@ namespace Clifton.WebRouterService
 				{
 					string key = kv2[0];
 					string val = kv2[1];
-					PropertyInfo pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+					PropertyInfo pi = null;
+
+					try
+					{
+						pi = receptorSemanticType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+					}
+					catch (Exception ex)
+					{
+
+					}
 
 					if (pi != null)
 					{

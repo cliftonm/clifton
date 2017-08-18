@@ -33,7 +33,7 @@ namespace Clifton.Core.ModuleManagement
 	public interface IModuleManager
 	{
 		void RegisterModules(List<AssemblyFileName> moduleFilenames, OptionalPath optionalPath = null, Func<string, Assembly> resourceAssemblyResolver = null);
-		void RegisterModulesFrom(List<AssemblyFileName> moduleFilenames, string path);
+		void RegisterModulesFrom(List<AssemblyFileName> moduleFilenames, string path, Func<string, Assembly> resourceAssemblyResolver = null);
 		ReadOnlyCollection<IModule> Modules { get; }
 	}
 }
