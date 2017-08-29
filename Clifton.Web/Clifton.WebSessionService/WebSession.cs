@@ -162,6 +162,29 @@ namespace Clifton.WebSessionService
 			si.StateManager.ToState(SessionState.New, new SessionStateInstance(context, this));
 		}
 
+		public virtual bool HasSessionObject(IContext context, string objectName)
+		{
+			SessionInfo si = CreateSessionInfoIfMissing(context);
+
+			return si.SessionObjectMap.ContainsKey(objectName);
+		}
+
+		public virtual bool TryGetSessionObject<T>(IContext context, string objectName, out T data)
+		{
+			bool ret = false;
+			data = default(T);
+			SessionInfo si = CreateSessionInfoIfMissing(context);
+			object val;
+
+			if (si.SessionObjectMap.TryGetValue(objectName, out val))
+			{
+				data = (T)Convert.ChangeType(val, typeof(T));
+				ret = true;
+			}
+
+			return ret;
+		}
+
 		/// <summary>
 		/// A return value of null indicates that the object doesn't exist in the collection.
 		/// </summary>

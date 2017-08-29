@@ -91,6 +91,7 @@ namespace Clifton.WebInterfaces
 	public interface IWebSocketClientService : IService
 	{
 		void Start(string ipAddress, int port, string path);
+		bool Ping();
 		void Send(string msg);
 	}
 
@@ -117,6 +118,8 @@ namespace Clifton.WebInterfaces
 		void Authenticate(IContext context);
 		void UpdateLastTransaction(IContext context);
 		void Logout(IContext context);
+		bool TryGetSessionObject<T>(IContext context, string objectName, out T data);
+		bool HasSessionObject(IContext context, string objectName);
 		string GetSessionObject(IContext context, string objectName);
 		T GetSessionObject<T>(IContext context, string objectName);
 		dynamic GetSessionObjectAsDynamic(IContext context, string objectName);
@@ -143,6 +146,8 @@ namespace Clifton.WebInterfaces
 
     public interface IWebRestService : IService
     {
+		int Timeout { get; set; }
+		bool HasTimeoutOrOtherError { get; set; }
 		string Get(string url);
 		R Get<R>(string url) where R : IRestResponse;
         R Post<R>(string url, object obj) where R : IRestResponse;

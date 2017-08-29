@@ -47,9 +47,17 @@ namespace Clifton.WebRestService
 
     public class WebRestService : ServiceBase, IWebRestService
     {
+		public int Timeout { get; set; }
+		public bool HasTimeoutOrOtherError { get; set; }
+
         public const int TIMEOUT = 1000;		// one second.
         public string LastJson;
         public string LastRetJson;
+
+		public WebRestService()
+		{
+			Timeout = TIMEOUT;
+		}
 
 		/// <summary>
 		/// A GET action, no serialization into an object.
@@ -62,7 +70,7 @@ namespace Clifton.WebRestService
 			try
 			{
 				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-				request.Timeout = TIMEOUT;
+				request.Timeout = Timeout;
 				request.Method = "GET";
 
 				resp = request.GetResponse();
@@ -89,6 +97,7 @@ namespace Clifton.WebRestService
 		/// </summary>
 		public R Get<R>(string url) where R : IRestResponse
         {
+			HasTimeoutOrOtherError = false;
 			R target = Activator.CreateInstance<R>();
 			string ret = String.Empty;
 
@@ -102,6 +111,7 @@ namespace Clifton.WebRestService
 			}
 			catch(Exception ex)
 			{
+				HasTimeoutOrOtherError = true;
 				target.Exception = ex;
 
 				if (ex.Source == "Newtonsoft.Json")
@@ -115,7 +125,8 @@ namespace Clifton.WebRestService
 
         public R Post<R>(string url, object obj) where R : IRestResponse
         {
-            R target = Activator.CreateInstance<R>();
+			HasTimeoutOrOtherError = false;
+			R target = Activator.CreateInstance<R>();
             Stream st = null;
             string json = string.Empty;
             string retjson = string.Empty;
@@ -129,7 +140,7 @@ namespace Clifton.WebRestService
 				// https://msdn.microsoft.com/en-us/library/system.net.webrequest.cachepolicy%28v=vs.110%29.aspx?f=255&MSPPError=-2147217396
 				//HttpRequestCachePolicy noCachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
 				//request.CachePolicy = noCachePolicy;
-				request.Timeout = TIMEOUT;
+				request.Timeout = Timeout;
                 request.Method = "POST";
                 request.ContentType = "application/json";
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
@@ -147,13 +158,15 @@ namespace Clifton.WebRestService
             }
             catch (Exception ex)
             {
+				HasTimeoutOrOtherError = true;
 				if (ex.Source == "Newtonsoft.Json")
 				{
                     target.RawJsonRet = retjson;
 				}
-                // TODO: Log Exception
-            }
-            finally
+
+				target.Exception = ex;
+			}
+			finally
             {
                 if (st != null)
                 {
