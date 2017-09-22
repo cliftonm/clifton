@@ -70,6 +70,7 @@ namespace Clifton.Core.ServiceInterfaces
 
 	public interface IEmailService : IService
 	{
+        bool Success { get; }
 		void Send(Email email);
 	}
 }

@@ -22,6 +22,8 @@ namespace Clifton.EmailService
 
 	public class EmailService : ServiceBase, IEmailService
 	{
+        public bool Success { get; protected set; }
+
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();
@@ -63,9 +65,11 @@ namespace Clifton.EmailService
 				email.Bcc.IfNotNull(bccs => bccs.ForEach(bcc => message.Bcc.Add(bcc)));
 
 				smtpClient.Send(message);
+                Success = true;
 			}
 			catch (Exception ex)
 			{
+                Success = false;
                 // If an exception occurs when emailing, log through whatever logging mechanism in place, rather than handling by trying to email another exception!
                 Assert.SilentTry(() =>
                     ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex2 => ex2.Exception = ex, true));
