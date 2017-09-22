@@ -52,6 +52,7 @@ namespace Clifton.WebRouterService
 			IContext context = route.Context;
 			HttpVerb verb = context.Verb();
 			UriPath path = context.Path();
+
 			string searchRoute = GetSearchRoute(verb, path);
 			string data = route.Data;
 			RouteInfo routeInfo;
