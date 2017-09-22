@@ -1378,5 +1378,10 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			return src.Count(q => q == c);
 		}
+
+        public static T AsNotNull<T>(this T? src) where T : struct
+        {
+            return (T)src;
+        }
     }
 }

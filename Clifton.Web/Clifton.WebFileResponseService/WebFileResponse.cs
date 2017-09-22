@@ -60,7 +60,7 @@ namespace Clifton.WebFileResponseService
 		{
 			bool handled = false;
 			string path = context.Path().Value.Replace('/', '\\').LeftOfRightmostOf('.');	// without extension
-			string ext = context.Extension().Value;
+			string ext = context.Extension().Value.ToLower();
 
 			if (String.IsNullOrEmpty(path))
 			{
@@ -98,6 +98,15 @@ namespace Clifton.WebFileResponseService
 							r.BinaryData = ReadBinaryFile(path);
 						});
 						break;
+
+                    case "pdf":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.ContentType = "application/" + ext;
+                            r.BinaryData = ReadBinaryFile(path);
+                        });
+                        break;
 
 					case "js":
 						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, JavascriptResponse>(r =>
