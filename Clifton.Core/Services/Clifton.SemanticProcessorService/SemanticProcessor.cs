@@ -245,6 +245,19 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			membraneReceptorInstances[membrane].Add(receptor);
 		}
 
+        public void Unregister<M>(IReceptor receptor)
+            where M : IMembrane, new()
+        {
+            IMembrane membrane = RegisterMembrane<M>();
+            Unregister(membrane, receptor);
+        }
+
+        public void Unregister(IMembrane membrane, IReceptor receptor)
+        {
+            statefulReceptors.Remove(receptor);
+            membraneReceptorInstances[membrane].Remove(receptor);
+        }
+
         public void RegisterQualifier<T>(IReceptor receptor, Func<ISemanticQualifier, bool> qualifier) where T : ISemanticQualifier
         {
             qualifiers.Add(new SemanticQualifier() { SemanticType = typeof(T), Receptor = receptor, Qualifier = qualifier });
