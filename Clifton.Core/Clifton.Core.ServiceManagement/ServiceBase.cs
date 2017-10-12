@@ -21,6 +21,9 @@
 * SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+
 namespace Clifton.Core.ServiceManagement
 {
 	/// <summary>
@@ -35,8 +38,6 @@ namespace Clifton.Core.ServiceManagement
 			ServiceManager = svcMgr;
 		}
 
-		public virtual void FinishedInitialization()
-		{
-		}
+        public virtual void FinishedInitialization() { }
 	}
 }

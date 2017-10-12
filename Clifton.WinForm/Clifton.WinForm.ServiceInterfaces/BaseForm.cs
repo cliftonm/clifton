@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using Clifton.Core.ExtensionMethods;
 using Clifton.WinForm.ServiceInterfaces;
 
-namespace Clifton.DockingFormService
+namespace Clifton.WinForm.ServiceInterfaces
 {
     public partial class BaseForm : Form, IBaseForm
     {

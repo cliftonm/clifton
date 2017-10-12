@@ -32,9 +32,9 @@ namespace Clifton.DockingFormService
         protected DockPanel dockPanel;
         protected VS2015LightTheme theme = new VS2015LightTheme();
 
-        public Form CreateMainForm()
+        public Form CreateMainForm<T>() where T : Form, new()
         {
-            Form form = new BaseForm();
+            Form form = new T();
             dockPanel = new DockPanel();
             dockPanel.Dock = DockStyle.Fill;
             dockPanel.Theme = theme;

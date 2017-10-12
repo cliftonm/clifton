@@ -38,15 +38,15 @@ namespace Clifton.Core.ModuleManagement
 			ServiceManager = svcMgr;
 		}
 
-		public virtual void FinishedInitialization()
-		{
-		}
+        public virtual void FinishedInitialization()
+        {
+        }
 
-		/// <summary>
-		/// Initialize each registrant by passing in the service manager.  This allows the module
-		/// to register the services it provides.
-		/// </summary>
-		protected override void InitializeRegistrants(List<IModule> registrants)
+        /// <summary>
+        /// Initialize each registrant by passing in the service manager.  This allows the module
+        /// to register the services it provides.
+        /// </summary>
+        protected override void InitializeRegistrants(List<IModule> registrants)
 		{
 			registrants.ForEach(r =>
 				{

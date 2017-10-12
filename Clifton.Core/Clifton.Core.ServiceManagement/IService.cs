@@ -21,12 +21,15 @@
 * SOFTWARE.
 */
 
+using System;
+using System.Collections.Generic;
+
 namespace Clifton.Core.ServiceManagement
 {
 	public interface IService
 	{
 		IServiceManager ServiceManager { get; }
 		void Initialize(IServiceManager srvMgr);
-		void FinishedInitialization();
+        void FinishedInitialization();
 	}
 }

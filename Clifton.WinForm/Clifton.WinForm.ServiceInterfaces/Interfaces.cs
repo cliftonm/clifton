@@ -62,7 +62,7 @@ namespace Clifton.WinForm.ServiceInterfaces
         Panel DockPanel { get; }
         List<IDockDocument> Documents { get; }
 
-        Form CreateMainForm();
+        Form CreateMainForm<T>() where T : Form, new();
 
         /// <summary>
         /// Create a document in the document area.

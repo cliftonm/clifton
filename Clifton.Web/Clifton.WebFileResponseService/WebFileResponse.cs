@@ -100,6 +100,7 @@ namespace Clifton.WebFileResponseService
 						break;
 
                     case "pdf":
+                    case "xlsx":
                         ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
                         {
                             r.Context = context;

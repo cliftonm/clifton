@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
@@ -105,9 +106,23 @@ namespace Clifton.Core.ServiceManagement
 			constructionOption[t] = ConstructionOption.AlwaysSingleton;
 		}
 
-		public override void FinishedInitialization()
+		public virtual List<Exception> FinishSingletonInitialization()
 		{
-			singletons.ForEach(kvp => kvp.Value.FinishedInitialization());
+            List<Exception> exceptions = new List<Exception>();
+
+            singletons.ForEach(kvp =>
+            {
+                try
+                {
+                    kvp.Value.FinishedInitialization();
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            });
+
+            return exceptions;
 		}
 
 		public virtual bool Exists<T>() where T : IService

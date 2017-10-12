@@ -1,4 +1,4 @@
-﻿namespace Clifton.DockingFormService
+﻿namespace Clifton.WinForm.ServiceInterfaces
 {
     partial class BaseForm
     {

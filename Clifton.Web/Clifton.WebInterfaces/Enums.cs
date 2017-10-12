@@ -41,6 +41,7 @@ namespace Clifton.WebInterfaces
 	{
 		SuperAdmin = 128,
 		Admin = 64,
+        Report = 32,
 		User = 1,
 		None = 0,
 	}

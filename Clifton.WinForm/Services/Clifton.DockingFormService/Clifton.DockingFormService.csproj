@@ -61,12 +61,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BaseForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="BaseForm.Designer.cs">
-      <DependentUpon>BaseForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="DockingFormService.cs" />
     <Compile Include="GenericDockContent.cs">
       <SubType>Form</SubType>
