@@ -532,6 +532,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			{
                 if (IsQualified(qstate, receptor, obj))
                 {
+                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
 
                     dynamic target = receptor;
                     // Call immediately?
@@ -633,6 +634,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                 // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
                 if (IsQualified(qstate, receptor, obj))
                 {
+                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
+
                     MethodInfo method = GetProcessMethod(receptor, tsource);
 
                     // Call immediately?
