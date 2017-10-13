@@ -21,16 +21,7 @@
 * SOFTWARE.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-
-using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ServiceInterfaces;
-using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceManagement;
 
 using Clifton.WebInterfaces;
 

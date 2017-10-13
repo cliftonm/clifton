@@ -95,7 +95,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 	public class SemanticProcessor : ServiceBase, ISemanticProcessor
 	{
-		public bool ForceSingleThreaded { get; set; }
+        public event EventHandler<ProcessEventArgs> Processing;
+
+        public bool ForceSingleThreaded { get; set; }
 		public IMembrane Surface { get; protected set; }
 		public IMembrane Logger { get; protected set; }
 
@@ -377,16 +379,106 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		public void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false)
 			where T : ISemanticType
 		{
-			ProcessInstance(membrane, null, obj, processOnCallerThread);
+			ProcessInstanceInternal(membrane, null, obj, processOnCallerThread);
 		}
 
 		public ProcStates ProcessInstance<T>(IMembrane membrane, T obj, int msTimeout)
 			where T : ISemanticType
 		{
-			return ProcessInstance(membrane, null, obj, true, msTimeout);
+			return ProcessInstanceInternal(membrane, null, obj, true, msTimeout);
 		}
 
-		protected ProcStates ProcessInstance<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread, int msTimeout = 0)
+        public void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
+            where M : IMembrane, new()
+        {
+            IMembrane m = RegisterMembrane<M>();
+            ProcessInstanceWithInvoke(m, null, obj, processOnCallerThread);
+        }
+
+        // ===========================================================
+
+        // For processing events, where we want to know the caller membrane and ST.
+        // We could create these as overloads, but appending "From" to the method name makes it
+        // clearer that this the intent of the caller is to provide as much information as possible
+        // about the publishing of the ST onto to pub-sub bus.
+
+        /// <summary>
+        /// Process a semantic type, allowing the caller to specify an initializer before processing the instance.
+        /// </summary>
+        public void ProcessInstanceFrom<M, T>(IMembrane fromMembrane, IReceptor fromReceptor, Action<T> initializer, bool processOnCallerThread = false)
+            where M : IMembrane, new()
+            where T : ISemanticType, new()
+        {
+            T inst = new T();
+            initializer.IfNotNull(i => i(inst));
+            ProcessInstanceFrom<M, T>(fromMembrane, fromReceptor, inst, processOnCallerThread);
+        }
+
+        public ProcStates ProcessInstanceFrom<M, T>(IMembrane fromMembrane, IReceptor fromReceptor, Action<T> initializer, int msTimeout)
+            where M : IMembrane, new()
+            where T : ISemanticType, new()
+        {
+            T inst = new T();
+            initializer.IfNotNull(i => i(inst));
+            return ProcessInstanceFrom<M, T>(fromMembrane, fromReceptor, inst, msTimeout);
+        }
+
+        public void ProcessInstanceFrom<M, T>(IMembrane fromMembrane, IReceptor fromReceptor, bool processOnCallerThread = false)
+            where M : IMembrane, new()
+            where T : ISemanticType, new()
+        {
+            T inst = new T();
+            ProcessInstanceFrom<M, T>(fromMembrane, fromReceptor, inst, processOnCallerThread);
+        }
+
+        /// <summary>
+        /// Process an instance in a given membrane type.
+        /// </summary>
+        public void ProcessInstanceFrom<M, T>(IMembrane fromMembrane, IReceptor fromReceptor, T obj, bool processOnCallerThread = false)
+            where M : IMembrane, new()
+            where T : ISemanticType
+        {
+            Type mtype = typeof(M);
+            IMembrane membrane = RegisterMembrane<M>();
+            ProcessInstanceFrom(fromMembrane, fromReceptor, membrane, obj, processOnCallerThread);
+        }
+
+        public ProcStates ProcessInstanceFrom<M, T>(IMembrane fromMembrane, IReceptor fromReceptor, T obj, int msTimeout)
+            where M : IMembrane, new()
+            where T : ISemanticType
+        {
+            Type mtype = typeof(M);
+            IMembrane membrane = RegisterMembrane<M>();
+            return ProcessInstanceFrom(fromMembrane, fromReceptor, membrane, obj, msTimeout);
+        }
+
+        public ProcStates ProcessInstanceFrom<T>(IMembrane fromMembrane, IReceptor fromReceptor, IMembrane membrane, T obj, int msTimeout)
+            where T : ISemanticType
+        {
+            return ProcessInstanceInternal(membrane, null, obj, true, msTimeout, fromMembrane, fromReceptor);
+        }
+
+        /// <summary>
+        /// Process an instance of a specific type immediately.  The type T is determined implicitly from the parameter type, so 
+        /// a call can look like: ProcessInstance(t1).  This also allows the code here to use the "dynamic" keyword rather than 
+        /// having to obtain the method to call by reflection.
+        /// </summary>
+        public void ProcessInstanceFrom<T>(IMembrane fromMembrane, IReceptor fromReceptor, IMembrane membrane, T obj, bool processOnCallerThread = false)
+            where T : ISemanticType
+        {
+            ProcessInstanceInternal(membrane, null, obj, processOnCallerThread, 0, fromMembrane, fromReceptor);
+        }
+
+        public void ProcessInstanceFrom<M>(IMembrane fromMembrane, IReceptor fromReceptor, ISemanticType obj, bool processOnCallerThread = false)
+            where M : IMembrane, new()
+        {
+            IMembrane m = RegisterMembrane<M>();
+            ProcessInstanceWithInvoke(m, null, obj, processOnCallerThread, fromMembrane, fromReceptor);
+        }
+
+        // ===========================================================
+
+        protected ProcStates ProcessInstanceInternal<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread, int msTimeout = 0, IMembrane fromMembrane = null, IReceptor fromReceptor = null)
 			where T : ISemanticType
 		{
 			// ProcessInstance((ISemanticType)obj);
@@ -421,8 +513,17 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					receptorInitializer.Initializer(target);
 				}
 
-				// Call immediately?
-				if (processOnCallerThread || ForceSingleThreaded)
+                Processing.Fire(this, new ProcessEventArgs()
+                {
+                    FromMembrane = fromMembrane,
+                    FromReceptor = fromReceptor,
+                    ToMembrane = membrane,
+                    ToReceptor = target,
+                    SemanticType = obj
+                });
+
+                // Call immediately?
+                if (processOnCallerThread || ForceSingleThreaded)
 				{
 					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
 				}
@@ -455,45 +556,38 @@ namespace Clifton.Core.Services.SemanticProcessorService
                 }
 			}
 
-			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
-			PermeateOut(membrane, caller, obj, processOnCallerThread);
+			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
+			PermeateOut(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
 
 			return ps;
 		}
 
-		public void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)
-			where M : IMembrane, new()
-		{
-			IMembrane m = RegisterMembrane<M>();
-			ProcessInstance(m, null, obj, processOnCallerThread);
-		}
-
 		/// <summary>
 		/// Traverse permeable membranes without calling back into the caller.  While membranes should not be bidirectionally
 		/// permeable, this does stop infinite recursion if the user accidentally (or intentionally) configured the membranes thusly.
 		/// </summary>
-		protected void PermeateOut<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread)
+		protected void PermeateOut<T>(IMembrane membrane, IMembrane caller, T obj, bool processOnCallerThread, IMembrane fromMembrane, IReceptor fromReceptor)
 			where T : ISemanticType
 		{
 			List<IMembrane> pmembranes = ((Membrane)membrane).PermeateTo(obj);
-			pmembranes.Where(m=>m != caller).ForEach((m) => ProcessInstance(m, membrane, obj, processOnCallerThread));
+			pmembranes.Where(m=>m != caller).ForEach((m) => ProcessInstanceInternal(m, membrane, obj, processOnCallerThread, 0, fromMembrane, fromReceptor));
 		}
 
 		/// <summary>
 		/// Traverse permeable membranes without calling back into the caller.  While membranes should not be bidirectionally
 		/// permeable, this does stop infinite recursion if the user accidentally (or intentionally) configured the membranes thusly.
 		/// </summary>
-		protected void PermeateOut(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
+		protected void PermeateOut(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread, IMembrane fromMembrane, IReceptor fromReceptor)
 		{
 			List<IMembrane> pmembranes = ((Membrane)membrane).PermeateTo(obj);
-			pmembranes.Where(m => m != caller).ForEach((m) => ProcessInstance(m, membrane, obj, processOnCallerThread));
+			pmembranes.Where(m => m != caller).ForEach((m) => ProcessInstanceWithInvoke(m, membrane, obj, processOnCallerThread, fromMembrane, fromReceptor));
 		}
 
 		/// <summary>
 		/// Process an instance where we only know that it implements ISemanticType as opposed the the concrete type in the generic method above.
 		/// We cannot use "dynamic" in this case, therefore we have to use Method.Invoke.
 		/// </summary>
-		protected void ProcessInstance(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread = false)
+		protected void ProcessInstanceWithInvoke(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread = false, IMembrane fromMembrane = null, IReceptor fromReceptor = null)
 		{
 			// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 			// ProcStates ps = ProcStates.NotProcessed;
@@ -520,10 +614,19 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					receptorInitializer.Initializer(target);
 				}
 
-				// Call immediately?
-				MethodInfo method = GetProcessMethod(target, tsource);
+                MethodInfo method = GetProcessMethod(target, tsource);
 
-				if (processOnCallerThread || ForceSingleThreaded)
+                Processing.Fire(this, new ProcessEventArgs()
+                {
+                    FromMembrane = fromMembrane,
+                    FromReceptor = fromReceptor,
+                    ToMembrane = membrane,
+                    ToReceptor = target,
+                    SemanticType = obj
+                });
+
+                // Call immediately?
+                if (processOnCallerThread || ForceSingleThreaded)
 				{
 					// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 					// dynamic dtarget = target;
@@ -561,8 +664,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                 }
 			}
 
-			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread);
-			PermeateOut(membrane, caller, obj, processOnCallerThread);
+			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
+			PermeateOut(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
 		}
 
         /// <summary>
@@ -603,7 +706,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
         /// <summary>
         /// Any public properties that are of ISemanticType type and not null are also emitted into the membrane.
         /// </summary>
-        protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread)
+        protected void ProcessInnerTypes(IMembrane membrane, IMembrane caller, ISemanticType obj, bool processOnCallerThread, IMembrane fromMembrane, IReceptor fromReceptor)
 		{
 			// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
 			// ProcStates ps = ProcStates.NotProcessed;
@@ -616,7 +719,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					if (prop != null)
 					{
 						// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
-						ProcessInstance(membrane, caller, prop, processOnCallerThread);
+						ProcessInstanceWithInvoke(membrane, caller, prop, processOnCallerThread);
 					}
 				});
 		}
