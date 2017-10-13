@@ -26,15 +26,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 using MoreLinq;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 using Clifton.Core.Utils;
 
@@ -513,14 +510,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					receptorInitializer.Initializer(target);
 				}
 
-                Processing.Fire(this, new ProcessEventArgs()
-                {
-                    FromMembrane = fromMembrane,
-                    FromReceptor = fromReceptor,
-                    ToMembrane = membrane,
-                    ToReceptor = target,
-                    SemanticType = obj
-                });
+                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
 
                 // Call immediately?
                 if (processOnCallerThread || ForceSingleThreaded)
@@ -616,14 +606,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
                 MethodInfo method = GetProcessMethod(target, tsource);
 
-                Processing.Fire(this, new ProcessEventArgs()
-                {
-                    FromMembrane = fromMembrane,
-                    FromReceptor = fromReceptor,
-                    ToMembrane = membrane,
-                    ToReceptor = target,
-                    SemanticType = obj
-                });
+                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
 
                 // Call immediately?
                 if (processOnCallerThread || ForceSingleThreaded)

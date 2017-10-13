@@ -37,11 +37,20 @@ namespace Clifton.Core.Semantics
 
     public class ProcessEventArgs : EventArgs
     {
-        public IMembrane FromMembrane { get; set; }
-        public IReceptor FromReceptor { get; set; }
-        public IMembrane ToMembrane { get; set; }
-        public IReceptor ToReceptor { get; set; }
-        public ISemanticType SemanticType { get; set; }
+        public IMembrane FromMembrane { get; protected set; }
+        public IReceptor FromReceptor { get; protected set; }
+        public IMembrane ToMembrane { get; protected set; }
+        public IReceptor ToReceptor { get; protected set; }
+        public ISemanticType SemanticType { get; protected set; }
+
+        public ProcessEventArgs(IMembrane fromMembrane, IReceptor fromReceptor, IMembrane toMembrane, IReceptor toReceptor, ISemanticType st)
+        {
+            FromMembrane = fromMembrane;
+            FromReceptor = fromReceptor;
+            ToMembrane = toMembrane;
+            ToReceptor = toReceptor;
+            SemanticType = st;
+        }
     }
 
     public interface ISemanticProcessor : IService
