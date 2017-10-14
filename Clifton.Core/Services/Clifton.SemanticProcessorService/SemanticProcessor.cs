@@ -48,11 +48,13 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 	public class MethodInvokeCall : ProcessCall
 	{
+        public Action Action { get; set; }
 		public MethodInfo Method { get; set; }
 		public object[] Parameters { get; set; }
 
 		public override void MakeCall()
 		{
+            Action?.Invoke();
 			Method.Invoke(Receptor, Parameters);
 		}
 	}
@@ -510,17 +512,25 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					receptorInitializer.Initializer(target);
 				}
 
-                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
-
                 // Call immediately?
                 if (processOnCallerThread || ForceSingleThreaded)
 				{
-					ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
+                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                    ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
 				}
 				else
 				{
 					// Pick a thread that has the least work to do.
-					threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) });
+					threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
+                    {
+                        SemanticInstance = obj,
+                        Receptor = target,
+                        Proc = () =>
+                        {
+                            Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                            target.Process(this, membrane, obj);
+                        }
+                    });
 				}
 			}
 
@@ -532,17 +542,26 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			{
                 if (IsQualified(qstate, receptor, obj))
                 {
-                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
-
                     dynamic target = receptor;
                     // Call immediately?
                     if (processOnCallerThread || ForceSingleThreaded)
                     {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
                         ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
                     }
                     else
                     {
-                        threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
+                        threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
+                        {
+                            SemanticInstance = obj,
+                            Receptor = target,
+                            Proc = () =>
+                            {
+                                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
+                                target.Process(this, membrane, obj);
+                            },
+                            AutoDispose = false
+                        });
                     }
                 }
 			}
@@ -607,21 +626,26 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
                 MethodInfo method = GetProcessMethod(target, tsource);
 
-                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
-
                 // Call immediately?
                 if (processOnCallerThread || ForceSingleThreaded)
 				{
-					// TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
-					// dynamic dtarget = target;
-					// ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => dtarget.Process(this, membrane, obj), AutoDispose = false });
+                    // TODO: Setup like we do for main ProcessInstance above so exceptions are caught and we get a ProcStates return.
+                    // dynamic dtarget = target;
+                    // ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => dtarget.Process(this, membrane, obj), AutoDispose = false });
 
-					method.Invoke(target, new object[] { this, membrane, obj });
+                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                    method.Invoke(target, new object[] { this, membrane, obj });
 				}
 				else
 				{
-					// Pick a thread that has the least work to do.
-					threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall() { Method = method, SemanticInstance = obj, Receptor = target, Parameters = new object[] { this, membrane, obj } });
+                    // Pick a thread that has the least work to do.
+                    threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
+                    {
+                        Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj)),
+                        Method = method,
+                        SemanticInstance = obj,
+                        Receptor = target,
+                        Parameters = new object[] { this, membrane, obj } });
 				}
 			}
 
@@ -634,18 +658,24 @@ namespace Clifton.Core.Services.SemanticProcessorService
                 // Only stateful receptors can have qualifiers, since the qualifier tests against a receptor state.
                 if (IsQualified(qstate, receptor, obj))
                 {
-                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
-
                     MethodInfo method = GetProcessMethod(receptor, tsource);
 
                     // Call immediately?
                     if (processOnCallerThread || ForceSingleThreaded)
                     {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
                         method.Invoke(receptor, new object[] { this, membrane, obj });
                     }
                     else
                     {
-                        threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall() { Method = method, SemanticInstance = obj, Receptor = receptor, Parameters = new object[] { this, membrane, obj }, AutoDispose = false });
+                        threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
+                        {
+                            Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj)),
+                            Method = method,
+                            SemanticInstance = obj,
+                            Receptor = receptor,
+                            Parameters = new object[] { this, membrane, obj },
+                            AutoDispose = false });
                     }
                 }
 			}

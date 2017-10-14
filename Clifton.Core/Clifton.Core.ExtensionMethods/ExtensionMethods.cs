@@ -775,16 +775,23 @@ namespace Clifton.Core.ExtensionMethods
 			return "{" + src + "}";
 		}
 
-		/// <summary>
-		/// Returns everything between the start-character and the first occurence
-		/// of the end-character, after the start-character, exclusive.
-		/// </summary>
-		/// <param name="src">The source string.</param>
-		/// <param name="start">The first char to find.</param>
-		/// <param name="end">The end char to find.</param>
-		/// <returns>The string between the start and end chars, or an empty string if 
-		/// the start char or end char is not found.</returns>
-		public static string Between(this string src, char start, char end)
+        public static string RemoveWhitespace(this string input)
+        {
+            return new string(input.ToCharArray()
+                .Where(c => !Char.IsWhiteSpace(c))
+                .ToArray());
+        }
+
+        /// <summary>
+        /// Returns everything between the start-character and the first occurence
+        /// of the end-character, after the start-character, exclusive.
+        /// </summary>
+        /// <param name="src">The source string.</param>
+        /// <param name="start">The first char to find.</param>
+        /// <param name="end">The end char to find.</param>
+        /// <returns>The string between the start and end chars, or an empty string if 
+        /// the start char or end char is not found.</returns>
+        public static string Between(this string src, char start, char end)
 		{
 			string ret = String.Empty;
 			int idxStart = src.IndexOf(start);
