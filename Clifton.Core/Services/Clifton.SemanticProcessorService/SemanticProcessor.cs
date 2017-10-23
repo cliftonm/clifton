@@ -156,13 +156,25 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			return membrane;
 		}
 
-		/// <summary>
-		/// Add the child (second generic type) to the outer (first generic type) membrane.
-		/// </summary>
-		/// <typeparam name="Outer"></typeparam>
-		/// <typeparam name="Inner"></typeparam>
-		/// <returns></returns>
-		public void AddChild<Outer, Inner>()
+        public void RegisterMembrane(IMembrane membrane)
+        {
+            Type m = membrane.GetType();
+
+            if (!membranes.ContainsKey(m))
+            {
+                membranes[m] = membrane;
+                membraneReceptorTypes[membrane] = new List<Type>();
+                membraneReceptorInstances[membrane] = new List<IReceptor>();
+            }
+        }
+
+        /// <summary>
+        /// Add the child (second generic type) to the outer (first generic type) membrane.
+        /// </summary>
+        /// <typeparam name="Outer"></typeparam>
+        /// <typeparam name="Inner"></typeparam>
+        /// <returns></returns>
+        public void AddChild<Outer, Inner>()
 			where Outer : IMembrane, new()
 			where Inner : IMembrane, new()
 		{
@@ -255,6 +267,11 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
         public void Unregister(IMembrane membrane, IReceptor receptor)
         {
+            if (receptor is IDisposable)
+            {
+                ((IDisposable)receptor).Dispose();
+            }
+
             statefulReceptors.Remove(receptor);
             membraneReceptorInstances[membrane].Remove(receptor);
         }
@@ -748,6 +765,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			foreach (MethodInfo method in methods)
 			{
+                var foo = method.GetCustomAttributes().First();
+                
 				// TODO: Use attribute, not specific function name.
 				if (method.Name == "Process")
 				{

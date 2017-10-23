@@ -74,6 +74,7 @@
     <Compile Include="Clifton.Core.Pipes\ClientPipe.cs" />
     <Compile Include="Clifton.Core.Pipes\PipeEventArgs.cs" />
     <Compile Include="Clifton.Core.Pipes\ServerPipe.cs" />
+    <Compile Include="Clifton.Core.Semantics\Attributes.cs" />
     <Compile Include="Clifton.Core.Semantics\SemanticTypes.cs" />
     <Compile Include="Clifton.Core.Semantics\ImmutableSemanticType.cs" />
     <Compile Include="Clifton.Core.Semantics\Interfaces.cs" />

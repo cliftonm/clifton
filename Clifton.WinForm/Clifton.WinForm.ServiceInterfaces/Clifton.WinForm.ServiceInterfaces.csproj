@@ -30,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Clifton.Core">
-      <HintPath>..\..\Clifton.Core\bin\Debug\Clifton.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Windows.Forms" />
@@ -52,6 +49,12 @@
     </Compile>
     <Compile Include="Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Clifton.Core\Clifton.Core.csproj">
+      <Project>{54e73707-81c4-4c7f-9739-446c6d7d5fea}</Project>
+      <Name>Clifton.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
