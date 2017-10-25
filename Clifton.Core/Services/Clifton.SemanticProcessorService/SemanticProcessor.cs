@@ -765,8 +765,6 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			foreach (MethodInfo method in methods)
 			{
-                var foo = method.GetCustomAttributes().First();
-                
 				// TODO: Use attribute, not specific function name.
 				if (method.Name == "Process")
 				{
