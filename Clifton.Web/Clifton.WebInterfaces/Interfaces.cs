@@ -72,10 +72,25 @@ namespace Clifton.WebInterfaces
 		void Write(byte[] data, string contentType = "text/text", int statusCode = 200);
 	}
 
-		public interface IWebDefaultWorkflowService : IService 
+    public interface IWebDefaultWorkflowService : IService 
 	{
 		void RegisterAppTemplateObject(string name, object obj);
 	}
+
+    public enum CertRegistrationMethod
+    {
+        NETSH,
+        IIS,
+    }
+
+    public interface ICertService : IService
+    {
+        event EventHandler<EventArgs> RegistrationResult;
+        bool Success { get; }
+        string Log { get; }
+
+        void StartCertificateMonitor(CertRegistrationMethod registrationMethod);
+    }
 
     public interface IWebSocketServerService : IService
     {

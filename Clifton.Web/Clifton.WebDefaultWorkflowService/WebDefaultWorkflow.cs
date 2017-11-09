@@ -24,11 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
 
-using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
 using Clifton.Core.ServiceInterfaces;
