@@ -103,6 +103,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		public IReadOnlyList<IMembrane> Membranes { get { return membranes.Values.ToList(); } }
 
 		protected const int MAX_WORKER_THREADS = 20;
+        protected int nextThread = -1;
 		protected List<ThreadSemaphore<ProcessCall>> threadPool;
 		protected ConcurrentDictionary<Type, IMembrane> membranes;
 		protected ConcurrentDictionary<IMembrane, List<Type>> membraneReceptorTypes;
@@ -537,8 +538,10 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				}
 				else
 				{
-					// Pick a thread that has the least work to do.
-					threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
+                    // Pick a thread that has the least work to do.
+                    // threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
+                    nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                    threadPool[nextThread].Enqueue(new DynamicCall()
                     {
                         SemanticInstance = obj,
                         Receptor = target,
@@ -568,7 +571,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     }
                     else
                     {
-                        threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
+                        nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                        threadPool[nextThread].Enqueue(new DynamicCall()
                         {
                             SemanticInstance = obj,
                             Receptor = target,
@@ -656,7 +660,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				else
 				{
                     // Pick a thread that has the least work to do.
-                    threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
+                    nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                    threadPool[nextThread].Enqueue(new MethodInvokeCall()
+                    // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
                     {
                         Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj)),
                         Method = method,
@@ -685,7 +691,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     }
                     else
                     {
-                        threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
+                        nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                        threadPool[nextThread].Enqueue(new MethodInvokeCall()
+                        // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
                         {
                             Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj)),
                             Method = method,
