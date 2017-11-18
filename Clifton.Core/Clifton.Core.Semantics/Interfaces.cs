@@ -81,7 +81,7 @@ namespace Clifton.Core.Semantics
 
         void RegisterQualifier<T>(IReceptor receptor, Func<ISemanticQualifier, bool> qualifier) where T : ISemanticQualifier;
 
-        void ProcessInstance<M, T>(Action<T> initializer, bool processOnCallerThread = false)
+        void ProcessInstance<M, T>(Action<T> initializer, bool processOnCallerThread = false, int msTimeout = 0)
             where M : IMembrane, new()
             where T : ISemanticType, new();
 
@@ -93,11 +93,11 @@ namespace Clifton.Core.Semantics
             where M : IMembrane, new()
             where T : ISemanticType, new();
 
-        void ProcessInstance<M, T>(T obj, bool processOnCallerThread = false)
+        void ProcessInstance<M, T>(T obj, bool processOnCallerThread = false, int msTimeout = 0)
             where M : IMembrane, new()
             where T : ISemanticType;
 
-        void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false)
+        void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false, int msTimeout = 0)
             where T : ISemanticType;
 
         void ProcessInstance<M>(ISemanticType obj, bool processOnCallerThread = false)

@@ -65,6 +65,8 @@ namespace Clifton.WebServerService
 		protected ISemanticProcessor semProc;
 		protected bool httpOnly;
 
+        private const int PROCESS_TIMEOUT = 500;        // milliseconds.
+
 		public override void FinishedInitialization()
 		{
 			base.FinishedInitialization();
@@ -159,13 +161,13 @@ namespace Clifton.WebServerService
 			}
 		}
 
-		protected void ProcessRoute(IContext context, string data)
-		{
-			semProc.ProcessInstance<WebServerMembrane, Route>(r =>
-			{
-				r.Context = context;
-				r.Data = data;
-			});
+        protected void ProcessRoute(IContext context, string data)
+        {
+            semProc.ProcessInstance<WebServerMembrane, Route>(r =>
+            {
+                r.Context = context;
+                r.Data = data;
+            } , false, PROCESS_TIMEOUT);
 		}
 
 		/// <summary>

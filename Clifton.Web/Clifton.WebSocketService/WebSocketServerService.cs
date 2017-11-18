@@ -6,9 +6,7 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 
 using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ModuleManagement;
 using Clifton.Core.Semantics;
-using Clifton.Core.ServiceInterfaces;
 using Clifton.Core.ServiceManagement;
 using Clifton.WebInterfaces;
 

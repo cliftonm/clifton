@@ -729,6 +729,11 @@ namespace Clifton.Core.ExtensionMethods
 			return "\"" + src + "\"";
 		}
 
+        public static string SurroundWith(this String src, string left, string right)
+        {
+            return left + src + right;
+        }
+
 		/// <summary>
 		/// Exchanges ' for " and " for ' then escapes the quotation marks (each /0xFF
 		/// becomes \").
@@ -1389,6 +1394,20 @@ namespace Clifton.Core.ExtensionMethods
         public static T AsNotNull<T>(this T? src) where T : struct
         {
             return (T)src;
+        }
+
+
+        public static IEnumerable<T> EveryNth<T>(this IEnumerable<T> list, int n)
+        {
+            int idx = 0;
+
+            foreach (var item in list)
+            {
+                if (++idx % n == 0)
+                {
+                    yield return item;
+                }
+            }
         }
     }
 }

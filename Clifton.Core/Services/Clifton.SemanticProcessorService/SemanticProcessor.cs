@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using MoreLinq;
 
@@ -42,8 +43,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		public IReceptor Receptor { get; set; }
 		public bool AutoDispose { get; set; }
 		public ISemanticType SemanticInstance { get; set; }
+        public int Timeout { get; set; }
 
-		public abstract void MakeCall();
+        public abstract void MakeCall();
 	}
 
 	public class MethodInvokeCall : ProcessCall
@@ -343,16 +345,16 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		/// <summary>
 		/// Process a semantic type, allowing the caller to specify an initializer before processing the instance.
 		/// </summary>
-		public void ProcessInstance<M, T>(Action<T> initializer, bool processOnCallerThread = false)
+		public void ProcessInstance<M, T>(Action<T> initializer, bool processOnCallerThread = false, int msTimeout = 0)
 			where M : IMembrane, new()
 			where T : ISemanticType, new()
 		{
 			T inst = new T();
 			initializer.IfNotNull(i => i(inst));
-			ProcessInstance<M, T>(inst, processOnCallerThread);
+			ProcessInstance<M, T>(inst, processOnCallerThread, msTimeout);
 		}
 
-		public ProcStates ProcessInstance<M, T>(Action<T> initializer, int msTimeout)
+		public ProcStates ProcessInstance<M, T>(Action<T> initializer, int msTimeout = 0)
 			where M : IMembrane, new()
 			where T : ISemanticType, new()
 		{
@@ -372,13 +374,13 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		/// <summary>
 		/// Process an instance in a given membrane type.
 		/// </summary>
-		public void ProcessInstance<M, T>(T obj, bool processOnCallerThread = false)
+		public void ProcessInstance<M, T>(T obj, bool processOnCallerThread = false, int msTimeout = 0)
 			where M : IMembrane, new()
 			where T : ISemanticType
 		{
 			Type mtype = typeof(M);
 			IMembrane membrane = RegisterMembrane<M>();
-			ProcessInstance(membrane, obj, processOnCallerThread);
+			ProcessInstance(membrane, obj, processOnCallerThread, msTimeout);
 		}
 
 		public ProcStates ProcessInstance<M, T>(T obj, int msTimeout)
@@ -395,10 +397,10 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		/// a call can look like: ProcessInstance(t1).  This also allows the code here to use the "dynamic" keyword rather than 
 		/// having to obtain the method to call by reflection.
 		/// </summary>
-		public void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false)
+		public void ProcessInstance<T>(IMembrane membrane, T obj, bool processOnCallerThread = false, int msTimeout = 0)
 			where T : ISemanticType
 		{
-			ProcessInstanceInternal(membrane, null, obj, processOnCallerThread);
+			ProcessInstanceInternal(membrane, null, obj, processOnCallerThread, msTimeout);
 		}
 
 		public ProcStates ProcessInstance<T>(IMembrane membrane, T obj, int msTimeout)
@@ -536,7 +538,13 @@ namespace Clifton.Core.Services.SemanticProcessorService
                 if (processOnCallerThread || ForceSingleThreaded)
 				{
                     Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
-                    ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj) }, msTimeout);
+                    ps |= Call(new DynamicCall()
+                    {
+                        SemanticInstance = obj,
+                        Receptor = target,
+                        Proc = () => target.Process(this, membrane, obj),
+                        Timeout = msTimeout
+                    });
 				}
 				else
 				{
@@ -551,7 +559,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                         {
                             Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
                             target.Process(this, membrane, obj);
-                        }
+                        },
+                        Timeout = msTimeout
                     });
 				}
 			}
@@ -569,7 +578,14 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     if (processOnCallerThread || ForceSingleThreaded)
                     {
                         Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
-                        ps |= Call(new DynamicCall() { SemanticInstance = obj, Receptor = target, Proc = () => target.Process(this, membrane, obj), AutoDispose = false });
+                        ps |= Call(new DynamicCall()
+                        {
+                            SemanticInstance = obj,
+                            Receptor = target,
+                            Proc = () => target.Process(this, membrane, obj),
+                            AutoDispose = false,
+                            Timeout = msTimeout,
+                        });
                     }
                     else
                     {
@@ -583,7 +599,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                                 Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
                                 target.Process(this, membrane, obj);
                             },
-                            AutoDispose = false
+                            AutoDispose = false,
+                            Timeout = msTimeout
                         });
                     }
                 }
@@ -616,6 +633,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			pmembranes.Where(m => m != caller).ForEach((m) => ProcessInstanceWithInvoke(m, membrane, obj, processOnCallerThread, fromMembrane, fromReceptor));
 		}
 
+        // TODO: We're not providing an option to set the thread timeout here!
 		/// <summary>
 		/// Process an instance where we only know that it implements ISemanticType as opposed the the concrete type in the generic method above.
 		/// We cannot use "dynamic" in this case, therefore we have to use Method.Invoke.
@@ -670,7 +688,8 @@ namespace Clifton.Core.Services.SemanticProcessorService
                         Method = method,
                         SemanticInstance = obj,
                         Receptor = target,
-                        Parameters = new object[] { this, membrane, obj } });
+                        Parameters = new object[] { this, membrane, obj },
+                    });
 				}
 			}
 
@@ -911,21 +930,30 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			}
 		}
 
-		protected ProcStates Call(ProcessCall rc, int msTimeout = 0)
+		protected ProcStates Call(ProcessCall rc)
 		{
 			try
 			{
-				rc.MakeCall();
+                if (rc.Timeout == 0)
+                {
+                    rc.MakeCall();
+                }
+                else
+                {
+                    // rc.MakeCall();
+                    CancellableCall(rc, rc.Timeout);
+                }
 
-				if (msTimeout != 0)
-				{
-					bool ok = Thread.CurrentThread.Join(msTimeout);
+                // This is totally wrong:
+				//if (msTimeout != 0)
+				//{
+				//	bool ok = Thread.CurrentThread.Join(msTimeout);
 
-					if (!ok)
-					{
-						return ProcStates.Timeout;
-					}
-				}
+				//	if (!ok)
+				//	{
+				//		return ProcStates.Timeout;
+				//	}
+				//}
 
 				return ProcStates.OK;
 			}
@@ -941,8 +969,11 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     }
                     catch { }
 				}
-				// The ST_Exception handler should deal with inner exceptions.
-				/*
+
+                return ProcStates.Exception;
+
+                // The ST_Exception handler should deal with inner exceptions.
+                /*
 				while (ex2.InnerException != null)
 				{
 					ex2 = ex2.InnerException;
@@ -957,25 +988,65 @@ namespace Clifton.Core.Services.SemanticProcessorService
 					}
 				}
 				*/
-			}
-			finally
+            }
+            finally
 			{
-				if ( (rc.Receptor is IDisposable) && (rc.AutoDispose) )
-				{
-					((IDisposable)rc.Receptor).Dispose();
-				}
-			}
+                // TODO:
+                // This looks wrong as well.  If the call is on a thread, the receptor should be disposed once the call completes.
+                // And oddly enough, we're setting autodispose to false on synchronous calls!  The logic for this needs to be fixed,
+                // so that dispose is called only on receptors that are created by the SP.
+                //if ( (rc.Receptor is IDisposable) && (rc.AutoDispose) )
+                //{
+                //	((IDisposable)rc.Receptor).Dispose();
+                //}
+            }
+        }
 
-			return ProcStates.Exception;
-		}
+        // From https://stackoverflow.com/questions/4359910/is-it-possible-to-abort-a-task-like-aborting-a-thread-thread-abort-method
+        // jtrem's answer, but of course, with a "Don't Do This!!!" hahaha.
+        protected async void CancellableCall(ProcessCall rc, int msTimeout)
+        {
+            var cts = new CancellationTokenSource();
+            var task = Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    using (cts.Token.Register(Thread.CurrentThread.Abort))
+                    {
+                        rc.MakeCall();
+                    }
+                }
+                catch (ThreadAbortException ex)
+                {
+                    try
+                    {
+                        ProcessInstance(Logger, new ST_Exception(ex), true);
+                    }
+                    catch { }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        ProcessInstance(Logger, new ST_Exception(ex), true);
+                    }
+                    catch { }
+                }
+            }, cts.Token);
 
-		/// <summary>
-		/// Get the Process method that implements, in its parameters, the source type.
-		/// Only one process method is allowed for a specific type -- the compiler would tell us if there's duplicates.
-		/// However, we can have different process methods for interfaces and base classes of a given type, as these
-		/// each are maintained in unique receptor target lists, since they are, technically, different types!
-		/// </summary>
-		protected MethodInfo GetProcessMethod(IReceptor target, Type tsource)
+            if (!(await Task.WhenAny(task, Task.Delay(msTimeout)) == task))
+            {
+                cts.Cancel();
+            }
+        }
+
+        /// <summary>
+        /// Get the Process method that implements, in its parameters, the source type.
+        /// Only one process method is allowed for a specific type -- the compiler would tell us if there's duplicates.
+        /// However, we can have different process methods for interfaces and base classes of a given type, as these
+        /// each are maintained in unique receptor target lists, since they are, technically, different types!
+        /// </summary>
+        protected MethodInfo GetProcessMethod(IReceptor target, Type tsource)
 		{
 			// TODO: Cache the (target type, source type) MethodInfo
 			MethodInfo[] methods = target.GetType().GetMethods();

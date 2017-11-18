@@ -75,29 +75,29 @@ namespace Clifton.WebFileResponseService
 			path = path + "." + ext;
 			path = Path.Combine(websitePath, path);
 
-			if (File.Exists(path))
-			{
-				switch (ext)
-				{
-					case "html":
-					case "spa":
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, HtmlResponse>(r =>
-						{
-							r.Context = context;
-							r.Html = ReadTextFile(path);
-						});
-						break;
+            if (File.Exists(path))
+            {
+                switch (ext)
+                {
+                    case "html":
+                    case "spa":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, HtmlResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.Html = ReadTextFile(path);
+                        });
+                        break;
 
-					case "woff":
-					case "woff2":
-					case "ttf":
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
-						{
-							r.Context = context;
-							r.ContentType = "font/" + ext;
-							r.BinaryData = ReadBinaryFile(path);
-						});
-						break;
+                    case "woff":
+                    case "woff2":
+                    case "ttf":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.ContentType = "font/" + ext;
+                            r.BinaryData = ReadBinaryFile(path);
+                        });
+                        break;
 
                     case "pdf":
                     case "xlsx":
@@ -109,47 +109,50 @@ namespace Clifton.WebFileResponseService
                         });
                         break;
 
-					case "js":
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, JavascriptResponse>(r =>
-						{
-							r.Context = context;
-							r.Script = ReadTextFile(path);
-						});
-						break;
+                    case "js":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, JavascriptResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.Script = ReadTextFile(path);
+                        });
+                        break;
 
-					case "css":
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, CssResponse>(r =>
-						{
-							r.Context = context;
-							r.Script = ReadTextFile(path);
-						});
-						break;
+                    case "css":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, CssResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.Script = ReadTextFile(path);
+                        });
+                        break;
 
-					case "jpg":
-					case "ico":
-					case "png":
-					case "bmp":
-					case "gif":
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, ImageResponse>(r =>
-						{
-							r.Context = context;
-							r.ContentType = "image/" + ext;
-							r.BinaryData = ReadBinaryFile(path);
-						});
-						break;
+                    case "jpg":
+                    case "ico":
+                    case "png":
+                    case "bmp":
+                    case "gif":
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, ImageResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.ContentType = "image/" + ext;
+                            r.BinaryData = ReadBinaryFile(path);
+                        });
+                        break;
 
-					default:
-						ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, StringResponse>(r =>
-						{
-							r.Context = context;
-							r.Message = ReadTextFile(path);
-							r.StatusCode = 200;
-						});
-						break;
-				}
+                    default:
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, StringResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.Message = ReadTextFile(path);
+                            r.StatusCode = 200;
+                        });
+                        break;
+                }
 
-				handled = true;
-			}
+                handled = true;
+            }
+            else
+            {
+            }
 
 			return handled;
 		}
