@@ -104,6 +104,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 		protected const int MAX_WORKER_THREADS = 20;
         protected int nextThread = -1;
+        protected List<Thread> threads;
 		protected List<ThreadSemaphore<ProcessCall>> threadPool;
 		protected ConcurrentDictionary<Type, IMembrane> membranes;
 		protected ConcurrentDictionary<IMembrane, List<Type>> membraneReceptorTypes;
@@ -118,6 +119,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 		public SemanticProcessor()
 		{
+            threads = new List<Thread>();
             qualifiers = new ConcurrentList<SemanticQualifier>();
 			membranes = new ConcurrentDictionary<Type, IMembrane>();
 			membraneReceptorTypes = new ConcurrentDictionary<IMembrane, List<Type>>();
@@ -883,6 +885,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			{
 				Thread thread = new Thread(new ParameterizedThreadStart(ProcessPoolItem));
 				thread.IsBackground = true;
+                threads.Add(thread);        // Place in list so garbage collector doesn't eventually attempt to collect a stack-created thread, as the list will have a reference to the thread.
 				ThreadSemaphore<ProcessCall> ts = new ThreadSemaphore<ProcessCall>();
 				threadPool.Add(ts);
 				thread.Start(ts);
