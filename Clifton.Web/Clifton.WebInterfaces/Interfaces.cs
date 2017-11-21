@@ -35,47 +35,47 @@ using Clifton.Core.Workflow;
 
 namespace Clifton.WebInterfaces
 {
-	public interface IContext
-	{
-		IPAddress EndpointAddress();
-		HttpVerb Verb();
-		UriPath Path();
-		UriExtension Extension();
-		IRequest Request { get; }
-		IResponse Response { get; }
-		HttpSessionState Session { get; }
-		bool IsLocal { get; }
-		bool IsSecureConnection { get; }
+    public interface IContext
+    {
+        IPAddress EndpointAddress();
+        HttpVerb Verb();
+        UriPath Path();
+        UriExtension Extension();
+        IRequest Request { get; }
+        IResponse Response { get; }
+        HttpSessionState Session { get; }
+        bool IsLocal { get; }
+        bool IsSecureConnection { get; }
 
-		void Redirect(string url);
-	}
+        void Redirect(string url);
+    }
 
-	public interface IRequest
-	{
-		NameValueCollection QueryString { get; }
-		Uri Url { get; }
-		Stream InputStream { get; }
-		Encoding ContentEncoding { get; }
-		IPEndPoint RemoteEndPoint { get; }
-	}
+    public interface IRequest
+    {
+        NameValueCollection QueryString { get; }
+        Uri Url { get; }
+        Stream InputStream { get; }
+        Encoding ContentEncoding { get; }
+        IPEndPoint RemoteEndPoint { get; }
+    }
 
-	public interface IResponse
-	{
-		int StatusCode { get; set; }
-		string ContentType { get; set; }
-		Encoding ContentEncoding { get; set; }
-		long ContentLength64 { get; set; }
-		Stream OutputStream { get; }
+    public interface IResponse
+    {
+        int StatusCode { get; set; }
+        string ContentType { get; set; }
+        Encoding ContentEncoding { get; set; }
+        long ContentLength64 { get; set; }
+        Stream OutputStream { get; }
 
-		void Close();
-		void Write(string data, string contentType = "text/text", int statusCode = 200);
-		void Write(byte[] data, string contentType = "text/text", int statusCode = 200);
-	}
+        void Close();
+        void Write(string data, string contentType = "text/text", int statusCode = 200);
+        void Write(byte[] data, string contentType = "text/text", int statusCode = 200);
+    }
 
-    public interface IWebDefaultWorkflowService : IService 
-	{
-		void RegisterAppTemplateObject(string name, object obj);
-	}
+    public interface IWebDefaultWorkflowService : IService
+    {
+        void RegisterAppTemplateObject(string name, object obj);
+    }
 
     public enum CertRegistrationMethod
     {
@@ -94,69 +94,79 @@ namespace Clifton.WebInterfaces
 
     public interface IWebSocketServerService : IService
     {
-		void Start(string ipAddress, int port, string path);
+        void Start(string ipAddress, int port, string path);
         void Stop();
     }
 
-	public interface IWebSocketSession
+    public interface IWebSocketSession
+    {
+        void Reply(string msg);
+    }
+
+    public interface IWebSocketClientService : IService
+    {
+        void Start(string ipAddress, int port, string path);
+        bool Ping();
+        void Send(string msg);
+    }
+
+    public interface ILoginService : IService
+    {
+    }
+
+    //public interface IPublicRouterService : IService
+    //{
+    //	Dictionary<string, RouteInfo> Routes { get; }
+    //	void RegisterSemanticRoute<T>(string path) where T : SemanticRoute;
+    //}
+
+    public interface IAuthenticatingRouterService : IService
+    {
+        Dictionary<string, RouteInfo> Routes { get; }
+        bool IsAuthenticatedRoute(string path);
+        void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.AuthenticatedRoute, Role role = Role.None) where T : SemanticRoute;
+    }
+
+    public interface IWebSessionService : IService
+    {
+        void UpdateState(IContext context);
+        void Authenticate(IContext context);
+        void UpdateLastTransaction(IContext context);
+        void Logout(IContext context);
+        bool TryGetSessionObject<T>(IContext context, string objectName, out T data);
+        bool HasSessionObject(IContext context, string objectName);
+        string GetSessionObject(IContext context, string objectName);
+        T GetSessionObject<T>(IContext context, string objectName);
+        dynamic GetSessionObjectAsDynamic(IContext context, string objectName);
+        void SetSessionObject(IContext context, string objectName, object val);
+        void RemoveSessionObject(IContext context, string objectName);
+        SessionState GetState(IContext context);
+        bool IsAuthenticated(IContext context);
+        bool IsExpired(IContext context);
+    }
+
+    public interface IWebResponder : IService { }
+
+    public interface IWebFileResponse : IService
+    {
+        bool ProcessFileRequest(IContext context);
+    }
+
+    public class UpdateBlackListArgs : EventArgs
+    {
+        public BlackList BlackListItem { get; set; }
+    }
+
+    public interface IWebServerService : IService
 	{
-		void Reply(string msg);
-	}
+        event EventHandler<UpdateBlackListArgs> UpdateBlackListEvent;
 
-	public interface IWebSocketClientService : IService
-	{
-		void Start(string ipAddress, int port, string path);
-		bool Ping();
-		void Send(string msg);
-	}
-
-	public interface ILoginService : IService
-	{
-	}
-
-	//public interface IPublicRouterService : IService
-	//{
-	//	Dictionary<string, RouteInfo> Routes { get; }
-	//	void RegisterSemanticRoute<T>(string path) where T : SemanticRoute;
-	//}
-
-	public interface IAuthenticatingRouterService : IService
-	{
-		Dictionary<string, RouteInfo> Routes { get; }
-		bool IsAuthenticatedRoute(string path);
-		void RegisterSemanticRoute<T>(string path, RouteType routeType = RouteType.AuthenticatedRoute, Role role = Role.None) where T : SemanticRoute;
-	}
-
-	public interface IWebSessionService : IService
-	{
-		void UpdateState(IContext context);
-		void Authenticate(IContext context);
-		void UpdateLastTransaction(IContext context);
-		void Logout(IContext context);
-		bool TryGetSessionObject<T>(IContext context, string objectName, out T data);
-		bool HasSessionObject(IContext context, string objectName);
-		string GetSessionObject(IContext context, string objectName);
-		T GetSessionObject<T>(IContext context, string objectName);
-		dynamic GetSessionObjectAsDynamic(IContext context, string objectName);
-		void SetSessionObject(IContext context, string objectName, object val);
-		void RemoveSessionObject(IContext context, string objectName);
-		SessionState GetState(IContext context);
-		bool IsAuthenticated(IContext context);
-		bool IsExpired(IContext context);
-	}
-
-	public interface IWebResponder : IService { }
-
-	public interface IWebFileResponse : IService
-	{
-		bool ProcessFileRequest(IContext context);
-	}
-
-	public interface IWebServerService : IService
-	{
-		List<IPAddress> GetLocalHostIPs();
+        List<IPAddress> GetLocalHostIPs();
 		void Start(string ip, int[] ports);					// Clifton.WebServerService handles the listener.
 		void ProcessRequest(HttpContext context);			// IIS HttpHandler.ProcessRequest hook
+        void UpdateWhiteList(List<WhiteList> whiteList);
+        void UpdateBlackList(List<BlackList> blackList);
+        void RouteNotFound(IContext context);
 	}
 
     public interface IWebRestService : IService

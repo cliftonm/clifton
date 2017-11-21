@@ -22,6 +22,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -45,7 +46,7 @@ namespace Clifton.WebServerService
 {
 	public class WebServerModule : IModule
 	{
-		public void InitializeServices(IServiceManager serviceManager)
+        public void InitializeServices(IServiceManager serviceManager)
 		{
 			serviceManager.RegisterSingleton<IWebServerService, WebServer>();
 		}
@@ -60,10 +61,17 @@ namespace Clifton.WebServerService
 	/// </summary>
     public class WebServer : ServiceBase, IWebServerService
     {
-		protected HttpListener listener;
+        public event EventHandler<UpdateBlackListArgs> UpdateBlackListEvent;
+
+        private const int MAX_NUM_ROUTE_NOT_FOUND_ATTEMPTS = 3;
+
+        protected HttpListener listener;
 		protected ILoggerService logger;
 		protected ISemanticProcessor semProc;
 		protected bool httpOnly;
+        protected List<BlackList> blackList = new List<BlackList>();
+        protected List<WhiteList> whiteList = new List<WhiteList>();
+        protected ConcurrentDictionary<string, int> maxAttempts = new ConcurrentDictionary<string, int>();
 
         private const int PROCESS_TIMEOUT = 500;        // milliseconds.
 
@@ -87,7 +95,45 @@ namespace Clifton.WebServerService
 			return ret;
 		}
 
-		public virtual void Start(string ip, int[] ports)
+        public void UpdateWhiteList(List<WhiteList> whiteList)
+        {
+            lock (this.whiteList)
+            {
+                this.whiteList = whiteList;
+            }
+        }
+
+        public void UpdateBlackList(List<BlackList> blackList)
+        {
+            lock (this.blackList)
+            {
+                this.blackList = blackList;
+            }
+        }
+
+        /// <summary>
+        /// After x attempts at not finding a route for this IP, block it.
+        /// </summary>
+        public void RouteNotFound(IContext context)
+        {
+            string ip = context.EndpointAddress().ToString();
+
+            if (maxAttempts.TryGetValue(ip, out int count))
+            {
+                maxAttempts[ip] = count + 1;
+
+                if (count >= MAX_NUM_ROUTE_NOT_FOUND_ATTEMPTS)
+                {
+                    AddToBlackList(context);
+                }
+            }
+            else
+            {
+                maxAttempts[ip] = 1;
+            }
+        }
+
+        public virtual void Start(string ip, int[] ports)
 		{
 			listener = new HttpListener();
 
@@ -117,11 +163,51 @@ namespace Clifton.WebServerService
 				// Wait for a connection.  Return to caller while we wait.
 				HttpListenerContext context = listener.GetContext();
 				IContext contextWrapper = new HttpListenerContextWrapper(context);
-				ProcessRequest(contextWrapper);
+
+                if (OnBlackList(contextWrapper))
+                {
+                    // Close immediately if on black list.
+                    contextWrapper.Response.Close();
+                }
+                else
+                {
+                    ProcessRequest(contextWrapper);
+                }
 			}
 		}
 
-		protected virtual void ProcessRequest(IContext contextWrapper)
+        protected bool OnBlackList(IContext contextWrapper)
+        {
+            string ip = contextWrapper.EndpointAddress().ToString();
+
+            lock (blackList)
+            {
+                return blackList.Any(bl => bl.IP == ip);
+            }
+        }
+
+        protected bool OnWhiteList(IContext contextWrapper)
+        {
+            string ip = contextWrapper.EndpointAddress().ToString();
+
+            lock (whiteList)
+            {
+                return whiteList.Any(bl => bl.IP == ip);
+            }
+        }
+
+        protected void AddToBlackList(IContext contextWrapper)
+        {
+            string ip = contextWrapper.EndpointAddress().ToString();
+
+            if (!OnWhiteList(contextWrapper))
+            {
+                BlackList bl = new BlackList() { IP = ip, LastHit = DateTime.Now, Hits = 1 };
+                UpdateBlackListEvent?.Invoke(this, new UpdateBlackListArgs() { BlackListItem = bl });
+            }
+        }
+
+        protected virtual void ProcessRequest(IContext contextWrapper)
 		{
 			// Redirect to HTTPS if not local and not secure.
 			if (!contextWrapper.IsLocal && !contextWrapper.IsSecureConnection && !httpOnly)
@@ -133,10 +219,22 @@ namespace Clifton.WebServerService
 			}
 			else
 			{
-				string data = new StreamReader(contextWrapper.Request.InputStream, contextWrapper.Request.ContentEncoding).ReadToEnd();
+                string data = null;
 
-				// TODO: The removal of the password when logging is really kludgy.
-				NameValueCollection nvc = contextWrapper.Request.QueryString;
+                try
+                {
+                    data = new StreamReader(contextWrapper.Request.InputStream, contextWrapper.Request.ContentEncoding).ReadToEnd();
+                }
+                catch   // any exception, particularly the System.Net.ProtocolViolationException: 
+                        // Bytes to be written to the stream exceed the Content-Length bytes size specified
+                {
+                    AddToBlackList(contextWrapper);
+                    contextWrapper.Response.Close();
+                    return;
+                }
+
+                // TODO: The removal of the password when logging is really kludgy.
+                NameValueCollection nvc = contextWrapper.Request.QueryString;
 				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.Where(k=>k != null).ToDictionary(k => k, k => nvc[k]));
 				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
 				logger.Log(LogMessage.Create(contextWrapper.Request.RemoteEndPoint.ToString() + " - [" + contextWrapper.Verb().Value + ": " + contextWrapper.Path().Value + "] Parameters: " + parms));
@@ -167,7 +265,7 @@ namespace Clifton.WebServerService
             {
                 r.Context = context;
                 r.Data = data;
-            } , false, PROCESS_TIMEOUT);
+            }); // , false, PROCESS_TIMEOUT);
 		}
 
 		/// <summary>

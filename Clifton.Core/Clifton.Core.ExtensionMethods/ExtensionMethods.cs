@@ -251,7 +251,28 @@ namespace Clifton.Core.ExtensionMethods
 			}
 		}
 
-		public static T Single<T>(this IEnumerable collection, Func<T, bool> expr)
+        public static void ForEach(this int n, Action action)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                action();
+            }
+        }
+
+        public static void ForEach(this int n, Action<int> action)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                action(i);
+            }
+        }
+
+        public static IEnumerable<int> Range(this int n)
+        {
+            return Enumerable.Range(0, n);
+        }
+
+        public static T Single<T>(this IEnumerable collection, Func<T, bool> expr)
 		{
 			T ret = default(T);
 			bool found = false;

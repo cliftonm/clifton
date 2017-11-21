@@ -57,6 +57,8 @@ namespace Clifton.WebFileResponseService
 				r.Message = "Route not found";
 				r.StatusCode = 500;
 			});
-		}
+
+            proc.ServiceManager.Get<IWebServerService>().RouteNotFound(context);
+        }
 	}
 }

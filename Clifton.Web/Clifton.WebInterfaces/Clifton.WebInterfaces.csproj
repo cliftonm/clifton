@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -46,6 +47,8 @@
     <Compile Include="HttpContextWrapper.cs" />
     <Compile Include="HttpListenerContextWrapper.cs" />
     <Compile Include="Interfaces.cs" />
+    <Compile Include="Models\BlackList.cs" />
+    <Compile Include="Models\WhiteList.cs" />
     <Compile Include="PostRouteWorkflowData.cs" />
     <Compile Include="PreRouteWorkflowData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

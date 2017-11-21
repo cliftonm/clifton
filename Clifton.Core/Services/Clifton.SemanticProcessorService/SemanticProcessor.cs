@@ -925,7 +925,30 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 				if (ts.TryDequeue(out rc))
 				{
-					Call(rc);
+                    // Call(rc);
+
+                    // TODO: As absurd as this is, we're trying to isolate a problem where the 
+                    // threads stop processing their work!
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            rc.MakeCall();
+                        }
+                        catch (Exception ex)
+                        {
+                            Exception ex2 = ex;
+                            // Prevent recursion if the exception process itself throws an exception.
+                            if (!(rc.SemanticInstance is ST_Exception))
+                            {
+                                try
+                                {
+                                    ProcessInstance(Logger, new ST_Exception(ex), true);
+                                }
+                                catch { }
+                            }
+                        }
+                    });
 				}
 			}
 		}
