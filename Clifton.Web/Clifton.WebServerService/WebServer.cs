@@ -61,6 +61,7 @@ namespace Clifton.WebServerService
 	/// </summary>
     public class WebServer : ServiceBase, IWebServerService
     {
+        public event EventHandler<AddToBlackListArgs> AddToBlackListEvent;
         public event EventHandler<UpdateBlackListArgs> UpdateBlackListEvent;
 
         private const int MAX_NUM_ROUTE_NOT_FOUND_ATTEMPTS = 3;
@@ -148,12 +149,6 @@ namespace Clifton.WebServerService
 			Task.Run(() => WaitForConnection(listener));
 		}
 
-		public virtual void ProcessRequest(HttpContext context)
-		{
-			IContext contextWrapper = new WebInterfaces.HttpContextWrapper(context);
-			ProcessRequest(contextWrapper);
-		}
-
 		protected virtual void WaitForConnection(object objListener)
 		{
 			HttpListener listener = (HttpListener)objListener;
@@ -167,6 +162,7 @@ namespace Clifton.WebServerService
                 if (OnBlackList(contextWrapper))
                 {
                     // Close immediately if on black list.
+                    UpdateBlackListHitAndCount(contextWrapper);
                     contextWrapper.Response.Close();
                 }
                 else
@@ -175,6 +171,12 @@ namespace Clifton.WebServerService
                 }
 			}
 		}
+
+        public virtual void ProcessRequest(HttpContext context)
+        {
+            IContext contextWrapper = new WebInterfaces.HttpContextWrapper(context);
+            ProcessRequest(contextWrapper);
+        }
 
         protected bool OnBlackList(IContext contextWrapper)
         {
@@ -203,8 +205,13 @@ namespace Clifton.WebServerService
             if (!OnWhiteList(contextWrapper))
             {
                 BlackList bl = new BlackList() { IP = ip, LastHit = DateTime.Now, Hits = 1 };
-                UpdateBlackListEvent?.Invoke(this, new UpdateBlackListArgs() { BlackListItem = bl });
+                AddToBlackListEvent?.Invoke(this, new AddToBlackListArgs() { BlackListItem = bl });
             }
+        }
+
+        protected void UpdateBlackListHitAndCount(IContext contextWrapper)
+        {
+            UpdateBlackListEvent?.Invoke(this, new UpdateBlackListArgs() { Context = contextWrapper });
         }
 
         protected virtual void ProcessRequest(IContext contextWrapper)

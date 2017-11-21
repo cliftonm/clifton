@@ -152,13 +152,19 @@ namespace Clifton.WebInterfaces
         bool ProcessFileRequest(IContext context);
     }
 
-    public class UpdateBlackListArgs : EventArgs
+    public class AddToBlackListArgs : EventArgs
     {
         public BlackList BlackListItem { get; set; }
     }
 
+    public class UpdateBlackListArgs : EventArgs
+    {
+        public IContext Context { get; set; }
+    }
+
     public interface IWebServerService : IService
 	{
+        event EventHandler<AddToBlackListArgs> AddToBlackListEvent;
         event EventHandler<UpdateBlackListArgs> UpdateBlackListEvent;
 
         List<IPAddress> GetLocalHostIPs();
