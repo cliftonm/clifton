@@ -244,7 +244,7 @@ namespace Clifton.WebServerService
                 NameValueCollection nvc = contextWrapper.Request.QueryString;
 				string nvcSerialized = new JavaScriptSerializer().Serialize(nvc.AllKeys.Where(k=>k != null).ToDictionary(k => k, k => nvc[k]));
 				string parms = String.IsNullOrEmpty(data) ? nvcSerialized : data.LeftOf("Password").LeftOf("password");
-				logger.Log(LogMessage.Create(contextWrapper.Request.RemoteEndPoint.ToString() + " - [" + contextWrapper.Verb().Value + ": " + contextWrapper.Path().Value + "] Parameters: " + parms));
+				logger.Log(LogMessage.Create(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss tt ") + contextWrapper.Request.RemoteEndPoint.ToString() + " - [" + contextWrapper.Verb().Value + ": " + contextWrapper.Path().Value + "] Parameters: " + parms));
 
 				// If the pre-router lets us continue, the route the request.
 				if (ServiceManager.Exists<IWebWorkflowService>())

@@ -66,7 +66,7 @@ namespace Clifton.WebRouterService
 				addr = new IPAddress(new byte[] { 127, 0, 0, 1 });
 			}
 
-			Console.WriteLine("IP: " + addr.ToString() + "    URL: " + route.Context.Request.Url);
+			Console.WriteLine(DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss tt ") + "IP: " + addr.ToString() + "    URL: " + route.Context.Request.Url);
 
 			// TODO: Session manager may not exist.  How do we handle services that are missing?
 			IWebSessionService session = proc.ServiceManager.Get<IWebSessionService>();
@@ -194,7 +194,7 @@ namespace Clifton.WebRouterService
 			}
 			else
 			{
-				proc.ProcessInstance<LoggerMembrane, ST_Log>(msg => msg.Message = "Using default handler: " + verb.Value + ": " + path.Value);
+				// proc.ProcessInstance<LoggerMembrane, ST_Log>(msg => msg.Message = "Using default handler: " + verb.Value + ": " + path.Value);
 				// Put the context on the bus for some service to pick up.
 				// All unhandled context are assumed to be public routes.
 				proc.ProcessInstance<WebServerMembrane, UnhandledContext>(c => c.Context = context);
