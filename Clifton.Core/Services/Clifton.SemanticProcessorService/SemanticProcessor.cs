@@ -1,4 +1,6 @@
-﻿/* The MIT License (MIT)
+﻿// #define USE_THREAD_POOL
+
+/* The MIT License (MIT)
 * 
 * Copyright (c) 2015 Marc Clifton
 * 
@@ -548,7 +550,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				}
 				else
 				{
-                    // Pick a thread that has the least work to do.
+#if USE_THREAD_POOL
                     // threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
                     nextThread = (++nextThread) % MAX_WORKER_THREADS;
                     threadPool[nextThread].Enqueue(new DynamicCall()
@@ -562,7 +564,14 @@ namespace Clifton.Core.Services.SemanticProcessorService
                         },
                         Timeout = msTimeout
                     });
-				}
+#else
+                    Task.Run(()=>
+                    {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                        target.Process(this, membrane, obj);
+                    });
+#endif
+                }
 			}
 
 			// Also check stateful receptors
@@ -589,6 +598,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     }
                     else
                     {
+#if USE_THREAD_POOL
                         nextThread = (++nextThread) % MAX_WORKER_THREADS;
                         threadPool[nextThread].Enqueue(new DynamicCall()
                         {
@@ -602,6 +612,13 @@ namespace Clifton.Core.Services.SemanticProcessorService
                             AutoDispose = false,
                             Timeout = msTimeout
                         });
+#else
+                        Task.Run(() =>
+                        {
+                            Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
+                            target.Process(this, membrane, obj);
+                        });
+#endif
                     }
                 }
 			}
@@ -679,6 +696,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				}
 				else
 				{
+#if USE_THREAD_POOL
                     // Pick a thread that has the least work to do.
                     nextThread = (++nextThread) % MAX_WORKER_THREADS;
                     threadPool[nextThread].Enqueue(new MethodInvokeCall()
@@ -690,8 +708,16 @@ namespace Clifton.Core.Services.SemanticProcessorService
                         Receptor = target,
                         Parameters = new object[] { this, membrane, obj },
                     });
-				}
-			}
+#else
+                    Task.Run(() =>
+                    {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                        method.Invoke(target, new object[] { this, membrane, obj });
+                        // target.Process(this, membrane, obj);
+                    });
+#endif
+                }
+            }
 
 			// Also check stateful receptors
 			List<IReceptor> sreceptors = GetStatefulReceptors(membrane, tsource);
@@ -712,6 +738,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     }
                     else
                     {
+#if USE_THREAD_POOL
                         nextThread = (++nextThread) % MAX_WORKER_THREADS;
                         threadPool[nextThread].Enqueue(new MethodInvokeCall()
                         // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
@@ -721,10 +748,18 @@ namespace Clifton.Core.Services.SemanticProcessorService
                             SemanticInstance = obj,
                             Receptor = receptor,
                             Parameters = new object[] { this, membrane, obj },
-                            AutoDispose = false });
+                            AutoDispose = false
+                        });
+#else
+                        Task.Run(() =>
+                        {
+                            Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
+                            method.Invoke(receptor, new object[] { this, membrane, obj });
+                        });
+#endif
                     }
                 }
-			}
+            }
 
 			ProcessInnerTypes(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
 			PermeateOut(membrane, caller, obj, processOnCallerThread, fromMembrane, fromReceptor);
