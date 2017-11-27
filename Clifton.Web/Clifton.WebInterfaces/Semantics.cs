@@ -87,6 +87,9 @@ namespace Clifton.WebInterfaces
 	public class CssPath : SemanticRoute { }
 	public class HtmlPageRoute : SemanticRoute { }
 
+    // Used for testing only!!!
+    public class AutoLoginRoute : SemanticRoute { }
+
 	public class UnhandledContext : ISemanticType
 	{
 		public IContext Context { get; set; }
