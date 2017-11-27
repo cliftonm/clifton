@@ -808,6 +808,20 @@ namespace Clifton.Core.ExtensionMethods
                 .ToArray());
         }
 
+        public static string RemoveNonPrintableChars(this string input)
+        {
+            return new string(input.ToCharArray()
+                .Where(c => c >= 32)
+                .ToArray());
+        }
+
+        public static string AlphaOnly(this string input)
+        {
+            return new string(input.ToCharArray()
+                .Where(c => ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c<='Z')))
+                .ToArray());
+        }
+
         /// <summary>
         /// Returns everything between the start-character and the first occurence
         /// of the end-character, after the start-character, exclusive.
@@ -1198,7 +1212,12 @@ namespace Clifton.Core.ExtensionMethods
 			return Convert.FromBase64String(data);
 		}
 
-		public static string ToBase64(this byte[] data)
+        public static string FromBase64ToString(this string data)
+        {
+            return Encoding.Default.GetString(Convert.FromBase64String(data));
+        }
+
+        public static string ToBase64(this byte[] data)
 		{
 			return Convert.ToBase64String(data);
 		}
@@ -1429,6 +1448,16 @@ namespace Clifton.Core.ExtensionMethods
                     yield return item;
                 }
             }
+        }
+
+        public static string SHA1(this string str)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(str);
+            SHA1 sha = new SHA1CryptoServiceProvider();
+            byte[] id = sha.ComputeHash(bytes);
+            string ret = id.ToBase64();
+
+            return ret;
         }
     }
 }
