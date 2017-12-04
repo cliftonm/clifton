@@ -1222,7 +1222,17 @@ namespace Clifton.Core.ExtensionMethods
 			return Convert.ToBase64String(data);
 		}
 
-		public static byte[] to_Utf8(this string str)
+        public static string ToBase64String(this string str)
+        {
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes(str));
+        }
+
+        public static string ToBase64String(this StringBuilder sb)
+        {
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes(sb.ToString()));
+        }
+
+        public static byte[] to_Utf8(this string str)
 		{
 			return Encoding.UTF8.GetBytes(str);
 		}

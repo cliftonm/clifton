@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using Clifton.Core.ExtensionMethods;
 
@@ -46,27 +47,39 @@ namespace Clifton.Core.TemplateEngine
 
 			lines.Where(l=>!String.IsNullOrEmpty(l)).ForEachWithIndex((line, idx) =>
 			{
-				switch (inCode)
-				{
-					case false:
-						if (inLiteralBlock)
-						{
-							AppendCodeOrLiteralLine(sb, line, ref inCode);
-						}
-						else
-						{
-							AppendNonCodeLine(sb, line, ref inCode);
-						}
-						break;
+                line = RemoveComments(line);
 
-					case true:
-						AppendCodeOrLiteralLine(sb, line, ref inCode);
-						break;
-				}
+                if (!String.IsNullOrWhiteSpace(line))
+                {
+                    switch (inCode)
+                    {
+                        case false:
+                            if (inLiteralBlock)
+                            {
+                                AppendCodeOrLiteralLine(sb, line, ref inCode);
+                            }
+                            else
+                            {
+                                AppendNonCodeLine(sb, line, ref inCode);
+                            }
+                            break;
+
+                        case true:
+                            AppendCodeOrLiteralLine(sb, line, ref inCode);
+                            break;
+                    }
+                }
 			});
 
 			return sb.ToString();
 		}
+
+        // TODO: Implement.
+        private string RemoveComments(string line)
+        {
+            string ret = line;
+            return ret;
+        }
 
 		/// <summary>
 		/// Returns the text split into lines with any trailing whitespace trimmed.

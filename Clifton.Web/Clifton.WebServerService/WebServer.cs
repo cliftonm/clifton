@@ -219,7 +219,7 @@ namespace Clifton.WebServerService
 			// Redirect to HTTPS if not local and not secure.
 			if (!contextWrapper.IsLocal && !contextWrapper.IsSecureConnection && !httpOnly)
 			{
-				logger.Log(LogMessage.Create("Redirecting to HTTPS"));
+				logger.Log(LogMessage.Create("Redirecting to HTTPS:" + contextWrapper.Request.Url.ToString()));
 				string redirectUrl = contextWrapper.Request.Url.ToString().Replace("http:", "https:");
 				contextWrapper.Redirect(redirectUrl);
 				contextWrapper.Response.Close();
