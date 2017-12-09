@@ -37,7 +37,7 @@ namespace Clifton.WebInterfaces
 
 	public class ServerSocketMessage : ISemanticType
 	{
-		public IWebSocketSession Session { get; set; }
+        public IWebSocketSession Session { get; set; }
 		public string Text { get; set; }
 	}
 

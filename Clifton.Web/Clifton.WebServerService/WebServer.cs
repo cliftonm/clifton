@@ -96,6 +96,11 @@ namespace Clifton.WebServerService
 			return ret;
 		}
 
+        public string GetLocalIP()
+        {
+            return GetLocalHostIPs().First().ToString();
+        }
+
         public void UpdateWhiteList(List<WhiteList> whiteList)
         {
             lock (this.whiteList)
@@ -298,7 +303,7 @@ namespace Clifton.WebServerService
 			return ret;
 		}
 
-		protected string GetExternalIP()
+        protected string GetExternalIP()
 		{
 			string externalIP;
 			externalIP = (new WebClient()).DownloadString("http://checkip.dyndns.org/");

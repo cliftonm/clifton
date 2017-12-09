@@ -167,6 +167,7 @@ namespace Clifton.WebInterfaces
         event EventHandler<AddToBlackListArgs> AddToBlackListEvent;
         event EventHandler<UpdateBlackListArgs> UpdateBlackListEvent;
 
+        string GetLocalIP();
         List<IPAddress> GetLocalHostIPs();
 		void Start(string ip, int[] ports);					// Clifton.WebServerService handles the listener.
 		void ProcessRequest(HttpContext context);			// IIS HttpHandler.ProcessRequest hook
