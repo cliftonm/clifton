@@ -84,21 +84,17 @@ namespace Clifton.WebServerService
             Assert.SilentTry(() => httpOnly = ServiceManager.Get<IAppConfigService>().GetValue("httpOnly").to_b());
 		}
 
-		/// <summary>
-		/// Returns list of IP addresses assigned to localhost network devices, such as hardwired ethernet, wireless, etc.
-		/// </summary>
-		public List<IPAddress> GetLocalHostIPs()
-		{
-			IPHostEntry host;
-			host = Dns.GetHostEntry(Dns.GetHostName());
-			List<IPAddress> ret = host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork).ToList();
-
-			return ret;
-		}
-
         public string GetLocalIP()
         {
-            return GetLocalHostIPs().First().ToString();
+            // override with config value if it exists.
+            string ip = ServiceManager.Get<IAppConfigService>().GetValue("ip");
+
+            if (ip == null)
+            {
+                ip = GetLocalHostIPs().First().ToString();
+            }
+
+            return ip;
         }
 
         public void UpdateWhiteList(List<WhiteList> whiteList)
@@ -154,7 +150,19 @@ namespace Clifton.WebServerService
 			Task.Run(() => WaitForConnection(listener));
 		}
 
-		protected virtual void WaitForConnection(object objListener)
+        /// <summary>
+        /// Returns list of IP addresses assigned to localhost network devices, such as hardwired ethernet, wireless, etc.
+        /// </summary>
+        protected List<IPAddress> GetLocalHostIPs()
+        {
+            IPHostEntry host;
+            host = Dns.GetHostEntry(Dns.GetHostName());
+            List<IPAddress> ret = host.AddressList.Where(ip => ip.AddressFamily == AddressFamily.InterNetwork).ToList();
+
+            return ret;
+        }
+
+        protected virtual void WaitForConnection(object objListener)
 		{
 			HttpListener listener = (HttpListener)objListener;
 
