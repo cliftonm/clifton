@@ -87,7 +87,8 @@ namespace Clifton.WebServerService
         public string GetLocalIP()
         {
             // override with config value if it exists.
-            string ip = ServiceManager.Get<IAppConfigService>().GetValue("ip");
+
+            ServiceManager.Get<IAppConfigService>().TryGetValue("ip", out string ip);
 
             if (ip == null)
             {

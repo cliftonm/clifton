@@ -27,7 +27,9 @@ namespace Clifton.Core.ServiceInterfaces
 {
 	public interface IConfigService : IService
 	{
-		string GetConnectionString(string key);
+        bool TryGetValue(string key, out string val);
+        bool KeyExists(string key);
+        string GetConnectionString(string key);
 		string GetValue(string key);
 	}
 }

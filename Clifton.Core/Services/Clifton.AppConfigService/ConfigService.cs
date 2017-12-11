@@ -21,8 +21,8 @@
 * SOFTWARE.
 */
 
-using System;
 using System.Configuration;
+using System.Linq;
 
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
@@ -47,6 +47,25 @@ namespace Clifton.Cores.Services.AppConfigService
 
 			return DecryptOption(text);
 		}
+
+        public virtual bool KeyExists(string key)
+        {
+            return ConfigurationManager.AppSettings.AllKeys.Contains(key);
+        }
+
+        public virtual bool TryGetValue(string key, out string val)
+        {
+            val = null;
+            bool found = false;
+
+            if (KeyExists(key))
+            {
+                val = GetValue(key);
+                found = true;
+            }
+
+            return found;
+        }
 
 		public virtual string GetValue(string key)
 		{
