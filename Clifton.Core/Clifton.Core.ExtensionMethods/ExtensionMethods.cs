@@ -26,6 +26,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -630,6 +631,18 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			return Convert.ToInt32(src);
 		}
+
+        public static int to_iFromHex(this string src)
+        {
+            return int.Parse(src, NumberStyles.HexNumber);
+        }
+
+        public static bool IsHex(this string src)
+        {
+            // https://stackoverflow.com/questions/223832/check-a-string-to-see-if-all-characters-are-hexadecimal-values
+            // For C-style hex notation (0xFF) you can use @"\A\b(0[xX])?[0-9a-fA-F]+\b\Z"
+            return Regex.IsMatch(src, @"\A\b[0-9a-fA-F]+\b\Z");
+        }
 
 		public static bool IsInt(this string src)
 		{
