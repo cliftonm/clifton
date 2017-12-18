@@ -109,6 +109,16 @@ namespace Clifton.WebFileResponseService
                         });
                         break;
 
+                    case "txt":
+                        // This represents a download
+                        ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, FontResponse>(r =>
+                        {
+                            r.Context = context;
+                            r.ContentType = "application/octet-stream";
+                            r.BinaryData = ReadBinaryFile(path);
+                        });
+                        break;
+
                     case "js":
                         ServiceManager.Get<ISemanticProcessor>().ProcessInstance<WebServerMembrane, JavascriptResponse>(r =>
                         {
