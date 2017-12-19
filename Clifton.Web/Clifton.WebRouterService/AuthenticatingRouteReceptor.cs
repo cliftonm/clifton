@@ -111,23 +111,35 @@ namespace Clifton.WebRouterService
 
 					if (!String.IsNullOrEmpty(data))
 					{
-						// Is it JSON?
-						// NOTE: "JSON" is passed in as a string, not object.  So this is what it looks like in the Javascript:
-						// $.post("/geeks/createProfile", '{ "profileName": "foobar" }'
-						// Note the surrounding ' marks
-						if (data[0] == '{')
-						{
-							JsonConvert.PopulateObject(data, semanticRoute);
-							SetUrlParameters(context.Request.Url.ToString(), semanticRoute, receptorSemanticType);
-						}
-						else
-						{
-							// Instead here, the data is passed in as an object, which comes in as params.  The Javascript for this looks like:
-							// $.post("/geeks/createProfile", { "profileName": profileName }
-							// Note the lack of surrounding ' around the { }
-							// Example: "username=sdfsf&password=sdfsdf&LoginButton=Login"
-							// Use $.post(url, JSON.stringify(data) to convert to JSON
-							string[] parms = data.Split('&');
+                        // Is it JSON?
+                        // NOTE: "JSON" is passed in as a string, not object.  So this is what it looks like in the Javascript:
+                        // $.post("/geeks/createProfile", '{ "profileName": "foobar" }'
+                        // Note the surrounding ' marks
+                        if (data[0] == '{')
+                        {
+                            JsonConvert.PopulateObject(data, semanticRoute);
+                            SetUrlParameters(context.Request.Url.ToString(), semanticRoute, receptorSemanticType);
+                        }
+                        else if (MultiPartParser.IsMultiPart(data))
+                        {
+                            MultiPartParser.ContentType ct = MultiPartParser.GetContentType(data);
+                            string content = MultiPartParser.GetContent(data);
+
+                            if (!(semanticRoute is IFileUpload))
+                            {
+                                throw new RouterException("Semantic route class must implement IFileUpload");
+                            }
+
+                            ((IFileUpload)semanticRoute).Content = content;
+                        }
+                        else
+                        {
+                            // Instead here, the data is passed in as an object, which comes in as params.  The Javascript for this looks like:
+                            // $.post("/geeks/createProfile", { "profileName": profileName }
+                            // Note the lack of surrounding ' around the { }
+                            // Example: "username=sdfsf&password=sdfsdf&LoginButton=Login"
+                            // Use $.post(url, JSON.stringify(data) to convert to JSON
+                            string[] parms = data.Split('&');
 
 							foreach (string parm in parms)
 							{

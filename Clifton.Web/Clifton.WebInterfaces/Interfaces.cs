@@ -77,6 +77,11 @@ namespace Clifton.WebInterfaces
         void RegisterAppTemplateObject(string name, object obj);
     }
 
+    public interface IFileUpload
+    {
+        string Content { get; set; }
+    }
+
     public enum CertRegistrationMethod
     {
         NETSH,

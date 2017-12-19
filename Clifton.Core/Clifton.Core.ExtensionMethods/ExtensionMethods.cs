@@ -1317,7 +1317,12 @@ namespace Clifton.Core.ExtensionMethods
 			return decryptedBytes;
 		}
 
-		public static string SplitCamelCase(this string input)
+        public static string[] Split(this string str, string splitter)
+        {
+            return str.Split(new[] { splitter }, StringSplitOptions.None);
+        }
+
+        public static string SplitCamelCase(this string input)
 		{
 			// return Regex.Replace(input, "([A-Z])", " $1", System.Text.RegularExpressions.RegexOptions.Compiled).Trim();
 			// Replaced, because the version below also handles strings like "IBMMakeStuffAndSellIt", converting it to "IBM Make Stuff And Sell It"
