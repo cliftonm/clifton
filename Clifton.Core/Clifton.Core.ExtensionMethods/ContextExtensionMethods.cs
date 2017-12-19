@@ -236,7 +236,33 @@ namespace Clifton.Core.ExtensionMethods
 			return count;
 		}
 
-		public static List<MappedRecord> GetTable(this DataContext context, string tableName)
+        public static bool Exists<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+        {
+            SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
+            DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+            int count = 0;
+
+            try
+            {
+                if (whereClause == null)
+                {
+                    count = newContext.GetTable<T>().Count();
+                }
+                else
+                {
+                    count = newContext.GetTable<T>().Where(whereClause).Count();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+
+            return count > 0;
+        }
+
+        public static List<MappedRecord> GetTable(this DataContext context, string tableName)
 		{
 			EntityProperty model = GetEntityProperty(context, tableName);
 			ITable records = (ITable)model.Property.GetValue(context, null);
