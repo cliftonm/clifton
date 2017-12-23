@@ -201,6 +201,10 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
 		{
+            // Debugging
+            //if (e.Row.Table.TableName == "EmsStationType")
+            //{
+            //}
 			if (!programmaticUpdate)
 			{
 				IEntity instance;
@@ -221,6 +225,7 @@ namespace Clifton.Core.ModelTableManagement
 				// a detached record (as in, it must exist in the database.)
 				if (e.Row.RowState != DataRowState.Detached)
 				{
+                    // Use the column name that has changed, not the potential mapped column name.
 					PropertyInfo pi = instance.GetType().GetProperty(e.Column.ColumnName);
 					object oldVal = pi.GetValue(instance);
 
@@ -230,10 +235,22 @@ namespace Clifton.Core.ModelTableManagement
 					if (((oldVal == null) && (e.ProposedValue != DBNull.Value)) ||
 						 ((oldVal != null) && (!oldVal.Equals(e.ProposedValue))))
 					{
-						modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+                        // Always update the actual column, as the setter, for a mapped column, will probably update the 
+                        // value for the mapped column.
+                        modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+
+                        // If mapped, then update again, using the mapped column name.
+                        //if (((ExtDataColumn)e.Column).MappedColumn != null)
+                        //{
+                        //    PropertyInfo piMapped = instance.GetType().GetProperty(((ExtDataColumn)e.Column).MappedColumn);
+                        //    object mappedColumnValue = piMapped.GetValue(instance);
+                        //    modelMgr.UpdateRecordField(instance, ((ExtDataColumn)e.Column).MappedColumn, mappedColumnValue);
+                        //}
+
 						// If it's actually a column in the table, then persist the change.
 						ExtDataColumn edc = (ExtDataColumn)e.Column;
-						if (edc.IsDbColumn)
+
+						if (edc.IsDbColumn || edc.MappedColumn != null)
 						{
 							Update(instance);
 						}

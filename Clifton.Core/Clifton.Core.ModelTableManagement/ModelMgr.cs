@@ -41,6 +41,9 @@ namespace Clifton.Core.ModelTableManagement
 		public bool Visible { get; set; }
 		public bool IsDbColumn { get; set; }
 		public LookupAttribute Lookup { get; set; }
+        public string MappedColumn { get; set; }
+
+        public string ActualColumnName { get { return MappedColumn ?? ColumnName; } }
 
 		public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, LookupAttribute lookup = null)
 			: base(colName, colType)
@@ -55,6 +58,13 @@ namespace Clifton.Core.ModelTableManagement
 	{
 		public string Name { get; set; }
 		public string DisplayName { get; set; }
+
+        /// <summary>
+        /// Mapped column is used when we have a property that is not a column, but directly maps to an actual column.
+        /// Useful when needing to convert the field's data type to a different internal data type.
+        /// </summary>
+        public string MappedColumn { get; set; }
+
 		public Type Type { get; set; }
 		public bool ReadOnly { get; set; }
 		public bool Visible { get; set; }
@@ -492,6 +502,7 @@ namespace Clifton.Core.ModelTableManagement
 							IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
 							IsDisplayField = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
 							Lookup = Attribute.IsDefined(prop, typeof(LookupAttribute)) ? ((LookupAttribute)prop.GetCustomAttribute(typeof(LookupAttribute))) : null,
+                            MappedColumn = Attribute.IsDefined(prop, typeof(MappedColumnAttribute)) ? ((MappedColumnAttribute)prop.GetCustomAttribute(typeof(MappedColumnAttribute))).Name : null,
 						};
 
 			return props.ToList();
@@ -517,6 +528,7 @@ namespace Clifton.Core.ModelTableManagement
 
 				dc.ReadOnly = field.ReadOnly;
 				dc.Caption = field.DisplayName;
+                dc.MappedColumn = field.MappedColumn;
 				dt.Columns.Add(dc);
 			}
 		}

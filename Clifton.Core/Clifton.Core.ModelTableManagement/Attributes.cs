@@ -45,6 +45,16 @@ namespace Clifton.Core.ModelTableManagement
 		}
 	}
 
+    public class MappedColumnAttribute : Attribute
+    {
+        public string Name { get; set; }
+
+        public MappedColumnAttribute(string name) : base()
+        {
+            Name = name;
+        }
+    }
+
 	public class LookupAttribute : Attribute
 	{
 		public string ForeignKeyTable { get; set; }
