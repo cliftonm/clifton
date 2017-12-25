@@ -57,15 +57,13 @@ namespace Clifton.Core.ModelTableManagement
 
 	public class LookupAttribute : Attribute
 	{
-		public string ForeignKeyTable { get; set; }
 		public Type ModelType { get; set; }
 		public string DisplayField { get; set; }
 		public string ValueField { get; set; }
 
-		public LookupAttribute(string fkTable)
+		public LookupAttribute()
 			: base()
 		{
-			ForeignKeyTable = fkTable;
 			DisplayField = "Name";			// Default - we expect the implementing field to be a string in the backing model.
 			ValueField = "Id";				// Default - we expect the implementing field to be an int? in the backing model.
 		}
