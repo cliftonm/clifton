@@ -79,6 +79,7 @@ namespace Clifton.Core.ModelTableManagement
 	{
 		public string FieldName { get; set; }
 		public object Value { get; set; }
+        public object OldValue { get; set; }
 	}
 
 	/// <summary>
@@ -164,16 +165,7 @@ namespace Clifton.Core.ModelTableManagement
 				});
 		}
 
-		public void DeleteRecord<T>(DataView dv, T model) where T : MappedRecord, IEntity
-		{
-			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
-
-			Type recType = typeof(T);
-			mappedRecords[recType].Remove(mappedRecords[recType].Single(mr => mr == model));
-			dv.Table.Rows.Remove(model.Row);
-		}
-
-		public void DeleteAllRecords<T>(DataView dv) where T : MappedRecord, IEntity
+        public void DeleteAllRecords<T>(DataView dv) where T : MappedRecord, IEntity
 		{
 			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
 			List<DataRow> rows = new List<DataRow>();
@@ -271,19 +263,31 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public void InsertRow<T>(DataView view, T model) where T : MappedRecord
 		{
-			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
+            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
 			DataRow row = NewRow(view, model.GetType(), model);
 			view.Table.Rows.InsertAt(row, 0);
 			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.EndProgrammaticUpdate());
 			AddRecordToCollection(model);
 		}
 
-		/// <summary>
-		/// Updates the backing DataRow with changes made to the model fields.
-		/// </summary>
-		public void UpdateRow<T>(T model) where T : MappedRecord
+        public void DeleteRecord<T>(DataView dv, T model) where T : MappedRecord, IEntity
+        {
+            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
+            Type recType = typeof(T);
+            dv.Table.Rows.Remove(model.Row);
+            mappedRecords[recType].Remove(mappedRecords[recType].Single(mr => mr == model));
+            modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.EndProgrammaticUpdate());
+        }
+
+        /// <summary>
+        /// Updates the backing DataRow with changes made to the model fields.
+        /// </summary>
+        public void UpdateRow<T>(T model) where T : MappedRecord
 		{
-			modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
+            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
 			DataRow row = model.Row;
 			List<Field> fields = GetFields<T>();
 
@@ -322,17 +326,16 @@ namespace Clifton.Core.ModelTableManagement
 				// We always want this event to fire, whether the change was done in the DataGridView or programmatically.
 				// TODO: Should the event fire only when the value hasn't changed?
 				// Apparently so, otherwise we can get continuous calls to UpdateRecordField by the app.
-				PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
+				PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val, OldValue = oldVal });
 			}
 		}
 
-		// TODO: Do we need this in AssignPerformerToRoomEvents and DlgAssignPerformerToRoomType, if those classes instead used UpdateRecordField?
 		/// <summary>
 		/// Explicity fire the property changed event.
 		/// </summary>
-		public void FirePropertyChangedEvent(IEntity record, string columnName, object val)
+		public void FirePropertyChangedEvent(IEntity record, string columnName, object val, object oldVal)
 		{
-			PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val });
+			PropertyChanged.Fire(record, new ModelPropertyChangedEventArgs() { FieldName = columnName, Value = val, OldValue = oldVal });
 		}
 
 		// TODO: Rename to TryGetRecord

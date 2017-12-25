@@ -49,6 +49,9 @@ namespace Clifton.Core.ModelTableManagement
 	/// </summary>
 	public class ModelTable<T> : IModelTable, IDisposable  where T : MappedRecord, IEntity, new()
 	{
+        public DataTable Table { get; }
+
+        public const string PK_FIELD = "Id";
 		public event EventHandler<RowDeletedEventArgs> RowDeleted;
 		protected DataTable dt;
 		protected T newInstance;
@@ -129,7 +132,7 @@ namespace Clifton.Core.ModelTableManagement
 						// After an insert, we need to set the the ID in the DataView, otherwise combobox controls in the grid whose
 						// field is this ID won't find the combobox record.
 						programmaticUpdate = true;
-						e.Row["Id"] = newInstance.Id;
+						e.Row[PK_FIELD] = newInstance.Id;
 						programmaticUpdate = false;
 						break;
 
@@ -163,17 +166,20 @@ namespace Clifton.Core.ModelTableManagement
 			}
 		}
 
-		protected void Table_RowDeleted(object sender, DataRowChangeEventArgs e)
-		{
-			IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
+        protected void Table_RowDeleted(object sender, DataRowChangeEventArgs e)
+        {
+            if (!programmaticUpdate)
+            {
+                IEntity item = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
 
-			if (item != null)
-			{
-				items.Remove(item);
-				Delete(item);
-				RowDeleted.Fire(this, new RowDeletedEventArgs() { Entity = item });
-			}
-		}
+                if (item != null)
+                {
+                    items.Remove(item);
+                    Delete(item);
+                    RowDeleted.Fire(this, new RowDeletedEventArgs() { Entity = item });
+                }
+            }
+        }
 
 		/// <summary>
 		/// ModelView overrides this method.
