@@ -167,7 +167,16 @@ namespace Clifton.Core.ExtensionMethods
 					data = newContext.GetTable<T>().Where(whereClause).ToList();
 				}
 
-				ret = data[0];
+                if (data.Count == 0)
+                {
+                    throw new ApplicationException("Now rows were returned querying Single for " + typeof(T).Name);
+                }
+                else if (data.Count > 1)
+                {
+                    throw new ApplicationException("More than one row was returned querying Single for " + typeof(T).Name);
+                }
+
+                ret = data[0];
 			}
 			catch (Exception ex)
 			{
@@ -196,10 +205,14 @@ namespace Clifton.Core.ExtensionMethods
 					data = newContext.GetTable<T>().Where(whereClause).ToList();
 				}
 
-				if (data.Count == 1)
-				{
-					ret = data[0];
-				}
+                if (data.Count == 1)
+                {
+                    ret = data[0];
+                }
+                else if (data.Count > 0)
+                {
+                    throw new ApplicationException("More than one row was returned querying SingleOrDefault for " + typeof(T).Name);
+                }
 			}
 			catch (Exception ex)
 			{
