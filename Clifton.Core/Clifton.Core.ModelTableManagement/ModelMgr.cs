@@ -105,6 +105,11 @@ namespace Clifton.Core.ModelTableManagement
 			modelViewMap = new Dictionary<Type, DataView>();
 		}
 
+        public void DisposeOfAllTables()
+        {
+            modelTables.ForEach(kvp => kvp.Value.Cast<IDisposable>().ForEach(mt => mt.Dispose()));
+        }
+
 		public void Register<T>() where T : MappedRecord, IEntity
 		{
 			Type recType = typeof(T);
