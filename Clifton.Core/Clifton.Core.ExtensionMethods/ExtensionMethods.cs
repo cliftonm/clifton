@@ -423,6 +423,9 @@ namespace Clifton.Core.ExtensionMethods
 			}
 		}
 
+        /// <summary>
+        /// Add then item if the comparer returns false, indicating a unique entry.
+        /// </summary>
 		public static void AddIfUnique<T>(this IList<T> list, T item, Func<T, bool> comparer)
 		{
 			if (!list.Contains(comparer))
