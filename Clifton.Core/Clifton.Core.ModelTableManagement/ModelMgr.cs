@@ -268,7 +268,8 @@ namespace Clifton.Core.ModelTableManagement
 		/// </summary>
 		public void InsertRow<T>(DataView view, T model) where T : MappedRecord
 		{
-            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            // Have to use model.GetType(), as typeof(T) is MappedRecord.
+            Assert.That(modelTables.ContainsKey(model.GetType()), "Model Manager does not know about " + model.GetType().Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
             modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
 			DataRow row = NewRow(view, model.GetType(), model);
 			view.Table.Rows.InsertAt(row, 0);
@@ -278,7 +279,8 @@ namespace Clifton.Core.ModelTableManagement
 
         public void DeleteRecord<T>(DataView dv, T model) where T : MappedRecord, IEntity
         {
-            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            // Have to use model.GetType(), as typeof(T) is MappedRecord.
+            Assert.That(modelTables.ContainsKey(model.GetType()), "Model Manager does not know about " + model.GetType().Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
             modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
             Type recType = typeof(T);
             dv.Table.Rows.Remove(model.Row);
@@ -291,7 +293,8 @@ namespace Clifton.Core.ModelTableManagement
         /// </summary>
         public void UpdateRow<T>(T model) where T : MappedRecord
 		{
-            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+            // Have to use model.GetType(), as typeof(T) is MappedRecord.
+            Assert.That(modelTables.ContainsKey(model.GetType()), "Model Manager does not know about " + model.GetType().Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
             modelTables.Single(kvp => kvp.Key == model.GetType()).Value.ForEach(mt => mt.BeginProgrammaticUpdate());
 			DataRow row = model.Row;
 			List<Field> fields = GetFields<T>();
