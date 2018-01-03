@@ -111,6 +111,7 @@ namespace Clifton.WebInterfaces
     public interface IWebSocketClientService : IService
     {
         void Start(string ipAddress, int port, string path);
+        void Stop();
         bool Ping();
         void Send(string msg);
     }

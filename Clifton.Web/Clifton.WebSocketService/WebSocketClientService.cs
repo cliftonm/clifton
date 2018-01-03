@@ -30,6 +30,11 @@ namespace Clifton.Core.Web.WebSocketService
             wsc.Connect();
 		}
 
+        public void Stop()
+        {
+            wsc.Close();
+        }
+
 		public bool Ping()
 		{
 			return wsc.Ping();
