@@ -632,6 +632,11 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static int to_i(this string src)
 		{
+            if (String.IsNullOrEmpty(src))
+            {
+                return 0;
+            }
+
 			return Convert.ToInt32(src);
 		}
 
