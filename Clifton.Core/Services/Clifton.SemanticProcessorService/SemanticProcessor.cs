@@ -1,4 +1,4 @@
-﻿// #define USE_THREAD_POOL
+﻿#define USE_THREAD_POOL
 
 /* The MIT License (MIT)
 * 
@@ -550,27 +550,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				}
 				else
 				{
-#if USE_THREAD_POOL
-                    // threadPool.MinBy(tp => tp.Count).Enqueue(new DynamicCall()
-                    nextThread = (++nextThread) % MAX_WORKER_THREADS;
-                    threadPool[nextThread].Enqueue(new DynamicCall()
-                    {
-                        SemanticInstance = obj,
-                        Receptor = target,
-                        Proc = () =>
-                        {
-                            Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
-                            target.Process(this, membrane, obj);
-                        },
-                        Timeout = msTimeout
-                    });
-#else
-                    Task.Run(()=>
-                    {
-                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
-                        target.Process(this, membrane, obj);
-                    });
-#endif
+                    QueueDynamicCall(obj, target, fromMembrane, fromReceptor, membrane, msTimeout, true);
                 }
 			}
 
@@ -599,19 +579,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     else
                     {
 #if USE_THREAD_POOL
-                        nextThread = (++nextThread) % MAX_WORKER_THREADS;
-                        threadPool[nextThread].Enqueue(new DynamicCall()
-                        {
-                            SemanticInstance = obj,
-                            Receptor = target,
-                            Proc = () =>
-                            {
-                                Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj));
-                                target.Process(this, membrane, obj);
-                            },
-                            AutoDispose = false,
-                            Timeout = msTimeout
-                        });
+                        QueueDynamicCall(obj, target, fromMembrane, fromReceptor, membrane, msTimeout, false);
 #else
                         Task.Run(() =>
                         {
@@ -697,17 +665,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				else
 				{
 #if USE_THREAD_POOL
-                    // Pick a thread that has the least work to do.
-                    nextThread = (++nextThread) % MAX_WORKER_THREADS;
-                    threadPool[nextThread].Enqueue(new MethodInvokeCall()
-                    // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
-                    {
-                        Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj)),
-                        Method = method,
-                        SemanticInstance = obj,
-                        Receptor = target,
-                        Parameters = new object[] { this, membrane, obj },
-                    });
+                    QueueInvokeCall(obj, method, target, fromMembrane, fromReceptor, membrane, 0, false);
 #else
                     Task.Run(() =>
                     {
@@ -739,17 +697,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                     else
                     {
 #if USE_THREAD_POOL
-                        nextThread = (++nextThread) % MAX_WORKER_THREADS;
-                        threadPool[nextThread].Enqueue(new MethodInvokeCall()
-                        // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
-                        {
-                            Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, receptor, obj)),
-                            Method = method,
-                            SemanticInstance = obj,
-                            Receptor = receptor,
-                            Parameters = new object[] { this, membrane, obj },
-                            AutoDispose = false
-                        });
+                        QueueInvokeCall(obj, method, receptor, fromMembrane, fromReceptor, membrane, 0, false);
 #else
                         Task.Run(() =>
                         {
@@ -1150,5 +1098,61 @@ namespace Clifton.Core.Services.SemanticProcessorService
 				ProcessInstance(Logger, obj);
 			}
 		}
-	}
+
+        protected void QueueDynamicCall<T>(T obj, dynamic target, IMembrane fromMembrane, IReceptor fromReceptor, IMembrane membrane, int msTimeout, bool autoDispose) where T : ISemanticType
+        {
+#if USE_THREAD_POOL
+            var call = new DynamicCall()
+            {
+                SemanticInstance = obj,
+                Receptor = target,
+                Proc = () =>
+                {
+                    Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                    target.Process(this, membrane, obj);
+                },
+                Timeout = msTimeout
+            };
+
+            lock (this)
+            {
+                nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                threadPool[nextThread].Enqueue(call);
+            }
+#else
+                    Task.Run(()=>
+                    {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                        target.Process(this, membrane, obj);
+                    });
+#endif
+        }
+
+        protected void QueueInvokeCall<T>(T obj, MethodInfo method, dynamic target, IMembrane fromMembrane, IReceptor fromReceptor, IMembrane membrane, int msTimeout, bool autoDispose) where T : ISemanticType
+        {
+#if USE_THREAD_POOL
+            var call = new MethodInvokeCall()
+            // threadPool.MinBy(tp => tp.Count).Enqueue(new MethodInvokeCall()
+            {
+                Action = () => Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj)),
+                Method = method,
+                SemanticInstance = obj,
+                Receptor = target,
+                Parameters = new object[] { this, membrane, obj },
+            };
+
+            lock (this)
+            {
+                nextThread = (++nextThread) % MAX_WORKER_THREADS;
+                threadPool[nextThread].Enqueue(call);
+            }
+#else
+                    Task.Run(()=>
+                    {
+                        Processing.Fire(this, new ProcessEventArgs(fromMembrane, fromReceptor, membrane, target, obj));
+                        target.Process(this, membrane, obj);
+                    });
+#endif
+        }
+    }
 }
