@@ -100,6 +100,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 	{
         public event EventHandler<ProcessEventArgs> Processing;
 
+        protected bool stopThreads;
         public bool ForceSingleThreaded { get; set; }
 		public IMembrane Surface { get; protected set; }
 		public IMembrane Logger { get; protected set; }
@@ -145,6 +146,11 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
 			InitializePoolThreads();
 		}
+
+        public void Stop()
+        {
+            stopThreads = true;
+        }
 
 		public IMembrane RegisterMembrane<M>()
 			where M : IMembrane, new()
@@ -887,7 +893,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			{
 				Thread thread = new Thread(new ParameterizedThreadStart(ProcessPoolItem));
 				thread.IsBackground = true;
-                threads.Add(thread);        // Place in list so garbage collector doesn't eventually attempt to collect a stack-created thread, as the list will have a reference to the thread.
+                // threads.Add(thread);        // Place in list so garbage collector doesn't eventually attempt to collect a stack-created thread, as the list will have a reference to the thread.
 				ThreadSemaphore<ProcessCall> ts = new ThreadSemaphore<ProcessCall>();
 				threadPool.Add(ts);
 				thread.Start(ts);
@@ -901,9 +907,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 		{
 			ThreadSemaphore<ProcessCall> ts = (ThreadSemaphore<ProcessCall>)state;
 
-			while (true)
+			while (!stopThreads)
 			{
-				ts.WaitOne();
+                ts.WaitOne(100);
 				ProcessCall rc;
 
 				if (ts.TryDequeue(out rc))
@@ -912,7 +918,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
 
                     // TODO: As absurd as this is, we're trying to isolate a problem where the 
                     // threads stop processing their work!
-                    Task.Run(() =>
+                    // Task.Run(() =>
                     {
                         try
                         {
@@ -931,7 +937,7 @@ namespace Clifton.Core.Services.SemanticProcessorService
                                 catch { }
                             }
                         }
-                    });
+                    }// );
 				}
 			}
 		}

@@ -47,9 +47,9 @@ namespace Clifton.Core.Services.SemanticProcessorService
 			sem.Release();
 		}
 
-		public void WaitOne()
+		public void WaitOne(int ms = -1)
 		{
-			sem.WaitOne();
+            sem.WaitOne(ms);
 		}
 
 		public bool TryDequeue(out T context)

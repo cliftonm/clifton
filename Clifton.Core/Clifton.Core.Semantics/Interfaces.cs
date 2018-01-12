@@ -65,6 +65,8 @@ namespace Clifton.Core.Semantics
         IMembrane Surface { get; }
         IMembrane Logger { get; }
 
+        void Stop();
+
         void Register<M, T>()
             where M : IMembrane, new()
             where T : IReceptor;
