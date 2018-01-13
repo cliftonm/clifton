@@ -169,21 +169,28 @@ namespace Clifton.WebServerService
 
 			while (true)
 			{
-				// Wait for a connection.  Return to caller while we wait.
-				HttpListenerContext context = listener.GetContext();
-				IContext contextWrapper = new HttpListenerContextWrapper(context);
+                try
+                {
+                    // Wait for a connection.  Return to caller while we wait.
+                    HttpListenerContext context = listener.GetContext();
+                    IContext contextWrapper = new HttpListenerContextWrapper(context);
 
-                if (OnBlackList(contextWrapper))
-                {
-                    // Close immediately if on black list.
-                    UpdateBlackListHitAndCount(contextWrapper);
-                    contextWrapper.Response.Close();
+                    if (OnBlackList(contextWrapper))
+                    {
+                        // Close immediately if on black list.
+                        UpdateBlackListHitAndCount(contextWrapper);
+                        contextWrapper.Response.Close();
+                    }
+                    else
+                    {
+                        ProcessRequest(contextWrapper);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    ProcessRequest(contextWrapper);
+                    logger.Log(LogMessage.Create("CONTEXT PROCESSING ERROR:" + ex.Message+"\r\n"+ex.StackTrace));
                 }
-			}
+            }
 		}
 
         public virtual void ProcessRequest(HttpContext context)

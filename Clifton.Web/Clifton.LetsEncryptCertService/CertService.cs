@@ -37,6 +37,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
 using Clifton.Core.ModuleManagement;
 using Clifton.Core.ServiceInterfaces;
@@ -67,7 +68,14 @@ namespace Clifton.LetsEncryptCertService
         protected string certPassword;
         protected StringBuilder log;
         protected AcmeChallengeServer server;
+        protected ILoggerService logger;
         protected CertRegistrationMethod registrationMethod;
+
+        public override void FinishedInitialization()
+        {
+            logger = ServiceManager.Get<ILoggerService>();
+            base.FinishedInitialization();
+        }
 
         public void StartCertificateMonitor(CertRegistrationMethod registrationMethod)
         {
@@ -78,8 +86,15 @@ namespace Clifton.LetsEncryptCertService
 
             Task.Run(() =>
             {
-                CheckCertificate();
-                Thread.Sleep(ONE_MINUTE);
+                try
+                {
+                    CheckCertificate();
+                    Thread.Sleep(ONE_MINUTE);
+                }
+                catch (Exception ex)
+                {
+                    logger.Log(LogMessage.Create("CERTIFICATE PROCESSING ERROR:" + ex.Message + "\r\n" + ex.StackTrace));
+                }
             });
         }
 
