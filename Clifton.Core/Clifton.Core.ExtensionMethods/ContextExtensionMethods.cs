@@ -21,6 +21,9 @@
 * SOFTWARE.
 */
 
+// While posted in 2/5/08, this is still a great read:
+// https://weblog.west-wind.com/posts/2008/Feb/05/Linq-to-SQL-DataContext-Lifetime-Management
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -123,7 +126,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
         */
 
-		public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+        public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
