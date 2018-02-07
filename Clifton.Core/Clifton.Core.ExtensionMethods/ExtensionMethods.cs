@@ -1495,5 +1495,23 @@ namespace Clifton.Core.ExtensionMethods
 
             return ret;
         }
+
+        // From: https://stackoverflow.com/questions/1779129/how-to-take-all-but-the-last-element-in-a-sequence-using-linq
+        public static IEnumerable<T> SkipLastN<T>(this IEnumerable<T> source, int n)
+        {
+            var it = source.GetEnumerator();
+            bool hasRemainingItems = false;
+            var cache = new Queue<T>(n + 1);
+
+            do
+            {
+                if (hasRemainingItems = it.MoveNext())
+                {
+                    cache.Enqueue(it.Current);
+                    if (cache.Count > n)
+                        yield return cache.Dequeue();
+                }
+            } while (hasRemainingItems);
+        }
     }
 }
