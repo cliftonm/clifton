@@ -49,7 +49,18 @@ namespace Clifton.Core.Assertions
 			}
 		}
 
-		public static void Try(Action a, Action<Exception> onErr = null)
+        [Conditional("DEBUG")]
+        public static void That<T>(bool b, string msg) where T : Exception, new()
+        {
+            if (!b)
+            {
+                Exception ex = (Exception)Activator.CreateInstance(typeof(T), new object[] { msg });
+                throw ex;
+            }
+        }
+
+
+        public static void Try(Action a, Action<Exception> onErr = null)
 		{
 			try 
 			{ 
