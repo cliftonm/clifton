@@ -115,7 +115,14 @@ namespace Clifton.WebInterfaces
 		public string Json { get; set; }
 	}
 
-	public class ImageResponse : ISemanticType
+    public class BinaryResponse : ISemanticType
+    {
+        public IContext Context { get; set; }
+        public string ContentType { get; set; }
+        public byte[] BinaryData { get; set; }
+    }
+
+    public class ImageResponse : ISemanticType
 	{
 		public IContext Context { get; set; }
 		public string ContentType { get; set; }

@@ -202,11 +202,18 @@ namespace Clifton.WebServerService
         protected bool OnBlackList(IContext contextWrapper)
         {
             string ip = contextWrapper.EndpointAddress().ToString();
+            bool ret = false;
 
-            lock (blackList)
+            // Never blacklist localhost.
+            if (ip != "127.0.0.1")
             {
-                return blackList.Any(bl => bl.IP == ip);
+                lock (blackList)
+                {
+                    ret = blackList.Any(bl => bl.IP == ip);
+                }
             }
+
+            return ret;
         }
 
         protected bool OnWhiteList(IContext contextWrapper)

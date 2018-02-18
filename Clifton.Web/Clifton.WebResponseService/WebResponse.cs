@@ -54,32 +54,45 @@ namespace Clifton.WebResponseService
 		{
 			// proc.ServiceManager.Get<ILoggerService>().Log(LogMessage.Create(resp.Exception.Message));
 			proc.ServiceManager.Get<ISemanticProcessor>().ProcessInstance<LoggerMembrane, ST_Exception>(ex => ex.Exception = resp.Exception);
-			resp.Context.Response.Write(resp.Exception.Message, "text/text", 500);
+            resp.Context.Response.ContentLength64 = resp.Exception.Message.Length;
+            resp.Context.Response.Write(resp.Exception.Message, "text/text", 500);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, StringResponse resp)
 		{
-			resp.Context.Response.Write(resp.Message, "text/text", resp.StatusCode);
+            resp.Context.Response.ContentLength64 = resp.Message.Length;
+            resp.Context.Response.Write(resp.Message, "text/text", resp.StatusCode);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, JsonResponse resp)
 		{
-			resp.Context.Response.Write(resp.Json, "text/json", resp.StatusCode);
+            resp.Context.Response.ContentLength64 = resp.Json.Length;
+            resp.Context.Response.Write(resp.Json, "text/json", resp.StatusCode);
 		}
 
-		public void Process(ISemanticProcessor proc, IMembrane membrane, ImageResponse resp)
+        public void Process(ISemanticProcessor proc, IMembrane membrane, BinaryResponse resp)
+        {
+            resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
+            resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
+        }
+
+        public void Process(ISemanticProcessor proc, IMembrane membrane, ImageResponse resp)
 		{
-			resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
+            resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
+            resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, FontResponse resp)
 		{
-			resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
+            resp.Context.Response.ContentLength64 = resp.BinaryData.Length;
+            resp.Context.Response.Write(resp.BinaryData, resp.ContentType);
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, DataResponse resp)
 		{
-			resp.Context.Response.Write(resp.Data.ToBase64(), "text/text", resp.StatusCode);
+            string data64 = resp.Data.ToBase64();
+            resp.Context.Response.ContentLength64 = data64.Length;
+			resp.Context.Response.Write(data64, "text/text", resp.StatusCode);
 		}
 
 		/// <summary>
@@ -89,17 +102,20 @@ namespace Clifton.WebResponseService
 		public void Process(ISemanticProcessor proc, IMembrane membrane, HtmlResponse resp)
 		{
 			proc.ServiceManager.IfExists<IWebWorkflowService>(wws => wws.PostRouter(resp.Context, resp));
-			resp.Context.Response.Write(resp.Html, "text/html");
+            // resp.Context.Response.ContentLength64 = resp.Html.Length;
+            resp.Context.Response.Write(resp.Html, "text/html");
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, JavascriptResponse resp)
 		{
-			resp.Context.Response.Write(resp.Script, "text/javascript");
+            // resp.Context.Response.ContentLength64 = resp.Script.Length;
+            resp.Context.Response.Write(resp.Script, "text/javascript");
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, CssResponse resp)
 		{
-			resp.Context.Response.Write(resp.Script, "text/css");
+            // resp.Context.Response.ContentLength64 = resp.Script.Length;
+            resp.Context.Response.Write(resp.Script, "text/css");
 		}
 	}
 }

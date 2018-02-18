@@ -477,7 +477,27 @@ namespace Clifton.Core.ExtensionMethods
 			return (int)data.Id;
 		}
 
-		public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
+        public static void DeleteAll<T>(this DataContext context) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
+
+            try
+            {
+                // T cloned = CloneEntity(data);		    		    // Disconnect from any other context.
+                var records = newContext.GetTable<T>();                 // Get IEnumerable for delete.
+                newContext.GetTable<T>().DeleteAllOnSubmit(records);    // We know it's only one record.
+                newContext.SubmitChanges();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+        }
+
+        public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
