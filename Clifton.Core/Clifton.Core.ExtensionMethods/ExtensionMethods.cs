@@ -1513,5 +1513,34 @@ namespace Clifton.Core.ExtensionMethods
                 }
             } while (hasRemainingItems);
         }
+
+        public static bool TryGetSingle<T>(this IEnumerable<T> source, Func<T, bool> qualifier, out T result)
+        {
+            result = source.SingleOrDefault(qualifier);
+
+            return result != null;
+        }
+
+        /// <summary>
+        /// Returns the index for the qualified item or -1.
+        /// </summary>
+        public static int IndexOf<T>(this IEnumerable<T> source, Func<T, bool> qualifer)
+        {
+            bool found = false;
+            int idx = -1;
+
+            foreach (var t in source)
+            {
+                ++idx;
+
+                if (qualifer(t))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            return found ? idx : -1;
+        }
     }
 }
