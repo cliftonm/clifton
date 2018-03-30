@@ -147,17 +147,20 @@ namespace Clifton.WebInterfaces
 	{
 		public IContext Context { get; set; }
 		public string Html { get; set; }
+        public bool GZip { get; set; }
 	}
 
 	public class JavascriptResponse : ISemanticType
 	{
 		public IContext Context { get; set; }
 		public string Script { get; set; }
-	}
+        public bool GZip { get; set; }
+    }
 
-	public class CssResponse : ISemanticType
+    public class CssResponse : ISemanticType
 	{
 		public IContext Context { get; set; }
 		public string Script { get; set; }
-	}
+        public bool GZip { get; set; }
+    }
 }

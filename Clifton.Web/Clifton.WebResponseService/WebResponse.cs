@@ -103,19 +103,41 @@ namespace Clifton.WebResponseService
 		{
 			proc.ServiceManager.IfExists<IWebWorkflowService>(wws => wws.PostRouter(resp.Context, resp));
             // resp.Context.Response.ContentLength64 = resp.Html.Length;
-            resp.Context.Response.Write(resp.Html, "text/html");
+
+            if (resp.Context.Request.AcceptEncoding)
+            {
+                resp.Context.Response.WriteCompressed(resp.Html, "text/html");
+            }
+            else
+            {
+                resp.Context.Response.Write(resp.Html, "text/html");
+            }
 		}
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, JavascriptResponse resp)
 		{
             // resp.Context.Response.ContentLength64 = resp.Script.Length;
-            resp.Context.Response.Write(resp.Script, "text/javascript");
-		}
+            if (resp.Context.Request.AcceptEncoding)
+            {
+                resp.Context.Response.WriteCompressed(resp.Script, "text/javascript");
+            }
+            else
+            {
+                resp.Context.Response.Write(resp.Script, "text/javascript");
+            }
+        }
 
 		public void Process(ISemanticProcessor proc, IMembrane membrane, CssResponse resp)
 		{
             // resp.Context.Response.ContentLength64 = resp.Script.Length;
-            resp.Context.Response.Write(resp.Script, "text/css");
+            if (resp.Context.Request.AcceptEncoding)
+            {
+                resp.Context.Response.WriteCompressed(resp.Script, "text/css");
+            }
+            else
+            {
+                resp.Context.Response.Write(resp.Script, "text/css");
+            }
 		}
 	}
 }

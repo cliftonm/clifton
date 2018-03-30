@@ -28,6 +28,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -1541,6 +1542,19 @@ namespace Clifton.Core.ExtensionMethods
             }
 
             return found ? idx : -1;
+        }
+
+        public static byte[] GZip(this string source)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(source);
+            var memoryStream = new MemoryStream();
+
+            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+            {
+                gZipStream.Write(buffer, 0, buffer.Length);
+            }
+
+            return memoryStream.ToArray();
         }
     }
 }

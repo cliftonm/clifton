@@ -40,6 +40,7 @@ namespace Clifton.WebInterfaces
 		public Uri Url { get { return request.Url; } }
 		public Stream InputStream { get { return request.InputStream; } }
 		public Encoding ContentEncoding { get { return request.ContentEncoding; } }
+        public bool AcceptEncoding { get { return request.Headers["Accept-Encoding"] != null; } }
 		public IPEndPoint RemoteEndPoint { get
 			{
 				string ip = request.UserHostAddress;
@@ -96,7 +97,17 @@ namespace Clifton.WebInterfaces
 			Close();
 		}
 
-		public void Write(byte[] data, string contentType = "text/text", int statusCode = 200)
+        public void WriteCompressed(string data, string contentType = "text/text", int statusCode = 200)
+        {
+            StatusCode = statusCode;
+            ContentType = contentType;
+            response.AddHeader("Content-Encoding", "gzip");
+            byte[] byteData = data.GZip();
+            response.OutputStream.Write(byteData, 0, byteData.Length);
+            Close();
+        }
+
+        public void Write(byte[] data, string contentType = "text/text", int statusCode = 200)
 		{
 			StatusCode = statusCode;
 			ContentType = contentType;

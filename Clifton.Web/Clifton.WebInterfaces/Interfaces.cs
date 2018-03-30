@@ -57,6 +57,7 @@ namespace Clifton.WebInterfaces
         Stream InputStream { get; }
         Encoding ContentEncoding { get; }
         IPEndPoint RemoteEndPoint { get; }
+        bool AcceptEncoding { get; }
     }
 
     public interface IResponse
@@ -69,6 +70,7 @@ namespace Clifton.WebInterfaces
 
         void Close();
         void Write(string data, string contentType = "text/text", int statusCode = 200);
+        void WriteCompressed(string data, string contentType = "text/text", int statusCode = 200);
         void Write(byte[] data, string contentType = "text/text", int statusCode = 200);
     }
 
