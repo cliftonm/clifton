@@ -269,6 +269,24 @@ namespace Clifton.Core.ExtensionMethods
             }
         }
 
+        /*
+        public static bool Contains<T>(this IEnumerable<T> collection, T matchWith)
+        {
+            bool ret = false;
+
+            foreach (T item in collection)
+            {
+                if (item.Equals(matchWith))
+                {
+                    ret = true;
+                    break;
+                }
+            }
+
+            return ret;
+        }
+        */
+
         public static IEnumerable<int> Range(this int n)
         {
             return Enumerable.Range(0, n);
@@ -1555,6 +1573,31 @@ namespace Clifton.Core.ExtensionMethods
             }
 
             return memoryStream.ToArray();
+        }
+
+        public static string TakeOnly(this string src, int n)
+        {
+            string ret = String.Empty;
+
+            if (n < 0)
+            {
+                // Remember, n is negtive.
+                if (src.Length + n >= 0)
+                {
+                    ret = src.Substring(0, src.Length + n);
+                }
+            }
+            else
+            {
+                ret = src.Substring(0, n);
+            }
+
+            return ret;
+        }
+
+        public static int Abs(this int n)
+        {
+            return Math.Abs(n);
         }
     }
 }

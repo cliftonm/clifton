@@ -128,9 +128,10 @@ namespace Clifton.Core.ExtensionMethods
 
         public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			List<T> data = null;
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
+            List<T> data = null;
 
 			try
 			{
@@ -154,9 +155,10 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static T Single<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			List<T> data = null;
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
+            List<T> data = null;
 			T ret = null;
 
 			try
@@ -192,8 +194,9 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static T SingleOrDefault<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+			SqlConnection connection;
+			DataContext newContext;
+            Setup(context, out connection, out newContext);
 			List<T> data = null;
 			T ret = null;
 
@@ -228,9 +231,10 @@ namespace Clifton.Core.ExtensionMethods
 
 		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
 		{
-			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-			DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			int count = 0;
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
+            int count = 0;
 
 			try
 			{
@@ -254,8 +258,9 @@ namespace Clifton.Core.ExtensionMethods
 
         public static bool Exists<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
         {
-            SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
-            DataContext newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
             int count = 0;
 
             try
