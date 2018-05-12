@@ -28,6 +28,7 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using Clifton.Core.Assertions;
@@ -155,7 +156,7 @@ namespace Clifton.Core.ModelTableManagement
 		/// <summary>
 		/// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
 		/// </summary>
-		public List<IEntity> LoadRecords<T>(DataView dv, Func<T, bool> whereClause = null) where T : MappedRecord, IEntity
+		public List<IEntity> LoadRecords<T>(DataView dv, Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
 		{
 			Clear<T>();
 			Type recType = typeof(T);

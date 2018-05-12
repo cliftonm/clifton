@@ -126,7 +126,7 @@ namespace Clifton.Core.ExtensionMethods
 		}
         */
 
-        public static List<T> Query<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+        public static List<T> Query<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;
@@ -153,7 +153,7 @@ namespace Clifton.Core.ExtensionMethods
 			return data;
 		}
 
-		public static T Single<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static T Single<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;
@@ -192,7 +192,7 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
-		public static T SingleOrDefault<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static T SingleOrDefault<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
@@ -229,7 +229,7 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
-		public static int Count<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static int Count<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;
@@ -256,7 +256,7 @@ namespace Clifton.Core.ExtensionMethods
 			return count;
 		}
 
-        public static bool Exists<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+        public static bool Exists<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
         {
             SqlConnection connection;
             DataContext newContext;
@@ -318,12 +318,12 @@ namespace Clifton.Core.ExtensionMethods
 			return property;
 		}
 
-		public static List<T> QueryOfConreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static List<T> QueryOfConreteType<T>(this DataContext context, IEntity entity, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			return context.QueryOfConreteType(entity.GetType().Name, whereClause);
 		}
 
-		public static List<T> QueryOfConreteType<T>(this DataContext context, string tableName, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static List<T> QueryOfConreteType<T>(this DataContext context, string tableName, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
@@ -358,7 +358,7 @@ namespace Clifton.Core.ExtensionMethods
 			return data;
 		}
 
-		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Func<T, bool> whereClause = null) where T : class, IEntity
+		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
@@ -525,7 +525,7 @@ namespace Clifton.Core.ExtensionMethods
 		/// <summary>
 		/// Must provide a where clause when deleting.
 		/// </summary>
-		public static void Delete<T>(this DataContext context, Func<T, bool> whereClause) where T : class, IEntity
+		public static void Delete<T>(this DataContext context, Expression<Func<T, bool>> whereClause) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
@@ -612,7 +612,7 @@ namespace Clifton.Core.ExtensionMethods
 			}
 		}
 
-		private static List<T> QueryWithContext<T>(DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+		private static List<T> QueryWithContext<T>(DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			List<T> data = null;
