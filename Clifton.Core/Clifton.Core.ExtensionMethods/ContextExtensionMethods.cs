@@ -229,7 +229,46 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
-		public static int Count<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        // Version without expression, so the where clause is not passed on to SQL Server.
+        // Use this when the expression cannot be translated to a SQL Server expression.
+        public static T SingleOrDefault2<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            Setup(context, out connection, out newContext);
+            List<T> data = null;
+            T ret = null;
+
+            try
+            {
+                if (whereClause == null)
+                {
+                    data = newContext.GetTable<T>().ToList();
+                }
+                else
+                {
+                    data = newContext.GetTable<T>().Where(whereClause).ToList();
+                }
+
+                if (data.Count == 1)
+                {
+                    ret = data[0];
+                }
+                else if (data.Count > 0)
+                {
+                    throw new ApplicationException("More than one row was returned querying SingleOrDefault for " + typeof(T).Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+
+            return ret;
+        }
+
+        public static int Count<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;

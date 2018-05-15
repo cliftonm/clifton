@@ -23,6 +23,7 @@
 
 using System;
 using System.Data.Linq;
+using System.Linq.Expressions;
 
 using Clifton.Core.ModelTableManagement;
 using Clifton.Core.Semantics;
@@ -40,9 +41,9 @@ namespace Clifton.Core.ServiceInterfaces
 		/// </summary>
 		// bool CreateDatabaseAndTablesIfNotExists();
 
-		bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity;
-		bool RecordExists<T>(Func<T, bool> whereClause, out int id) where T : class, IEntity;
-		bool RecordOfTypeExists<T>(IEntity entity, Func<T, bool> whereClause, out int id) where T : class, IEntity;
+		bool RecordExists<T>(Expression<Func<T, bool>> whereClause) where T : class, IEntity;
+		bool RecordExists<T>(Expression<Func<T, bool>> whereClause, out int id) where T : class, IEntity;
+		bool RecordOfTypeExists<T>(IEntity entity, Expression<Func<T, bool>> whereClause, out int id) where T : class, IEntity;
 		DataContext Context { get; }
 	}
 

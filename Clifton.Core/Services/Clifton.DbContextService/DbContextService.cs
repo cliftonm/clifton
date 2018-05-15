@@ -88,12 +88,12 @@ namespace Clifton.DbContextService
 			return false;
 		}
 */
-		public bool RecordExists<T>(Func<T, bool> whereClause) where T : class, IEntity
+		public bool RecordExists<T>(Expression<Func<T, bool>> whereClause) where T : class, IEntity
 		{
 			return context.Count<T>(whereClause) != 0;
 		}
 
-		public bool RecordExists<T>(Func<T, bool> whereClause, out int id) where T : class, IEntity
+		public bool RecordExists<T>(Expression<Func<T, bool>> whereClause, out int id) where T : class, IEntity
 		{
 			id = -1;
 			var records = context.Query<T>(whereClause);
@@ -108,7 +108,7 @@ namespace Clifton.DbContextService
 			return exists;
 		}
 
-		public bool RecordOfTypeExists<T>(IEntity entity, Func<T, bool> whereClause, out int id) where T : class, IEntity
+		public bool RecordOfTypeExists<T>(IEntity entity, Expression<Func<T, bool>> whereClause, out int id) where T : class, IEntity
 		{
 			id = -1;
 			var records = context.QueryOfConreteType<T>(entity, whereClause);
