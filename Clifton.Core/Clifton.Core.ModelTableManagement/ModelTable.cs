@@ -38,7 +38,12 @@ namespace Clifton.Core.ModelTableManagement
 		public IEntity Entity { get; set; }
 	}
 
-	public interface IModelTable
+    public class RowAddingEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+    }
+
+    public interface IModelTable
 	{
 		void BeginProgrammaticUpdate();
 		void EndProgrammaticUpdate();
@@ -53,7 +58,8 @@ namespace Clifton.Core.ModelTableManagement
 
         public const string PK_FIELD = "Id";
 		public event EventHandler<RowDeletedEventArgs> RowDeleted;
-		protected DataTable dt;
+        public event EventHandler<RowAddingEventArgs> RowAdding;
+        protected DataTable dt;
 		protected T newInstance;
 		protected List<IEntity> items;
 		protected ModelMgr modelMgr;
@@ -126,7 +132,8 @@ namespace Clifton.Core.ModelTableManagement
 				switch (e.Action)
 				{
 					case DataRowAction.Add:
-						items.Add(newInstance);
+                        RowAdding.Fire(this, new RowAddingEventArgs() { Entity = newInstance });
+                        items.Add(newInstance);
 						Insert(newInstance);
 
 						// After an insert, we need to set the the ID in the DataView, otherwise combobox controls in the grid whose
