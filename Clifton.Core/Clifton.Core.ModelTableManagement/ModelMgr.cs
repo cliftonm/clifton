@@ -449,11 +449,20 @@ namespace Clifton.Core.ModelTableManagement
 			return record;
 		}
 
-		/// <summary>
-		/// Read only columns have to be set back to read-writeable in order to update them.
-		/// Ironically, this is not the case when adding a row to the grid's view's table.
-		/// </summary>
-		public void UpdateTableRowField(DataRow row, string fieldName, object val)
+        public bool TryGetRow<T>(DataRow row, out T record) where T : MappedRecord
+        {
+            Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
+
+            record = mappedRecords[typeof(T)].Cast<T>().Where(r => r.Row == row).SingleOrDefault();
+
+            return record != null;
+        }
+
+        /// <summary>
+        /// Read only columns have to be set back to read-writeable in order to update them.
+        /// Ironically, this is not the case when adding a row to the grid's view's table.
+        /// </summary>
+        public void UpdateTableRowField(DataRow row, string fieldName, object val)
 		{
 			if (row != null)
 			{
