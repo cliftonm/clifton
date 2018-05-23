@@ -1599,5 +1599,45 @@ namespace Clifton.Core.ExtensionMethods
         {
             return Math.Abs(n);
         }
+
+        /// <summary>
+        /// Splits a string into substrings of the specified lengths with the last entry in the array
+        /// getting the remainder.  If the string is shorter, the array will be padded with empty strings.
+        /// </summary>
+        public static string[] SplitInto(this string src, params int[] lengths)
+        {
+            string[] ret = new string[lengths.Length + 1];      // +1 for remainder.
+            int pos = 0;
+
+            (lengths.Length + 1).ForEach(n =>
+            {
+                if (n >= lengths.Length)
+                {
+                    ret[n] = String.Empty;
+                }
+                else
+                {
+                    int len = lengths[n];
+
+                    if (src.Length >= pos + len)
+                    {
+                        ret[n] = src.Substring(pos, len);
+                    }
+                    else if (src.Length > pos)
+                    {
+                        ret[n] = src.Substring(pos);
+                    }
+                    else
+                    {
+                        ret[n] = String.Empty;
+                    }
+
+                    pos += len;
+                }
+            });
+            
+
+            return ret;
+        }
     }
 }
