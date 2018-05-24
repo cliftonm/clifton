@@ -1575,6 +1575,10 @@ namespace Clifton.Core.ExtensionMethods
             return memoryStream.ToArray();
         }
 
+        /// <summary>
+        /// Take only n chars from 0 to n.
+        /// If n is negative, take only n to length of src chars.
+        /// </summary>
         public static string TakeOnly(this string src, int n)
         {
             string ret = String.Empty;
@@ -1638,6 +1642,11 @@ namespace Clifton.Core.ExtensionMethods
             
 
             return ret;
+        }
+
+        public static string AsString(this IEnumerable<char> chars)
+        {
+            return new string(chars.ToArray());
         }
     }
 }
