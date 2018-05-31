@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -160,15 +161,7 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Clear<T>();
 			Type recType = typeof(T);
-
-			if (whereClause == null)
-			{
-				context.GetTable<T>().ForEach(m => AppendRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
-			}
-			else
-			{
-				context.GetTable<T>().Where(whereClause).ForEach(m => AppendRow(dv, (T)m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
-			}
+			context.Query(whereClause).ForEach(m => AppendRow(dv, m));
 
 			return mappedRecords[recType];
 		}
@@ -176,15 +169,32 @@ namespace Clifton.Core.ModelTableManagement
         public List<IEntity> LoadRecords(Type recType, DataView dv)
 		{
 			Clear(recType);
-			context.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+            // We create a new context because the existing context caches the previously queried model.
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+			newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+            newContext.Dispose();
 
 			return mappedRecords[recType];
 		}
 
-		/// <summary>
-		/// Adds all the records for the model type into the DataView and our underlying EXISTING model collection for that model type.
-		/// </summary>
-		public void AddRecords<T>(DataView dv) where T : MappedRecord, IEntity
+        /// <summary>
+        /// Reloads records into the existing table.
+        /// </summary>
+        public List<IEntity> ReloadRecords<T>(DataView dv, Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
+        {
+            ClearView<T>();
+            Type recType = typeof(T);
+            context.Query(whereClause).ForEach(m => AppendRow(dv, m));
+
+            return mappedRecords[recType];
+        }
+
+        /// <summary>
+        /// Adds all the records for the model type into the DataView and our underlying EXISTING model collection for that model type.
+        /// </summary>
+        public void AddRecords<T>(DataView dv) where T : MappedRecord, IEntity
 		{
 			Assert.That(mappedRecords.ContainsKey(typeof(T)), "Model Manager does not know about " + typeof(T).Name + ".\r\nCreate an instance of ModuleMgr with this record collection.");
 
@@ -279,6 +289,19 @@ namespace Clifton.Core.ModelTableManagement
 
 			return dv;
 		}
+
+        public void ClearView<T>() where T : MappedRecord, IEntity
+        {
+            ClearView(typeof(T));
+        }
+
+        public void ClearView(Type t)
+        {
+            modelTables[t].ForEach(mt => mt.BeginProgrammaticUpdate());
+            modelViewMap[t].Table.Rows.Clear();
+            mappedRecords[t].Clear();
+            modelTables[t].ForEach(mt => mt.EndProgrammaticUpdate());
+        }
 
         /// <summary>
         /// Appends a DataRow from the fields in the model and adds the row to the underlying model collection.

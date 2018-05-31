@@ -126,29 +126,84 @@ namespace Clifton.Core.ExtensionMethods
 		}
         */
 
+        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        We create a new context from an EXISTING, NON-DISPOSED context.  If we don't create a new context,
+        calls to GetTable<T> return the previously loaded data rather than actually hitting the DB for new data.
+
+        FURTHERMORE, when EntityRef or EntitySet is used, we can't dispose of the context anyways!!!
+
+            The model that derives from DataContext should be implemented as:
+
+	            public class ModelDataContext : DataContext
+	            {
+                    public static ModelDataContext Context { get { return context; } }
+
+                    public static ModelDataContext Factory(DbConnection conn)
+                    {
+                        ModelDataContext ret;
+
+                        if (Context == null)
+                        {
+                            ret = new ModelDataContext(conn);
+                        }
+                        else
+                        {
+                            ret = context;
+                        }
+
+                        return ret;
+                    }
+
+                    private static ModelDataContext context;
+                    private ModelDataContext() : base(Context.Connection) { }
+
+		            private ModelDataContext(DbConnection conn) : base(conn)
+		            {
+			            context = this;
+		            }
+
+                    public Table<ATable> ATables => GetTable<ATable>();
+                    ... etc ...
+
+           !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+
+        public static void CreateNewContext(DataContext context, out SqlConnection connection, out DataContext newContext)
+        {
+            connection = new SqlConnection(context.Connection.ConnectionString);
+            Type t = context.GetType();
+            ConstructorInfo ci = t.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { }, null);
+            newContext = (DataContext)ci.Invoke(new object[] { });
+            newContext.Log = new SqlLogWriter(SqlLogger);
+        }
+
         public static List<T> Query<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
             List<T> data = null;
 
-			try
-			{
-				if (whereClause == null)
-				{
-					data = newContext.GetTable<T>().ToList();
-				}
-				else
-				{
-					data = newContext.GetTable<T>().Where(whereClause).ToList();
-				}
-			}
-			catch (Exception ex)
-			{
-				LogException(ex);
-				throw;
-			}
+            try
+            {
+                if (whereClause == null)
+                {
+                    data = newContext.GetTable<T>().ToList();
+                }
+                else
+                {
+                    data = newContext.GetTable<T>().Where(whereClause).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
 			return data;
 		}
@@ -157,7 +212,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
             List<T> data = null;
 			T ret = null;
 
@@ -188,15 +243,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return ret;
+            return ret;
 		}
 
 		public static T SingleOrDefault<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
 			List<T> data = null;
 			T ret = null;
 
@@ -225,8 +284,12 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return ret;
+            return ret;
 		}
 
         // Version without expression, so the where clause is not passed on to SQL Server.
@@ -235,7 +298,7 @@ namespace Clifton.Core.ExtensionMethods
         {
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
             List<T> data = null;
             T ret = null;
 
@@ -264,6 +327,10 @@ namespace Clifton.Core.ExtensionMethods
                 LogException(ex);
                 throw;
             }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
             return ret;
         }
@@ -272,7 +339,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
             int count = 0;
 
 			try
@@ -291,15 +358,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return count;
+            return count;
 		}
 
         public static bool Exists<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
         {
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
             int count = 0;
 
             try
@@ -318,6 +389,10 @@ namespace Clifton.Core.ExtensionMethods
                 LogException(ex);
                 throw;
             }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
             return count > 0;
         }
@@ -366,7 +441,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 	
 			// TODO: What is this? newContext.Mapping;
 			List<T> data = new List<T>();
@@ -393,15 +468,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return data;
+            return data;
 		}
 
 		public static int CountOfConcreteType<T>(this DataContext context, IEntity entity, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 			// TODO: What is this? newContext.Mapping;
 			int count = 0;
 
@@ -426,8 +505,12 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return count;
+            return count;
 		}
 
 		/// <summary>
@@ -438,7 +521,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -453,8 +536,12 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return (int)data.Id;
+            return (int)data.Id;
 		}
 
 		private static void SetCreatedOnFieldValue<T>(DataContext context, T data, string tableName) where T : class, IEntity
@@ -500,7 +587,7 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -517,15 +604,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
 
-			return (int)data.Id;
+            return (int)data.Id;
 		}
 
         public static void DeleteAll<T>(this DataContext context) where T : class, IEntity
         {
             SqlConnection connection;
             DataContext newContext;
-            Setup(context, out connection, out newContext);
+            CreateNewContext(context, out connection, out newContext);
 
             try
             {
@@ -539,13 +630,17 @@ namespace Clifton.Core.ExtensionMethods
                 LogException(ex);
                 throw;
             }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
         }
 
         public static void Delete<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -559,16 +654,20 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
-		}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
 
-		/// <summary>
-		/// Must provide a where clause when deleting.
-		/// </summary>
-		public static void Delete<T>(this DataContext context, Expression<Func<T, bool>> whereClause) where T : class, IEntity
+        /// <summary>
+        /// Must provide a where clause when deleting.
+        /// </summary>
+        public static void Delete<T>(this DataContext context, Expression<Func<T, bool>> whereClause) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -581,13 +680,17 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
-		}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
 
-		public static void DeleteOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
+        public static void DeleteOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -603,15 +706,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
-		}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
 
-		public static void Update<T>(this DataContext context, T data) where T : class, IEntity
+        public static void Update<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
 			// so that the update then updates only the fields changed.
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -625,15 +732,19 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
-		}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
 
-		public static void UpdateOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
+        public static void UpdateOfConcreteType<T>(this DataContext context, T data) where T : class, IEntity
 		{
 			// We have to query the record, because contexts are transactional, then copy in the changes, which marks fields in this context as changed,
 			// so that the update then updates only the fields changed.
 			SqlConnection connection;
 			DataContext newContext;
-			Setup(context, out connection, out newContext);
+			CreateNewContext(context, out connection, out newContext);
 
 			try
 			{
@@ -649,9 +760,13 @@ namespace Clifton.Core.ExtensionMethods
 				LogException(ex);
 				throw;
 			}
-		}
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
 
-		private static List<T> QueryWithContext<T>(DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        private static List<T> QueryWithContext<T>(DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
 			SqlConnection connection = new SqlConnection(context.Connection.ConnectionString);
 			List<T> data = null;
@@ -759,13 +874,6 @@ namespace Clifton.Core.ExtensionMethods
 		private static void LogException(Exception ex)
 		{
 			ExceptionHandler.IfNotNull(e => e(ex));
-		}
-
-		private static void Setup(DataContext context, out SqlConnection connection, out DataContext newContext)
-		{
-			connection = new SqlConnection(context.Connection.ConnectionString);
-			newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
-			newContext.Log = new SqlLogWriter(SqlLogger);
 		}
 	}
 }
