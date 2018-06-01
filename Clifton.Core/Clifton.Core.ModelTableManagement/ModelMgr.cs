@@ -174,7 +174,7 @@ namespace Clifton.Core.ModelTableManagement
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
 			newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
-            newContext.Dispose();
+            // newContext.Dispose();
 
 			return mappedRecords[recType];
 		}

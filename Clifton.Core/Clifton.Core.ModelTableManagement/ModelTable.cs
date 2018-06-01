@@ -36,6 +36,12 @@ namespace Clifton.Core.ModelTableManagement
 	public class RowDeletedEventArgs : EventArgs
 	{
 		public IEntity Entity { get; set; }
+
+        /// <summary>
+        /// Set to true if the RowDeleted event handler handles "deleting" the row.
+        /// If true, the row is not actually deleted from the DB.
+        /// </summary>
+        public bool Handled { get; set; }
 	}
 
     public class RowAddingEventArgs : EventArgs
@@ -181,9 +187,14 @@ namespace Clifton.Core.ModelTableManagement
 
                 if (item != null)
                 {
-                    items.Remove(item);
-                    Delete(item);
-                    RowDeleted.Fire(this, new RowDeletedEventArgs() { Entity = item });
+                    RowDeletedEventArgs args = new RowDeletedEventArgs() { Entity = item };
+                    RowDeleted.Fire(this, args);
+
+                    if (!args.Handled)
+                    {
+                        items.Remove(item);
+                        Delete(item);
+                    }
                 }
             }
         }
