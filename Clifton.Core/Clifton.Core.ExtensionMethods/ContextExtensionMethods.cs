@@ -168,12 +168,21 @@ namespace Clifton.Core.ExtensionMethods
 
            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
+        /*
         public static void CreateNewContext(DataContext context, out SqlConnection connection, out DataContext newContext)
         {
             connection = new SqlConnection(context.Connection.ConnectionString);
             Type t = context.GetType();
             ConstructorInfo ci = t.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { }, null);
             newContext = (DataContext)ci.Invoke(new object[] { });
+            newContext.Log = new SqlLogWriter(SqlLogger);
+        }
+        */
+
+        public static void CreateNewContext(DataContext context, out SqlConnection connection, out DataContext newContext)
+        {
+            connection = new SqlConnection(context.Connection.ConnectionString);
+            newContext = (DataContext)Activator.CreateInstance(context.GetType(), new object[] { connection });
             newContext.Log = new SqlLogWriter(SqlLogger);
         }
 
