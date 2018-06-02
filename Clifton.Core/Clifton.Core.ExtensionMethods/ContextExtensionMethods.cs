@@ -375,23 +375,16 @@ namespace Clifton.Core.ExtensionMethods
             return count;
 		}
 
-        public static bool Exists<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        public static bool Exists<T>(this DataContext context, Expression<Func<T, bool>> whereClause) where T : class, IEntity
         {
             SqlConnection connection;
             DataContext newContext;
             CreateNewContext(context, out connection, out newContext);
-            int count = 0;
+            bool exists = false;
 
             try
             {
-                if (whereClause == null)
-                {
-                    count = newContext.GetTable<T>().Count();
-                }
-                else
-                {
-                    count = newContext.GetTable<T>().Where(whereClause).Count();
-                }
+                exists = newContext.GetTable<T>().Any(whereClause);
             }
             catch (Exception ex)
             {
@@ -403,7 +396,7 @@ namespace Clifton.Core.ExtensionMethods
             //    newContext.Dispose();
             //}
 
-            return count > 0;
+            return exists;
         }
 
         public static List<MappedRecord> GetTable(this DataContext context, string tableName)
@@ -731,6 +724,7 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
+                // Gets the current record values from the DB before we update the record with any new values.
 				T record = newContext.GetTable<T>().Where(t => (int)t.Id == data.Id).Single();	 // Cast to (int) is required because there's no mapping for int?
 				record.CopyFrom(data);
 				newContext.SubmitChanges();

@@ -137,6 +137,22 @@ namespace Clifton.Core.ModelTableManagement
             modelTables.ForEach(kvp => kvp.Value.Cast<IDisposable>().ForEach(mt => mt.Dispose()));
         }
 
+        public void Replace(MappedRecord oldEntity, MappedRecord withEntity)
+        {
+            var oldEntityType = oldEntity.GetType();
+            var mappedEntities = mappedRecords[oldEntityType];
+            int idx = mappedEntities.Cast<MappedRecord>().IndexOf(e => e.Row == oldEntity.Row);
+
+            if (idx != -1)
+            {
+                mappedEntities[idx] = (IEntity)withEntity;
+            }
+
+            var tables = modelTables[oldEntityType];
+
+            tables.ForEach(mt => mt.Replace((IEntity)oldEntity, (IEntity)withEntity));
+        }
+
 		public void Register<T>() where T : MappedRecord, IEntity
 		{
 			Type recType = typeof(T);

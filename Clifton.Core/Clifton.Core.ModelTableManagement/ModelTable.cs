@@ -49,10 +49,40 @@ namespace Clifton.Core.ModelTableManagement
         public IEntity Entity { get; set; }
     }
 
+    public class RowChangedEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+
+        /// <summary>
+        /// Set to true if the RowDeleted event handler handles "deleting" the row.
+        /// If true, the row is not actually deleted from the DB.
+        /// </summary>
+        public bool Handled { get; set; }
+    }
+
+    public class RowChangingEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+
+        /// <summary>
+        /// Set to true if the RowDeleted event handler handles "deleting" the row.
+        /// If true, the row is not actually deleted from the DB.
+        /// </summary>
+        public bool Handled { get; set; }
+
+        /// <summary>
+        /// If true, update the NewInstance.  This is used when archiving an existing instance
+        /// but we want the new instance to be updated.
+        /// </summary>
+        public bool ReplaceInstance { get; set; }
+        public IEntity NewInstance { get; set; }
+    }
+
     public interface IModelTable
 	{
 		void BeginProgrammaticUpdate();
 		void EndProgrammaticUpdate();
+        void Replace(IEntity oldEntity, IEntity withEntity);
 	}
 
 	/// <summary>
@@ -65,6 +95,8 @@ namespace Clifton.Core.ModelTableManagement
         public const string PK_FIELD = "Id";
 		public event EventHandler<RowDeletedEventArgs> RowDeleted;
         public event EventHandler<RowAddingEventArgs> RowAdding;
+        public event EventHandler<RowChangedEventArgs> RowChanged;
+        public event EventHandler<RowChangingEventArgs> RowChanging;
         protected DataTable dt;
 		protected T newInstance;
 		protected List<IEntity> items;
@@ -90,6 +122,16 @@ namespace Clifton.Core.ModelTableManagement
 			dt.RowChanged -= Table_RowChanged;
 			UnregisterWithModelManager();
 		}
+
+        public void Replace(IEntity oldEntity, IEntity newEntity)
+        {
+            int idx = items.IndexOf(record => ((MappedRecord)record).Row == ((MappedRecord)oldEntity).Row);
+
+            if (idx != -1)
+            {
+                items[idx] = newEntity;
+            }
+        }
 
 		public void ResetItems(List<IEntity> modelCollection)
 		{
@@ -261,7 +303,18 @@ namespace Clifton.Core.ModelTableManagement
 					{
                         // Always update the actual column, as the setter, for a mapped column, will probably update the 
                         // value for the mapped column.
-                        modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+                        RowChangingEventArgs rowChangingArgs = new RowChangingEventArgs() { Entity = instance };
+                        RowChanging.Fire(this, rowChangingArgs);
+
+                        if (!rowChangingArgs.Handled)
+                        {
+                            if (rowChangingArgs.ReplaceInstance)
+                            {
+                                instance = rowChangingArgs.NewInstance;
+                            }
+
+                            modelMgr.UpdateRecordField(instance, e.Column.ColumnName, e.ProposedValue);
+                        }
 
                         // If mapped, then update again, using the mapped column name.
                         //if (((ExtDataColumn)e.Column).MappedColumn != null)
@@ -276,7 +329,13 @@ namespace Clifton.Core.ModelTableManagement
 
 						if (edc.IsDbColumn || edc.MappedColumn != null)
 						{
-							Update(instance);
+                            RowChangedEventArgs rowChangedArgs = new RowChangedEventArgs() { Entity = instance };
+                            RowChanged.Fire(this, rowChangedArgs);
+
+                            if (!rowChangedArgs.Handled)
+                            {
+                                Update(instance);
+                            }
 						}
 					}
 				}
