@@ -234,7 +234,7 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-            newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));
+            newContext.GetTable(recType.Name).ForEach(m => AppendDecoupledRow(dv, recType, m));
 
             return dv;
         }
@@ -245,7 +245,7 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-            newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendRow(dv, recType, m));
+            newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendDecoupledRow(dv, recType, m));
 
             return dv;
         }
