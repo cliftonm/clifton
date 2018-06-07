@@ -200,11 +200,24 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-			newContext.GetTable(recType.Name).ForEach(m => AppendDecoupledRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			newContext.GetTable(recType.Name).ForEach(m => AppendDecoupledRow(dv, recType, m));
             // newContext.Dispose();
 
 			return mappedRecords[recType];
 		}
+
+        public List<IEntity> LoadRecords(Type recType, DataView dv, Func<MappedRecord, bool> where)
+        {
+            Clear(recType);
+            // We create a new context because the existing context caches the previously queried model.
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendDecoupledRow(dv, recType, m));
+            // newContext.Dispose();
+
+            return mappedRecords[recType];
+        }
 
         /// <summary>
         /// Simply creates a view and loads it with the records, decoupled from the model manager.
@@ -221,7 +234,18 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-            newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+            newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));
+
+            return dv;
+        }
+
+        public DataView LoadDecoupledView(Type recType, Func<MappedRecord, bool> where)
+        {
+            DataView dv = CreateDecoupledView(recType);
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendRow(dv, recType, m));
 
             return dv;
         }
