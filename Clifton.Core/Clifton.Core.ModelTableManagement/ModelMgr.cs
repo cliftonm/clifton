@@ -137,6 +137,14 @@ namespace Clifton.Core.ModelTableManagement
             modelTables.ForEach(kvp => kvp.Value.Cast<IDisposable>().ForEach(mt => mt.Dispose()));
         }
 
+        public void RemoveView<T>()
+        {
+            Type t = typeof(T);
+            mappedRecords.Remove(t);
+            modelTables.Remove(t);
+            modelViewMap.Remove(t);
+        }
+
         public void Replace(MappedRecord oldEntity, MappedRecord withEntity)
         {
             var oldEntityType = oldEntity.GetType();
@@ -177,7 +185,10 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Clear<T>();
 			Type recType = typeof(T);
-			context.Query(whereClause).ForEach(m => AppendRow(dv, m));
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            newContext.Query(whereClause).ForEach(m => AppendRow(dv, m));
 
 			return mappedRecords[recType];
 		}
@@ -189,11 +200,31 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-			newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+			newContext.GetTable(recType.Name).ForEach(m => AppendDecoupledRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
             // newContext.Dispose();
 
 			return mappedRecords[recType];
 		}
+
+        /// <summary>
+        /// Simply creates a view and loads it with the records, decoupled from the model manager.
+        /// We provide this method so that a lookup view can be loaded without referencing an existing view used in a different grid.
+        /// This is particularly necessary when changing records in one grid that are archived, and we need to force reloading the
+        /// lookup view in another grid so it gets the changes without causing a reload of the view on the grid for the record being changed,
+        /// which will disrupt the mapping.
+        /// </summary>
+        /// <param name="recType"></param>
+        /// <returns></returns>
+        public DataView LoadDecoupledView(Type recType)
+        {
+            DataView dv = CreateDecoupledView(recType);
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            newContext.GetTable(recType.Name).ForEach(m => AppendRow(dv, recType, m));			// The cast to (T) is critical here so that the type is T rather than MappedRecord.
+
+            return dv;
+        }
 
         /// <summary>
         /// Reloads records into the existing table.
@@ -536,6 +567,23 @@ namespace Clifton.Core.ModelTableManagement
 			AddRecordToCollection(record);
 			modelTables[recType].ForEach(mt => mt.EndProgrammaticUpdate());
 		}
+
+        protected DataView CreateDecoupledView(Type t)
+        {
+            DataTable dt = new DataTable();
+            dt.TableName = t.Name;
+            List<Field> fields = GetFields(t);
+            CreateColumns(dt, fields);
+            DataView dv = new DataView(dt);
+
+            return dv;
+        }
+
+        protected void AppendDecoupledRow(DataView view, Type recType, MappedRecord record)
+        {
+            DataRow row = NewRow(view, recType, record);
+            view.Table.Rows.Add(row);
+        }
 
         protected void AddRecordToCollection(MappedRecord record)
 		{

@@ -60,6 +60,11 @@ namespace Clifton.Core.ModelTableManagement
         public bool Handled { get; set; }
     }
 
+    public class RowFinalizedEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+    }
+
     public class RowChangingEventArgs : EventArgs
     {
         public IEntity Entity { get; set; }
@@ -97,6 +102,7 @@ namespace Clifton.Core.ModelTableManagement
         public event EventHandler<RowAddingEventArgs> RowAdding;
         public event EventHandler<RowChangedEventArgs> RowChanged;
         public event EventHandler<RowChangingEventArgs> RowChanging;
+        public event EventHandler<RowFinalizedEventArgs> RowFinalized;
         protected DataTable dt;
 		protected T newInstance;
 		protected List<IEntity> items;
@@ -335,8 +341,9 @@ namespace Clifton.Core.ModelTableManagement
                             if (!rowChangedArgs.Handled)
                             {
                                 Update(instance);
+                                RowFinalized.Fire(this, new RowFinalizedEventArgs() { Entity = instance });
                             }
-						}
+                        }
 					}
 				}
 				else
