@@ -689,7 +689,12 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static bool to_b(this string src)
 		{
-			return Convert.ToBoolean(src);
+            if (String.IsNullOrEmpty(src))
+            {
+                return false;
+            }
+
+            return Convert.ToBoolean(src);
 		}
 
 		/// <summary>
@@ -697,7 +702,12 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static float to_f(this string src)
 		{
-			return (float)Convert.ToDouble(src);
+            if (String.IsNullOrEmpty(src))
+            {
+                return 0;
+            }
+
+            return (float)Convert.ToDouble(src);
 		}
 
 		/// <summary>
@@ -705,7 +715,12 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static double to_d(this string src)
 		{
-			return Convert.ToDouble(src);
+            if (String.IsNullOrEmpty(src))
+            {
+                return 0;
+            }
+
+            return Convert.ToDouble(src);
 		}
 
 		/// <summary>
@@ -713,7 +728,10 @@ namespace Clifton.Core.ExtensionMethods
 		/// </summary>
 		public static decimal to_dec(this string src)
 		{
-			return Convert.ToDecimal(src);
+            decimal d=0;
+            Decimal.TryParse(src, out d);
+
+            return d;
 		}
 
 		public static T ToEnum<T>(this string src)
@@ -1485,6 +1503,16 @@ namespace Clifton.Core.ExtensionMethods
 		{
 			return src.Count(q => q == c);
 		}
+
+        public static T? AsNull<T>(this T src) where T : struct
+        {
+            var type = Nullable.GetUnderlyingType(src.GetType());
+            var ntype = typeof(Nullable<>).MakeGenericType(type);
+            T? item = (T?)Activator.CreateInstance(ntype);
+            item = src;
+
+            return item;
+        }
 
         public static T AsNotNull<T>(this T? src) where T : struct
         {

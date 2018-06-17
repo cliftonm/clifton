@@ -38,28 +38,28 @@ using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
-	public class ExtDataColumn : DataColumn
-	{
-		public bool Visible { get; set; }
-		public bool IsDbColumn { get; set; }
-		public LookupAttribute Lookup { get; set; }
+    public class ExtDataColumn : DataColumn
+    {
+        public bool Visible { get; set; }
+        public bool IsDbColumn { get; set; }
+        public LookupAttribute Lookup { get; set; }
         public string MappedColumn { get; set; }
 
         public string ActualColumnName { get { return MappedColumn ?? ColumnName; } }
 
-		public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, LookupAttribute lookup = null)
-			: base(colName, colType)
-		{
-			Visible = visible;
-			IsDbColumn = isDbColumn;
-			Lookup = lookup;
-		}
-	}
+        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, LookupAttribute lookup = null)
+            : base(colName, colType)
+        {
+            Visible = visible;
+            IsDbColumn = isDbColumn;
+            Lookup = lookup;
+        }
+    }
 
-	public class Field
-	{
-		public string Name { get; set; }
-		public string DisplayName { get; set; }
+    public class Field
+    {
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
 
         /// <summary>
         /// Mapped column is used when we have a property that is not a column, but directly maps to an actual column.
@@ -67,22 +67,22 @@ namespace Clifton.Core.ModelTableManagement
         /// </summary>
         public string MappedColumn { get; set; }
 
-		public Type Type { get; set; }
-		public bool ReadOnly { get; set; }
-		public bool Visible { get; set; }
-		public bool IsColumn { get; set; }
-		public bool IsDisplayField { get; set; }
-		public LookupAttribute Lookup { get; set; }
+        public Type Type { get; set; }
+        public bool ReadOnly { get; set; }
+        public bool Visible { get; set; }
+        public bool IsColumn { get; set; }
+        public bool IsDisplayField { get; set; }
+        public LookupAttribute Lookup { get; set; }
 
-		public bool IsTableField { get { return IsColumn || IsDisplayField; } }
-	}
+        public bool IsTableField { get { return IsColumn || IsDisplayField; } }
+    }
 
-	public class ModelPropertyChangedEventArgs : EventArgs
-	{
-		public string FieldName { get; set; }
-		public object Value { get; set; }
+    public class ModelPropertyChangedEventArgs : EventArgs
+    {
+        public string FieldName { get; set; }
+        public object Value { get; set; }
         public object OldValue { get; set; }
-	}
+    }
 
     /*
     public class TypeKey : IEquatable<TypeKey>
@@ -106,6 +106,75 @@ namespace Clifton.Core.ModelTableManagement
         }
     }
     */
+
+    public class ModelManagerDataSet
+    {
+        public DataSet DataSet { get { return dataset; } }
+
+        protected ModelMgr modelMgr;
+        protected DataSet dataset;
+        protected List<Type> entityTypes;
+        protected Dictionary<Type, DataTable> typeTableMap;
+
+        public ModelManagerDataSet(ModelMgr modelMgr)
+        {
+            this.modelMgr = modelMgr;
+            dataset = new DataSet();
+            entityTypes = new List<Type>();
+            typeTableMap = new Dictionary<Type, DataTable>();
+        }
+
+        public ModelManagerDataSet WithTable<T>(Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
+        {
+            var dt = modelMgr.CreateViewAndLoadRecords<T>(whereClause).Table;
+            dataset.Tables.Add(dt);
+            Type t = typeof(T);
+            entityTypes.Add(t);
+            typeTableMap[t] = dt;
+
+            return this;
+        }
+
+        public ModelManagerDataSet BuildAssociations()
+        {
+            foreach (KeyValuePair<Type, DataTable> kvp in typeTableMap)
+            {
+                var fks = kvp.Key.GetProperties().
+                    Where(p => Attribute.IsDefined(p, typeof(ForeignKeyAttribute))).
+                    Select(p => new
+                    {
+                        Property = p,
+                        FKAttr = ((ForeignKeyAttribute)p.GetCustomAttribute(typeof(ForeignKeyAttribute))),
+                    });
+
+                foreach (var prop in fks)
+                {
+                    Type fkType;
+
+                    if (typeTableMap.Keys.TryGetSingle(k => k.Name == prop.FKAttr.ForeignKeyTable, out fkType))
+                    {
+                        DataTable parent = typeTableMap[fkType];
+                        string parentCol = prop.FKAttr.ForeignKeyColumn;
+                        DataTable child = kvp.Value;
+                        string childCol = prop.Property.Name;
+                        dataset.Relations.Add(parent.Columns[parentCol], child.Columns[childCol]);
+                    }
+                }
+            }
+
+            return this;
+        }
+    }
+
+    public static class ModelMgrExtensionMethods
+    {
+        public static ModelManagerDataSet CreateDataSet(this ModelMgr mmgr)
+        {
+            var mmds = new ModelManagerDataSet(new ModelMgr(mmgr.DataContext));
+
+            return mmds;
+        }
+    }
 
 	/// <summary>
 	/// Provides services to populate a model collection and to track model collections by their model type.
@@ -178,10 +247,18 @@ namespace Clifton.Core.ModelTableManagement
 			mappedRecords[recType] = new List<IEntity>();
 		}
 
-		/// <summary>
-		/// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
-		/// </summary>
-		public List<IEntity> LoadRecords<T>(DataView dv, Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
+        public DataView CreateViewAndLoadRecords<T>(Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
+        {
+            DataView dv = CreateView<T>();
+            LoadRecords(dv, whereClause);
+
+            return dv;
+        }
+
+        /// <summary>
+        /// Loads all the records for the model type into the DataView and our underlying model collection for that model type.
+        /// </summary>
+        public List<IEntity> LoadRecords<T>(DataView dv, Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
 		{
 			Clear<T>();
 			Type recType = typeof(T);
