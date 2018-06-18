@@ -527,11 +527,9 @@ namespace Clifton.Core.ExtensionMethods
 
 			try
 			{
-				// T cloned = CloneEntity(data);
 				newContext.GetTable<T>().InsertOnSubmit(data);
 				newContext.SubmitChanges();
 				SetCreatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(typeof(T)).TableName);
-				// data.Id = cloned.Id;
 			}
 			catch (Exception ex)
 			{
@@ -546,7 +544,33 @@ namespace Clifton.Core.ExtensionMethods
             return (int)data.Id;
 		}
 
-		private static void SetCreatedOnFieldValue<T>(DataContext context, T data, string tableName) where T : class, IEntity
+        /// <summary>
+        /// Insert the items in the collection.
+        /// </summary>
+        public static void InsertRange<T>(this DataContext context, IEnumerable<T> dataItems) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            CreateNewContext(context, out connection, out newContext);
+
+            try
+            {
+                newContext.GetTable<T>().InsertAllOnSubmit(dataItems);
+                dataItems.ForEach(data => SetCreatedOnFieldValue(newContext, data, newContext.Mapping.GetTable(typeof(T)).TableName));
+                newContext.SubmitChanges();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+        }
+
+        private static void SetCreatedOnFieldValue<T>(DataContext context, T data, string tableName) where T : class, IEntity
 		{
 			if (data is ICreateUpdate)
 			{
