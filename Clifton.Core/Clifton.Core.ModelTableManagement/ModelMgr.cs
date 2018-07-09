@@ -44,15 +44,17 @@ namespace Clifton.Core.ModelTableManagement
         public bool IsDbColumn { get; set; }
         public LookupAttribute Lookup { get; set; }
         public string MappedColumn { get; set; }
+        public string Format { get; set; }
 
         public string ActualColumnName { get { return MappedColumn ?? ColumnName; } }
 
-        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, LookupAttribute lookup = null)
+        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, string format, LookupAttribute lookup = null)
             : base(colName, colType)
         {
             Visible = visible;
             IsDbColumn = isDbColumn;
             Lookup = lookup;
+            Format = format;
         }
     }
 
@@ -72,6 +74,7 @@ namespace Clifton.Core.ModelTableManagement
         public bool Visible { get; set; }
         public bool IsColumn { get; set; }
         public bool IsDisplayField { get; set; }
+        public string Format { get; set; }
         public LookupAttribute Lookup { get; set; }
 
         public bool IsTableField { get { return IsColumn || IsDisplayField; } }
@@ -724,17 +727,18 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected List<Field> GetFields(Type modelType)
 		{
-			var props = from prop in modelType.GetProperties()
-						where Attribute.IsDefined(prop, typeof(ColumnAttribute)) || Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
-						select new Field()
-						{
-							Name = prop.Name,
-							DisplayName = Attribute.IsDefined(prop, typeof(DisplayNameAttribute)) ? ((DisplayNameAttribute)prop.GetCustomAttribute(typeof(DisplayNameAttribute))).DisplayName : prop.Name,
-							Type = prop.PropertyType,
-							ReadOnly = Attribute.IsDefined(prop, typeof(ReadOnlyAttribute)),
-							Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
-							IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
-							IsDisplayField = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
+            var props = from prop in modelType.GetProperties()
+                        where Attribute.IsDefined(prop, typeof(ColumnAttribute)) || Attribute.IsDefined(prop, typeof(DisplayFieldAttribute))
+                        select new Field()
+                        {
+                            Name = prop.Name,
+                            DisplayName = Attribute.IsDefined(prop, typeof(DisplayNameAttribute)) ? ((DisplayNameAttribute)prop.GetCustomAttribute(typeof(DisplayNameAttribute))).DisplayName : prop.Name,
+                            Type = prop.PropertyType,
+                            ReadOnly = Attribute.IsDefined(prop, typeof(ReadOnlyAttribute)),
+                            Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
+                            IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
+                            IsDisplayField = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
+                            Format = Attribute.IsDefined(prop, typeof(FormatAttribute)) ? ((FormatAttribute)prop.GetCustomAttribute(typeof(FormatAttribute))).Format : null,
 							Lookup = Attribute.IsDefined(prop, typeof(LookupAttribute)) ? ((LookupAttribute)prop.GetCustomAttribute(typeof(LookupAttribute))) : null,
                             MappedColumn = Attribute.IsDefined(prop, typeof(MappedColumnAttribute)) ? ((MappedColumnAttribute)prop.GetCustomAttribute(typeof(MappedColumnAttribute))).Name : null,
 						};
@@ -753,11 +757,11 @@ namespace Clifton.Core.ModelTableManagement
 				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
 				if (field.Type.Name == "Nullable`1")
 				{
-					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Format, field.Lookup);
 				}
 				else
 				{
-					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Format, field.Lookup);
 				}
 
 				dc.ReadOnly = field.ReadOnly;

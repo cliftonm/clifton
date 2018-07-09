@@ -29,6 +29,16 @@ namespace Clifton.Core.ModelTableManagement
 	public class UniqueAttribute : Attribute { }
 	public class ReadOnlyAttribute : Attribute { }
 
+    public class FormatAttribute : Attribute
+    {
+        public string Format { get; set; }
+
+        public FormatAttribute(string format)
+        {
+            Format = format;
+        }
+    }
+
 	/// <summary>
 	/// Add View attribute to the data context to indicate that a Table is a view and should not be created in the database.
 	/// </summary>
