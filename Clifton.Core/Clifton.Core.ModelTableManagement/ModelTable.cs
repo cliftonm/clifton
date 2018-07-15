@@ -60,7 +60,17 @@ namespace Clifton.Core.ModelTableManagement
         public bool Handled { get; set; }
     }
 
-    public class RowFinalizedEventArgs : EventArgs
+    public class RowChangeFinalizedEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+    }
+
+    public class RowAddFinalizedEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+    }
+
+    public class RowDeleteFinalizedEventArgs : EventArgs
     {
         public IEntity Entity { get; set; }
     }
@@ -102,7 +112,9 @@ namespace Clifton.Core.ModelTableManagement
         public event EventHandler<RowAddingEventArgs> RowAdding;
         public event EventHandler<RowChangedEventArgs> RowChanged;
         public event EventHandler<RowChangingEventArgs> RowChanging;
-        public event EventHandler<RowFinalizedEventArgs> RowFinalized;
+        public event EventHandler<RowChangeFinalizedEventArgs> RowChangeFinalized;
+        public event EventHandler<RowAddFinalizedEventArgs> RowAddFinalized;
+        public event EventHandler<RowDeleteFinalizedEventArgs> RowDeleteFinalized;
         protected DataTable dt;
 		protected T newInstance;
 		protected List<IEntity> items;
@@ -195,7 +207,9 @@ namespace Clifton.Core.ModelTableManagement
 						programmaticUpdate = true;
 						e.Row[PK_FIELD] = newInstance.Id;
 						programmaticUpdate = false;
-						break;
+                        RowAddFinalized.Fire(this, new RowAddFinalizedEventArgs() { Entity = newInstance });
+
+                        break;
 
 					// We don't do this here because the Table_ColumnChanged event handles persisting the change.
 					//case DataRowAction.Change:
@@ -242,6 +256,7 @@ namespace Clifton.Core.ModelTableManagement
                     {
                         items.Remove(item);
                         Delete(item);
+                        RowDeleteFinalized.Fire(this, new RowDeleteFinalizedEventArgs() { Entity = item });
                     }
                 }
             }
@@ -341,7 +356,7 @@ namespace Clifton.Core.ModelTableManagement
                             if (!rowChangedArgs.Handled)
                             {
                                 Update(instance);
-                                RowFinalized.Fire(this, new RowFinalizedEventArgs() { Entity = instance });
+                                RowChangeFinalized.Fire(this, new RowChangeFinalizedEventArgs() { Entity = instance });
                             }
                         }
 					}
