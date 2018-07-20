@@ -52,6 +52,7 @@ namespace Clifton.Core.ModelTableManagement
     public class RowChangedEventArgs : EventArgs
     {
         public IEntity Entity { get; set; }
+        public string ColumnName { get; set; }
 
         /// <summary>
         /// Set to true if the RowDeleted event handler handles "deleting" the row.
@@ -63,6 +64,7 @@ namespace Clifton.Core.ModelTableManagement
     public class RowChangeFinalizedEventArgs : EventArgs
     {
         public IEntity Entity { get; set; }
+        public string ColumnName { get; set; }
     }
 
     public class RowAddFinalizedEventArgs : EventArgs
@@ -75,9 +77,17 @@ namespace Clifton.Core.ModelTableManagement
         public IEntity Entity { get; set; }
     }
 
+    public class ColumnChangingEventArgs : EventArgs
+    {
+        public IEntity Entity { get; set; }
+        public string ColumnName { get; set; }
+        public object ProposedValue { get; set; }
+    }
+
     public class RowChangingEventArgs : EventArgs
     {
         public IEntity Entity { get; set; }
+        public string ColumnName { get; set; }
 
         /// <summary>
         /// Set to true if the RowDeleted event handler handles "deleting" the row.
@@ -108,7 +118,8 @@ namespace Clifton.Core.ModelTableManagement
         public DataTable Table { get; }
 
         public const string PK_FIELD = "Id";
-		public event EventHandler<RowDeletedEventArgs> RowDeleted;
+        public event EventHandler<ColumnChangingEventArgs> ColumnChanging;   // Fires from DataTable.ColumnChanging event, contrast with RowChanged/RowChanging.
+        public event EventHandler<RowDeletedEventArgs> RowDeleted;
         public event EventHandler<RowAddingEventArgs> RowAdding;
         public event EventHandler<RowChangedEventArgs> RowChanged;
         public event EventHandler<RowChangingEventArgs> RowChanging;
@@ -134,6 +145,7 @@ namespace Clifton.Core.ModelTableManagement
 
 		public void Dispose()
 		{
+            dt.ColumnChanging -= Table_ColumnChanging;
 			dt.ColumnChanged -= Table_ColumnChanged;
 			dt.RowDeleted -= Table_RowDeleted;
 			dt.TableNewRow -= Table_TableNewRow;
@@ -175,7 +187,8 @@ namespace Clifton.Core.ModelTableManagement
 
 		protected void WireUpEvents(DataTable dt)
 		{
-			dt.ColumnChanged += Table_ColumnChanged;
+            dt.ColumnChanging += Table_ColumnChanging;
+            dt.ColumnChanged += Table_ColumnChanged;
 			dt.RowDeleted += Table_RowDeleted;
 			dt.TableNewRow += Table_TableNewRow;
 			dt.RowChanged += Table_RowChanged;
@@ -286,7 +299,33 @@ namespace Clifton.Core.ModelTableManagement
 			context.UpdateOfConcreteType(instance);
 		}
 
-		protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
+        protected virtual void Table_ColumnChanging(object sender, DataColumnChangeEventArgs e)
+        {
+            if (!programmaticUpdate)
+            {
+                IEntity instance;
+
+                if (e.Row.RowState == DataRowState.Detached)
+                {
+                    instance = newInstance;
+                }
+                else
+                {
+                    instance = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
+                }
+
+                ColumnChangingEventArgs rowChangingArgs = new ColumnChangingEventArgs()
+                {
+                    Entity = instance,
+                    ColumnName = e.Column.ColumnName,
+                    ProposedValue = e.ProposedValue
+                };
+
+                ColumnChanging.Fire(this, rowChangingArgs);
+            }
+        }
+
+        protected virtual void Table_ColumnChanged(object sender, DataColumnChangeEventArgs e)
 		{
             // Debugging
             //if (e.Row.Table.TableName == "EmsStationType")
@@ -305,8 +344,6 @@ namespace Clifton.Core.ModelTableManagement
 					instance = items.SingleOrDefault(record => ((MappedRecord)record).Row == e.Row);
 				}
 
-				// TODO: CAN PROBABLY BE REMOVED NOW THAT WE HAVE THE MODEL MANAGER SETTING THE PROGRAMMATIC FLAG.
-
 				// Comboboxes do not fire a DataRowAction.Change RowChanged event when closing the dialog, 
 				// these fire only when the use changes the selected row, so we persist the change now if not
 				// a detached record (as in, it must exist in the database.)
@@ -324,7 +361,7 @@ namespace Clifton.Core.ModelTableManagement
 					{
                         // Always update the actual column, as the setter, for a mapped column, will probably update the 
                         // value for the mapped column.
-                        RowChangingEventArgs rowChangingArgs = new RowChangingEventArgs() { Entity = instance };
+                        RowChangingEventArgs rowChangingArgs = new RowChangingEventArgs() { Entity = instance, ColumnName = e.Column.ColumnName };
                         RowChanging.Fire(this, rowChangingArgs);
 
                         if (!rowChangingArgs.Handled)
@@ -350,13 +387,13 @@ namespace Clifton.Core.ModelTableManagement
 
 						if (edc.IsDbColumn || edc.MappedColumn != null)
 						{
-                            RowChangedEventArgs rowChangedArgs = new RowChangedEventArgs() { Entity = instance };
+                            RowChangedEventArgs rowChangedArgs = new RowChangedEventArgs() { Entity = instance, ColumnName = e.Column.ColumnName };
                             RowChanged.Fire(this, rowChangedArgs);
 
                             if (!rowChangedArgs.Handled)
                             {
                                 Update(instance);
-                                RowChangeFinalized.Fire(this, new RowChangeFinalizedEventArgs() { Entity = instance });
+                                RowChangeFinalized.Fire(this, new RowChangeFinalizedEventArgs() { Entity = instance, ColumnName = e.Column.ColumnName });
                             }
                         }
 					}
