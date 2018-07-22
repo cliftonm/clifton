@@ -1635,33 +1635,34 @@ namespace Clifton.Core.ExtensionMethods
         /// <summary>
         /// Splits a string into substrings of the specified lengths with the last entry in the array
         /// getting the remainder.  If the string is shorter, the array will be padded with empty strings.
+        /// If the string length is less than or equal to sum(lengths), the number of strings returned will == array size of lengths.
+        /// If the string length is greater than the sum(lengths), an additional final array element will contain the remainder.
         /// </summary>
         public static string[] SplitInto(this string src, params int[] lengths)
         {
-            string[] ret = new string[lengths.Length + 1];      // +1 for remainder.
+            List<string> segments = new List<string>();
             int pos = 0;
 
             (lengths.Length + 1).ForEach(n =>
             {
-                if (n >= lengths.Length)
-                {
-                    ret[n] = String.Empty;
-                }
-                else
+                if (n < lengths.Length)
                 {
                     int len = lengths[n];
 
                     if (src.Length >= pos + len)
                     {
-                        ret[n] = src.Substring(pos, len);
+                        // More chars in the source string remain to split.
+                        segments.Add(src.Substring(pos, len));
                     }
                     else if (src.Length > pos)
                     {
-                        ret[n] = src.Substring(pos);
+                        // Remainder of what's left in the source string to split.
+                        segments.Add(src.Substring(pos));
                     }
                     else
                     {
-                        ret[n] = String.Empty;
+                        // We're short, so pad with empty strings.
+                        segments.Add(String.Empty);
                     }
 
                     pos += len;
@@ -1669,7 +1670,7 @@ namespace Clifton.Core.ExtensionMethods
             });
             
 
-            return ret;
+            return segments.ToArray();
         }
 
         public static string AsString(this IEnumerable<char> chars)
