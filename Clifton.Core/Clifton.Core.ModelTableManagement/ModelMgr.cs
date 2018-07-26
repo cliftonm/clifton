@@ -129,7 +129,7 @@ namespace Clifton.Core.ModelTableManagement
 
         public ModelManagerDataSet WithTable<T>(Expression<Func<T, bool>> whereClause = null) where T : MappedRecord, IEntity
         {
-            var dt = modelMgr.CreateViewAndLoadRecords<T>(whereClause).Table;
+            var dt = modelMgr.CreateViewAndLoadRecords(whereClause).Table;
             dataset.Tables.Add(dt);
             Type t = typeof(T);
             entityTypes.Add(t);

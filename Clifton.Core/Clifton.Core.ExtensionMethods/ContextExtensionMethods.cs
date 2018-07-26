@@ -301,6 +301,76 @@ namespace Clifton.Core.ExtensionMethods
             return ret;
 		}
 
+        // Ex: var cio = ModelDataContext.Context.LastOrDefault<StaffCheckInCheckOut, DateTime>(s => s.When);
+        public static T FirstOrDefault<T, TOrderBy>(
+            this DataContext context, 
+            Expression<Func<T, TOrderBy>> orderBy, 
+            Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            CreateNewContext(context, out connection, out newContext);
+            T ret = null;
+
+            try
+            {
+                if (whereClause == null)
+                {
+                    ret = newContext.GetTable<T>().OrderBy(orderBy).FirstOrDefault();
+                }
+                else
+                {
+                    ret = newContext.GetTable<T>().OrderBy(orderBy).Where(whereClause).FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+
+            return ret;
+        }
+
+        // Example: var cio = ModelDataContext.Context.LastOrDefault<StaffCheckInCheckOut, DateTime>(s => s.When);
+        public static T LastOrDefault<T, TOrderBy>(
+            this DataContext context, 
+            Expression<Func<T, TOrderBy>> orderBy, 
+            Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            CreateNewContext(context, out connection, out newContext);
+            T ret = null;
+
+            try
+            {
+                if (whereClause == null)
+                {
+                    ret = newContext.GetTable<T>().OrderByDescending(orderBy).FirstOrDefault();
+                }
+                else
+                {
+                    ret = newContext.GetTable<T>().OrderByDescending(orderBy).Where(whereClause).FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+            //finally
+            //{
+            //    newContext.Dispose();
+            //}
+
+            return ret;
+        }
+
         // Version without expression, so the where clause is not passed on to SQL Server.
         // Use this when the expression cannot be translated to a SQL Server expression.
         public static T SingleOrDefault2<T>(this DataContext context, Func<T, bool> whereClause = null) where T : class, IEntity
