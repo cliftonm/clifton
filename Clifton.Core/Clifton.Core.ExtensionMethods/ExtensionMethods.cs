@@ -1432,23 +1432,23 @@ namespace Clifton.Core.ExtensionMethods
 			return sb.ToString();
 		}
 
-	        /// <summary>
-	        /// Returns true or false as to whether the first argument is greater
-	        /// than or equal to the second argument, and less than or equal to the
-	        /// third argument.
-	        /// </summary>
-	        /// <remarks>
-	        /// The name of this method is a bit misleading. It doesn't test only for
-	        /// 'between'.
-	        /// </remarks>
-	        /// <param name="b">The integer to test.</param>
-	        /// <param name="a">The integer that should be less than or equal to the test.</param>
-	        /// <param name="c">The integer that should be greater than or equal to the test.</param>
-	        /// <returns>bool</returns>
+        /// <summary>
+        /// Inclusive of start and end values.
+        /// </summary>
 		public static bool Between(this int b, int a, int c)
 		{
+            // b between [a, c]
 			return b >= a && b <= c;
 		}
+
+        /// <summary>
+        /// Inclusive of start value, exclusive of end value.
+        /// </summary>
+        public static bool BetweenIncExc(this int b, int a, int c)
+        {
+            // b between [a, c)
+            return b >= a && b < c;
+        }
 
         /// <summary>
         /// Value cannot exceed max, otherwise max is returned.
