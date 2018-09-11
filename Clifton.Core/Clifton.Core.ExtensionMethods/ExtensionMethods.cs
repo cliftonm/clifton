@@ -1043,13 +1043,29 @@ namespace Clifton.Core.ExtensionMethods
 			return ret;
 		}
 
-		/// <summary>
-		/// Returns everything to the right of the rightmost char c.
-		/// </summary>
-		/// <param name="src">The source string.</param>
-		/// <param name="c">The search char.</param>
-		/// <returns>Returns everything to the right of the rightmost search char, or an empty string.</returns>
-		public static string RightOfRightmostOf(this string src, char c)
+        /// <summary>
+        /// If the search criteria is found, it is returned as the prefix of the remainder of the string.
+        /// </summary>
+        public static string RightOfIncluding(this String src, string s)
+        {
+            string ret = String.Empty;
+            int idx = src.IndexOf(s);
+
+            if (idx != -1)
+            {
+                ret = s + src.Substring(idx + s.Length);
+            }
+
+            return ret;
+        }
+
+        /// <summary>
+        /// Returns everything to the right of the rightmost char c.
+        /// </summary>
+        /// <param name="src">The source string.</param>
+        /// <param name="c">The search char.</param>
+        /// <returns>Returns everything to the right of the rightmost search char, or an empty string.</returns>
+        public static string RightOfRightmostOf(this string src, char c)
 		{
 			string ret = String.Empty;
 			int idx = src.LastIndexOf(c);
