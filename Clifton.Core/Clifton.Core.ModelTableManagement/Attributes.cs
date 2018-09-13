@@ -55,6 +55,16 @@ namespace Clifton.Core.ModelTableManagement
 		}
 	}
 
+    public class ActualTypeAttribute : Attribute
+    {
+        public string ActualTypeName { get; set; }
+
+        public ActualTypeAttribute(string name) : base()
+        {
+            ActualTypeName = name;
+        }
+    }
+
     public class MappedColumnAttribute : Attribute
     {
         public string Name { get; set; }

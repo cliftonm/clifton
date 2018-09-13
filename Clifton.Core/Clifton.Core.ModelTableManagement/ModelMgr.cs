@@ -34,7 +34,6 @@ using System.Reflection;
 
 using Clifton.Core.Assertions;
 using Clifton.Core.ExtensionMethods;
-using Clifton.Core.ServiceInterfaces;
 
 namespace Clifton.Core.ModelTableManagement
 {
@@ -45,16 +44,18 @@ namespace Clifton.Core.ModelTableManagement
         public LookupAttribute Lookup { get; set; }
         public string MappedColumn { get; set; }
         public string Format { get; set; }
+        public string ActualType { get; set; }
 
         public string ActualColumnName { get { return MappedColumn ?? ColumnName; } }
 
-        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, string format, LookupAttribute lookup = null)
+        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, string format, string actualType, LookupAttribute lookup = null)
             : base(colName, colType)
         {
             Visible = visible;
             IsDbColumn = isDbColumn;
             Lookup = lookup;
             Format = format;
+            ActualType = actualType;
         }
     }
 
@@ -70,6 +71,7 @@ namespace Clifton.Core.ModelTableManagement
         public string MappedColumn { get; set; }
 
         public Type Type { get; set; }
+        public string ActualType { get; set; }
         public bool ReadOnly { get; set; }
         public bool Visible { get; set; }
         public bool IsColumn { get; set; }
@@ -140,6 +142,62 @@ namespace Clifton.Core.ModelTableManagement
 
         public ModelManagerDataSet BuildAssociations()
         {
+            // In the order tables were added:
+            for (int i = 0; i < dataset.Tables.Count; i++)
+            {
+                DataTable dt = dataset.Tables[i];
+
+                // What are our FK's?
+                Type t = typeTableMap.Single(kvp => kvp.Value == dt).Key;
+
+                var fks = t.GetProperties().
+                Where(p => Attribute.IsDefined(p, typeof(ForeignKeyAttribute))).
+                Select(p => new
+                {
+                    Property = p,
+                    FKAttr = ((ForeignKeyAttribute)p.GetCustomAttribute(typeof(ForeignKeyAttribute))),
+                });
+
+                // The for each FK...
+                foreach (var prop in fks)
+                {
+                    // If the FK references a table in our dataset...
+                    if (typeTableMap.Keys.TryGetSingle(k => k.Name == prop.FKAttr.ForeignKeyTable, out Type fkType))
+                    {
+                        int idx = typeTableMap.IndexOf(kvp => kvp.Key == fkType);
+
+                        // If the index references a table further down in the list, then this is a child table
+                        // Forward references must have unique parent ID's, these should always be 1:1 relationships and should be handled with a join
+                        // to populate the forward referencing values.  Example: ProductSale references Product which is a 1:1 relationship.
+                        if (idx > i)
+                        {
+                            //DataTable parent = dt;
+                            //string parentCol = prop.Property.Name;
+                            //DataTable child = typeTableMap[fkType];
+                            //string childCol = prop.FKAttr.ForeignKeyColumn;
+                            //dataset.Relations.Add(parent.TableName + "-" + child.TableName, parent.Columns[parentCol], child.Columns[childCol]);
+                            //Console.WriteLine("Relationship: parent {0}.{1} with child {2}.{3}", parent.TableName, parentCol, child.TableName, childCol);
+                        }
+                        else if (idx < i)
+                        {
+                            // Otherwise, if it references a table earlier in the list, then this table is a "parent" table (reverse relationship)
+                            DataTable parent = typeTableMap[fkType];
+                            string parentCol = prop.FKAttr.ForeignKeyColumn;
+                            DataTable child = dt;
+                            string childCol = prop.Property.Name;
+                            dataset.Relations.Add(parent.TableName + "-" + child.TableName, parent.Columns[parentCol], child.Columns[childCol]);
+                            Console.WriteLine("Relationship: parent {0}.{1} with child {2}.{3}", parent.TableName, parentCol, child.TableName, childCol);
+                        }
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        /*
+        public ModelManagerDataSet BuildAssociations()
+        {
             foreach (KeyValuePair<Type, DataTable> kvp in typeTableMap)
             {
                 var fks = kvp.Key.GetProperties().
@@ -160,13 +218,15 @@ namespace Clifton.Core.ModelTableManagement
                         string parentCol = prop.FKAttr.ForeignKeyColumn;
                         DataTable child = kvp.Value;
                         string childCol = prop.Property.Name;
-                        dataset.Relations.Add(parent.Columns[parentCol], child.Columns[childCol]);
+                        dataset.Relations.Add(parent.TableName + "-" + child.TableName, parent.Columns[parentCol], child.Columns[childCol]);
+                        Console.WriteLine("Relationship: parent {0}.{1} with child {2}.{3}", parent.TableName, parentCol, child.TableName, childCol);
                     }
                 }
             }
 
             return this;
         }
+        */
     }
 
     public static class ModelMgrExtensionMethods
@@ -734,6 +794,7 @@ namespace Clifton.Core.ModelTableManagement
                             Name = prop.Name,
                             DisplayName = Attribute.IsDefined(prop, typeof(DisplayNameAttribute)) ? ((DisplayNameAttribute)prop.GetCustomAttribute(typeof(DisplayNameAttribute))).DisplayName : prop.Name,
                             Type = prop.PropertyType,
+                            ActualType = Attribute.IsDefined(prop, typeof(ActualTypeAttribute)) ? ((ActualTypeAttribute)prop.GetCustomAttribute(typeof(ActualTypeAttribute))).ActualTypeName : null,
                             ReadOnly = Attribute.IsDefined(prop, typeof(ReadOnlyAttribute)),
                             Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
                             IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
@@ -757,11 +818,11 @@ namespace Clifton.Core.ModelTableManagement
 				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
 				if (field.Type.Name == "Nullable`1")
 				{
-					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Format, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Format, field.ActualType, field.Lookup);
 				}
 				else
 				{
-					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Format, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Format, field.ActualType, field.Lookup);
 				}
 
 				dc.ReadOnly = field.ReadOnly;

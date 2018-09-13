@@ -656,7 +656,7 @@ namespace Clifton.Core.ExtensionMethods
                 return 0;
             }
 
-			return Convert.ToInt32(src);
+			return Convert.ToInt32(src.Replace(",", "").LeftOf('.'));
 		}
 
         public static int to_iFromHex(this string src)
