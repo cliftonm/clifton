@@ -852,6 +852,11 @@ namespace Clifton.Core.ExtensionMethods
 			return "{" + src + "}";
 		}
 
+        public static string Percents(this String src)
+        {
+            return "%" + src + "%";
+        }
+
         public static string RemoveWhitespace(this string input)
         {
             return new string(input.ToCharArray()
