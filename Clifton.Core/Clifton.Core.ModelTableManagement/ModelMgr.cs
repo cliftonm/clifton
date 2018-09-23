@@ -340,10 +340,11 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-			newContext.GetTable(recType.Name).ForEach(m => AppendDecoupledRow(dv, recType, m));
+            var records = newContext.GetTable(recType.Name);
+            records.ForEach(m => AppendDecoupledRow(dv, recType, m));
             // newContext.Dispose();
 
-			return mappedRecords[recType];
+			return records.Cast<IEntity>().ToList();
 		}
 
         public List<IEntity> LoadRecords(Type recType, DataView dv, Func<MappedRecord, bool> where)
@@ -353,10 +354,41 @@ namespace Clifton.Core.ModelTableManagement
             SqlConnection connection;
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-            newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendDecoupledRow(dv, recType, m));
+            var records = newContext.GetTable(recType.Name).Where(where);
+            records.ForEach(m => AppendDecoupledRow(dv, recType, m));
             // newContext.Dispose();
 
-            return mappedRecords[recType];
+            return records.Cast<IEntity>().ToList();
+        }
+
+        public List<IEntity> LoadRecords(Type recType, DataView dv, out List<IEntity> records)
+        {
+            Clear(recType);
+            // We create a new context because the existing context caches the previously queried model.
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            var mappedRecords = newContext.GetTable(recType.Name);
+            records = mappedRecords.Cast<IEntity>().ToList();
+            mappedRecords.ForEach(m => AppendDecoupledRow(dv, recType, m));
+            // newContext.Dispose();
+
+            return mappedRecords.Cast<IEntity>().ToList();
+        }
+
+        public List<IEntity> LoadRecords(Type recType, DataView dv, Func<MappedRecord, bool> where, out List<IEntity> records)
+        {
+            Clear(recType);
+            // We create a new context because the existing context caches the previously queried model.
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            var mappedRecords = newContext.GetTable(recType.Name).Where(where);
+            records = mappedRecords.Cast<IEntity>().ToList();
+            mappedRecords.ForEach(m => AppendDecoupledRow(dv, recType, m));
+            // newContext.Dispose();
+
+            return mappedRecords.Cast<IEntity>().ToList();
         }
 
         /// <summary>
@@ -386,6 +418,32 @@ namespace Clifton.Core.ModelTableManagement
             DataContext newContext;
             ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
             newContext.GetTable(recType.Name).Where(where).ForEach(m => AppendDecoupledRow(dv, recType, m));
+
+            return dv;
+        }
+
+        public DataView LoadDecoupledView(Type recType, out List<IEntity> records)
+        {
+            DataView dv = CreateDecoupledView(recType);
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            var mappedRecords = newContext.GetTable(recType.Name);
+            records = mappedRecords.Cast<IEntity>().ToList();
+            mappedRecords.ForEach(m => AppendDecoupledRow(dv, recType, m));
+
+            return dv;
+        }
+
+        public DataView LoadDecoupledView(Type recType, Func<MappedRecord, bool> where, out List<IEntity> records)
+        {
+            DataView dv = CreateDecoupledView(recType);
+            SqlConnection connection;
+            DataContext newContext;
+            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            var mappedRecords = newContext.GetTable(recType.Name).Where(where);
+            records = mappedRecords.Cast<IEntity>().ToList();
+            mappedRecords.ForEach(m => AppendDecoupledRow(dv, recType, m));
 
             return dv;
         }
@@ -446,15 +504,21 @@ namespace Clifton.Core.ModelTableManagement
 			return mappedRecords[recType];
 		}
 
-		/// <summary>
-		/// Returns a collection of T.
-		/// </summary>
-		public List<T> GetRecords<T>() where T : MappedRecord, IEntity, new()
+        public List<IEntity> GetEntityRecordCollection(Type recType)
+        {
+            return mappedRecords[recType];
+        }
+
+        /// <summary>
+        /// Returns a collection of T.
+        /// </summary>
+        public List<T> GetRecords<T>() where T : MappedRecord, IEntity, new()
 		{
 			Type recType = typeof(T);
 
 			return mappedRecords[recType].Cast<T>().ToList();
 		}
+
 		/*
 		/// <summary>
 		/// Returns a collection cast to the specified model type, which can by used by the application to get a concrete collection of the model type, as opposed
