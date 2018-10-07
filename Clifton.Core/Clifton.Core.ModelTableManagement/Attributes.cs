@@ -65,6 +65,16 @@ namespace Clifton.Core.ModelTableManagement
         }
     }
 
+    public class MaxLengthAttribute : Attribute
+    {
+        public int MaxLength { get; set; }
+
+        public MaxLengthAttribute(int n) : base()
+        {
+            MaxLength = n;
+        }
+    }
+
     public class MappedColumnAttribute : Attribute
     {
         public string Name { get; set; }

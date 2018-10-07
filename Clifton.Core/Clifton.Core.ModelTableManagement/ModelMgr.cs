@@ -45,10 +45,11 @@ namespace Clifton.Core.ModelTableManagement
         public string MappedColumn { get; set; }
         public string Format { get; set; }
         public string ActualType { get; set; }
+        public int FieldMaxLength { get; set; }
 
         public string ActualColumnName { get { return MappedColumn ?? ColumnName; } }
 
-        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, string format, string actualType, LookupAttribute lookup = null)
+        public ExtDataColumn(string colName, Type colType, bool visible, bool isDbColumn, string format, string actualType, int maxLength, LookupAttribute lookup = null)
             : base(colName, colType)
         {
             Visible = visible;
@@ -56,6 +57,7 @@ namespace Clifton.Core.ModelTableManagement
             Lookup = lookup;
             Format = format;
             ActualType = actualType;
+            FieldMaxLength = maxLength;
         }
     }
 
@@ -78,6 +80,7 @@ namespace Clifton.Core.ModelTableManagement
         public bool IsDisplayField { get; set; }
         public string Format { get; set; }
         public LookupAttribute Lookup { get; set; }
+        public int MaxLength { get; set; }
 
         public bool IsTableField { get { return IsColumn || IsDisplayField; } }
     }
@@ -859,6 +862,7 @@ namespace Clifton.Core.ModelTableManagement
                             DisplayName = Attribute.IsDefined(prop, typeof(DisplayNameAttribute)) ? ((DisplayNameAttribute)prop.GetCustomAttribute(typeof(DisplayNameAttribute))).DisplayName : prop.Name,
                             Type = prop.PropertyType,
                             ActualType = Attribute.IsDefined(prop, typeof(ActualTypeAttribute)) ? ((ActualTypeAttribute)prop.GetCustomAttribute(typeof(ActualTypeAttribute))).ActualTypeName : null,
+                            MaxLength = Attribute.IsDefined(prop, typeof(MaxLengthAttribute)) ? ((MaxLengthAttribute)prop.GetCustomAttribute(typeof(MaxLengthAttribute))).MaxLength : 0,
                             ReadOnly = Attribute.IsDefined(prop, typeof(ReadOnlyAttribute)),
                             Visible = Attribute.IsDefined(prop, typeof(DisplayFieldAttribute)),
                             IsColumn = Attribute.IsDefined(prop, typeof(ColumnAttribute)),
@@ -882,11 +886,11 @@ namespace Clifton.Core.ModelTableManagement
 				// Handle nullable types by creating the column type as the underlying, non-nullable, type.
 				if (field.Type.Name == "Nullable`1")
 				{
-					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Format, field.ActualType, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type.UnderlyingSystemType.GenericTypeArguments[0], field.Visible, field.IsColumn, field.Format, field.ActualType, field.MaxLength, field.Lookup);
 				}
 				else
 				{
-					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Format, field.ActualType, field.Lookup);
+					dc = new ExtDataColumn(field.Name, field.Type, field.Visible, field.IsColumn, field.Format, field.ActualType, field.MaxLength, field.Lookup);
 				}
 
 				dc.ReadOnly = field.ReadOnly;
