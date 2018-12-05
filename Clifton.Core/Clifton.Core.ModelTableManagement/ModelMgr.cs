@@ -765,14 +765,17 @@ namespace Clifton.Core.ModelTableManagement
         /// </summary>
         public void UpdateTableRowField(DataRow row, string fieldName, object val)
 		{
-			if (row != null)
-			{
-				bool lastState = row.Table.Columns[fieldName].ReadOnly;
-				row.Table.Columns[fieldName].ReadOnly = false;
-				row[fieldName] = val ?? DBNull.Value;
-				row.Table.Columns[fieldName].ReadOnly = lastState;
-                row.Table.AcceptChanges();
-			}
+            lock (this)
+            {
+                if (row != null)
+                {
+                    bool lastState = row.Table.Columns[fieldName].ReadOnly;
+                    row.Table.Columns[fieldName].ReadOnly = false;
+                    row[fieldName] = val ?? DBNull.Value;
+                    row.Table.Columns[fieldName].ReadOnly = lastState;
+                    row.Table.AcceptChanges();
+                }
+            }
 		}
 
 		public void Register<T>(IModelTable mt) where T : IEntity
