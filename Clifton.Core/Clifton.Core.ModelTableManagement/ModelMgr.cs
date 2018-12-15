@@ -328,13 +328,25 @@ namespace Clifton.Core.ModelTableManagement
 		{
 			Clear<T>();
 			Type recType = typeof(T);
-            SqlConnection connection;
-            DataContext newContext;
-            ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
-            newContext.Query(whereClause).ForEach(m => AppendRow(dv, m));
+            //SqlConnection connection;
+            //DataContext newContext;
+            // ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            context.Query(whereClause).ForEach(m => AppendRow(dv, m));
 
 			return mappedRecords[recType];
 		}
+
+        public List<IEntity> LoadRecordsFromSql<T>(DataView dv, string sql) where T : MappedRecord, IEntity
+        {
+            Clear<T>();
+            Type recType = typeof(T);
+            //SqlConnection connection;
+            //DataContext newContext;
+            // ContextExtensionMethods.CreateNewContext(context, out connection, out newContext);
+            context.SqlQuery<T>(sql).ForEach(m => AppendRow(dv, m));
+
+            return mappedRecords[recType];
+        }
 
         public List<IEntity> LoadRecords(Type recType, DataView dv)
 		{

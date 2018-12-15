@@ -217,7 +217,27 @@ namespace Clifton.Core.ExtensionMethods
 			return data;
 		}
 
-		public static T Single<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
+        public static List<T> SqlQuery<T>(this DataContext context, string sql) where T : class, IEntity
+        {
+            SqlConnection connection;
+            DataContext newContext;
+            CreateNewContext(context, out connection, out newContext);
+            List<T> data = null;
+
+            try
+            {
+                data = newContext.ExecuteQuery<T>(sql).ToList();
+            }
+            catch (Exception ex)
+            {
+                LogException(ex);
+                throw;
+            }
+
+            return data;
+        }
+
+        public static T Single<T>(this DataContext context, Expression<Func<T, bool>> whereClause = null) where T : class, IEntity
 		{
             SqlConnection connection;
             DataContext newContext;
