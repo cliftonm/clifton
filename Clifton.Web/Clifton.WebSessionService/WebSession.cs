@@ -95,9 +95,13 @@ namespace Clifton.WebSessionService
 
 	public class WebSession : ServiceBase, IWebSessionService
 	{
-		// Shared across all sessions.
-		// TODO: Get Session working for IIS.  Workaround for right now is we've made these static, but I'm not convinced that that is a robust solution.
-		private ConcurrentDictionary<IPAddress, SessionInfo> sessionInfoMap;
+        // Shared across all sessions.
+        // Get Session working for IIS.  Workaround for right now is we've made these static, but I'm not convinced that that is a robust solution.
+        // From: https://stackoverflow.com/questions/8919095/lifetime-of-asp-net-static-variable
+        // Static variables persist for the life of the app domain. So the two things that will cause your static variables to 'reset' is an app domain restart or the use of a new class.
+        // You can't prevent the loss of static variables from an app domain restart, but you can try to avoid it from class replacement. You could put your static variables in a class that is not an aspx page and is not in the App_Code directory. You might want to place them on a static class somewhere in your program.
+        // The static variables are per pool (multiple pools, see "web garden mode")
+        private ConcurrentDictionary<IPAddress, SessionInfo> sessionInfoMap;
 		private List<StateInfo<SessionStateInstance>> states = new List<StateInfo<SessionStateInstance>>();
 		private const string SESSION_INFO = "_SessionInfo_";
 
